@@ -12,12 +12,10 @@ export type AppView =
   | "builder"
   | "forecast";
 
-interface SavedScenario {
-  id: string;
-  name: string;
-  createdAt: string;
-  overrides: PlannerOverrides;
-}
+import type {
+  SavedScenario,
+} from "../types/scenario";
+
 interface PlannerStore {
   baseConfig: PlannerConfig;
   overrides: PlannerOverrides;
@@ -71,7 +69,8 @@ interface PlannerStore {
   resetAll: () => void;
   loadPlan: (
     baseConfig: PlannerConfig,
-    overrides: PlannerOverrides
+    overrides: PlannerOverrides,
+    scenarios?: SavedScenario[],
   ) => void;
   saveScenario: (
     name: string
@@ -279,12 +278,16 @@ export const usePlannerStore = create<PlannerStore>()(
 
       loadPlan: (
         baseConfig,
-        overrides
+        overrides,
+        scenarios = [],
       ) =>
         set({
           baseConfig,
 
           overrides,
+
+          savedScenarios:
+            scenarios,
 
           config:
             buildEffectiveConfig(

@@ -72,6 +72,12 @@ export default function ScenarioPanel() {
       HTMLInputElement
     >(null);
 
+  const savedScenarios =
+    usePlannerStore(
+      (state) =>
+        state.savedScenarios
+    );
+
   const handleImport =
     async (
       file: File
@@ -84,7 +90,8 @@ export default function ScenarioPanel() {
 
         loadPlan(
           plan.baseConfig,
-          plan.overrides
+          plan.overrides,
+          plan.savedScenarios
         );
 
         notifications.show({
@@ -235,6 +242,7 @@ export default function ScenarioPanel() {
             exportPlan({
               baseConfig,
               overrides,
+              savedScenarios,
             })
           }
         >

@@ -6,9 +6,13 @@ import type {
   PlannerOverrides,
 } from "../types/overrides";
 
+import type {
+  SavedScenario,
+} from "../types/scenario";
 export interface ExportedPlan {
   baseConfig: PlannerConfig;
   overrides: PlannerOverrides;
+  savedScenarios?: SavedScenario[];
 }
 
 export function exportPlan(

@@ -22,17 +22,30 @@ import {
 
 import {
   useState,
+  useMemo,
 } from "react";
 
 import {
   usePlannerStore,
 } from "../../store/plannerStore";
 
+import { simulate }
+  from "../../engine/simulate";
+
+import { buildEffectiveConfig }
+  from "../../engine/buildEffectiveConfig";
+
 export default function SavedScenarios() {
   const scenarios =
     usePlannerStore(
       (state) =>
         state.savedScenarios
+    );
+
+  const baseConfig =
+    usePlannerStore(
+      (state) =>
+        state.baseConfig
     );
 
   const saveScenario =
@@ -84,6 +97,79 @@ export default function SavedScenarios() {
 
       close();
     };
+
+  function formatDelta(
+    value: number
+  ) {
+    const sign =
+      value >= 0
+        ? "+"
+        : "-";
+
+    return (
+      sign +
+      "₹" +
+      Math.abs(
+        Math.round(value)
+      ).toLocaleString()
+    );
+  }
+
+  function deltaColor(
+    value: number
+  ) {
+    if (value > 0) {
+      return "green";
+    }
+
+    if (value < 0) {
+      return "red";
+    }
+
+    return "gray";
+  }
+
+  const scenarioComparisons =
+    useMemo(() => {
+      const baseResult =
+        simulate(
+          baseConfig
+        );
+
+      return Object.fromEntries(
+        scenarios.map(
+          (scenario) => {
+            const scenarioResult =
+              simulate(
+                buildEffectiveConfig(
+                  baseConfig,
+                  scenario.overrides
+                )
+              );
+
+            return [
+              scenario.id,
+              {
+                netWorth:
+                  scenarioResult.summary.finalNetWorth -
+                  baseResult.summary.finalNetWorth,
+
+                cash:
+                  scenarioResult.summary.finalBalance -
+                  baseResult.summary.finalBalance,
+
+                lowestCash:
+                  scenarioResult.summary.lowestBalance -
+                  baseResult.summary.lowestBalance,
+              },
+            ];
+          }
+        )
+      );
+    }, [
+      scenarios,
+      baseConfig,
+    ]);
 
   return (
     <>
@@ -168,7 +254,7 @@ export default function SavedScenarios() {
         </Group>
 
         {scenarios.length ===
-        0 ? (
+          0 ? (
           <Paper
             withBorder
             radius="md"
@@ -201,27 +287,78 @@ export default function SavedScenarios() {
                   <Stack
                     gap={2}
                   >
-                    <Text
-                      fw={500}
-                      size="sm"
-                    >
-                      {
-                        scenario.name
-                      }
-                    </Text>
+                    <Group gap="xs">
+                      <Text fw={600}>
+                        {scenario.name}
+                      </Text>
 
-                    <Badge
-                      size="xs"
-                      variant="light"
-                    >
-                      {(scenario
-                        .overrides
-                        .runtimeEvents
-                        ?.length ??
-                        0)}
-                      {" "}
-                      changes
-                    </Badge>
+                      <Badge
+                        size="sm"
+                        variant="light"
+                      >
+                        {(scenario.overrides.runtimeEvents?.length ?? 0)}
+                        {" "}
+                        changes
+                      </Badge>
+                    </Group>
+                    {(() => {
+                      const comparison =
+                        scenarioComparisons[
+                        scenario.id
+                        ];
+
+                      if (
+                        !comparison
+                      ) {
+                        return null;
+                      }
+
+                      return (
+                        <Group
+                          justify="start"
+                          mt="xs"
+                        >
+                          <Stack gap={0}>
+                            <Text size="xs" c="dimmed">
+                              Net Worth
+                            </Text>
+
+                            <Text
+                              fw={500}
+                              c={deltaColor(comparison.netWorth)}
+                            >
+                              {formatDelta(comparison.netWorth)}
+                            </Text>
+                          </Stack>
+
+                          <Stack gap={0}>
+                            <Text size="xs" c="dimmed">
+                              Cash
+                            </Text>
+
+                            <Text
+                              fw={500}
+                              c={deltaColor(comparison.cash)}
+                            >
+                              {formatDelta(comparison.cash)}
+                            </Text>
+                          </Stack>
+
+                          <Stack gap={0}>
+                            <Text size="xs" c="dimmed">
+                              Lowest Cash
+                            </Text>
+
+                            <Text
+                              fw={500}
+                              c={deltaColor(comparison.lowestCash)}
+                            >
+                              {formatDelta(comparison.lowestCash)}
+                            </Text>
+                          </Stack>
+                        </Group>
+                      );
+                    })()}
                   </Stack>
 
                   <Group

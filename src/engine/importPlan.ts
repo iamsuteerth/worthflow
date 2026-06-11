@@ -7,10 +7,17 @@ import type {
 } from "../types/overrides";
 
 import { z } from "zod";
+import type { SavedScenario } from "../types/scenario";
+import type { MonthKey } from "../types/simulation";
 
 const MonthKeySchema =
-  z.string().regex(
-    /^\d{4}-(0[1-9]|1[0-2])$/
+  z.custom<MonthKey>(
+    (value) =>
+      typeof value ===
+        "string" &&
+      /^\d{4}-(0[1-9]|1[0-2])$/.test(
+        value
+      )
   );
 
 const FixedDepositSchema =
@@ -92,6 +99,131 @@ const BonusIncomeSchema =
       z.number().nonnegative(),
     description:
       z.string(),
+  });
+
+const RuntimeOneOffExpenseSchema =
+  z.object({
+    id: z.string(),
+    type:
+      z.literal(
+        "ONE_OFF_EXPENSE"
+      ),
+    month:
+      MonthKeySchema,
+    amount:
+      z.number()
+        .nonnegative(),
+    label:
+      z.string(),
+  });
+
+const RuntimeFixedDepositSchema =
+  z.object({
+    id: z.string(),
+    type:
+      z.literal("FD"),
+    name:
+      z.string(),
+    principal:
+      z.number()
+        .positive(),
+    rate:
+      z.number()
+        .min(0),
+    startMonth:
+      MonthKeySchema,
+    durationMonths:
+      z.number()
+        .int()
+        .positive(),
+  });
+
+const RuntimeRecurringDepositSchema =
+  z.object({
+    id: z.string(),
+    type:
+      z.literal("RD"),
+    name:
+      z.string(),
+    monthlyContribution:
+      z.number()
+        .positive(),
+    rate:
+      z.number()
+        .min(0),
+    startMonth:
+      MonthKeySchema,
+    durationMonths:
+      z.number()
+        .int()
+        .positive(),
+  });
+
+const RuntimeBonusIncomeSchema =
+  z.object({
+    id: z.string(),
+    type:
+      z.literal(
+        "BONUS_INCOME"
+      ),
+    month:
+      MonthKeySchema,
+    amount:
+      z.number()
+        .nonnegative(),
+    description:
+      z.string(),
+  });
+
+const RuntimeSalaryChangeSchema =
+  z.object({
+    id: z.string(),
+    type:
+      z.literal(
+        "SALARY_CHANGE"
+      ),
+    effectiveMonth:
+      MonthKeySchema,
+    newMonthlyIncome:
+      z.number()
+        .nonnegative(),
+    description:
+      z.string(),
+  });
+
+const RuntimeEventSchema =
+  z.discriminatedUnion(
+    "type",
+    [
+      RuntimeOneOffExpenseSchema,
+      RuntimeFixedDepositSchema,
+      RuntimeRecurringDepositSchema,
+      RuntimeBonusIncomeSchema,
+      RuntimeSalaryChangeSchema,
+    ]
+  );
+
+const PlannerOverridesSchema =
+  z.object({
+    runtimeEvents:
+      z.array(
+        RuntimeEventSchema
+      ).optional(),
+  });
+
+const SavedScenarioSchema =
+  z.object({
+    id:
+      z.string(),
+
+    name:
+      z.string(),
+
+    createdAt:
+      z.string(),
+
+    overrides:
+      PlannerOverridesSchema,
   });
 
 const ImportedPlanSchema =
@@ -183,12 +315,13 @@ const ImportedPlanSchema =
         ),
     }),
 
-    overrides: z.object({
-      runtimeEvents:
-        z.array(
-          z.unknown()
-        ).optional(),
-    }),
+    savedScenarios:
+      z.array(
+        SavedScenarioSchema
+      ).optional(),
+
+    overrides:
+      PlannerOverridesSchema,
   });
 
 export type ImportedPlan =
@@ -201,6 +334,7 @@ export async function importPlan(
 ): Promise<{
   baseConfig: PlannerConfig;
   overrides: PlannerOverrides;
+  savedScenarios?: SavedScenario[];
 }> {
   const text =
     await file.text();
@@ -219,5 +353,8 @@ export async function importPlan(
 
     overrides:
       result.overrides as PlannerOverrides,
+
+    savedScenarios:
+      result.savedScenarios as SavedScenario[],
   };
 }
