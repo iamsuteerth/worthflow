@@ -122,7 +122,9 @@ export default function AddFdForm() {
         label="Interest Rate (%)"
         value={rate}
         min={0}
+        max={15}
         decimalScale={2}
+        clampBehavior="strict"
         onChange={(value) =>
           setRate(
             Number(value)
@@ -134,6 +136,8 @@ export default function AddFdForm() {
         label="Duration (Months)"
         value={durationMonths}
         min={1}
+        max={120}
+        clampBehavior="strict"
         onChange={(value) =>
           setDurationMonths(
             Number(value)

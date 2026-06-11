@@ -140,7 +140,9 @@ export default function InstrumentsStep() {
             label="Interest Rate (%)"
             value={fdRate}
             min={0}
+            max={15}
             decimalScale={2}
+            clampBehavior="strict"
             onChange={(v) =>
               setFdRate(
                 Number(v)
@@ -247,7 +249,9 @@ export default function InstrumentsStep() {
             label="Interest Rate (%)"
             value={rdRate}
             min={0}
+            max={15}
             decimalScale={2}
+            clampBehavior="strict"
             onChange={(v) =>
               setRdRate(
                 Number(v)
