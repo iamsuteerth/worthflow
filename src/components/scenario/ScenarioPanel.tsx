@@ -132,7 +132,6 @@ export default function ScenarioPanel() {
             '&::-webkit-scrollbar': {
               display: 'none',
             },
-            borderBottom: "1px solid #e9ecef",
           }}
         >
           <Tabs.Tab

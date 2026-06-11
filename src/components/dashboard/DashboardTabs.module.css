@@ -1,3 +1,15 @@
+.tabsList {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.tabsList::-webkit-scrollbar {
+  display: none;
+}
+
 .tabsList::before {
-  content: none;
+  display: none;
 }
