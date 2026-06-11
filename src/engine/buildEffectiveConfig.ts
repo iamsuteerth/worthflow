@@ -53,16 +53,31 @@ export function buildEffectiveConfig(
       ...oneOffEvents.map(
         (event) => ({
           id: event.id,
-
           month: event.month,
-
           amount: event.amount,
-
           label: event.label,
         })
       )
     );
   }
+
+  const creditCardEvents =
+    overrides.runtimeEvents?.filter(
+      (event) =>
+        event.type ===
+        "CREDIT_CARD_EXPENSE"
+    ) ?? [];
+
+  config.creditCardBills.push(
+    ...creditCardEvents.map(
+      (event) => ({
+        id: event.id,
+        month: event.month,
+        amount: event.amount,
+        label: event.label,
+      })
+    )
+  );
 
   const fdEvents =
     overrides.runtimeEvents?.filter(

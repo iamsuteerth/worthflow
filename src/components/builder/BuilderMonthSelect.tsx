@@ -1,55 +1,33 @@
-import {
-  Select,
-} from "@mantine/core";
+import { Select } from "@mantine/core";
 
-import {
-  formatMonth,
-} from "../../engine/monthFormatting";
+import { formatMonth } from "../../engine/monthFormatting";
 
 interface Props {
   value: string | null;
-
-  onChange: (
-    value: string | null
-  ) => void;
+  onChange: (value: string | null) => void;
 
   label?: string;
+  minMonth?: string;
 }
 
 function buildMonths(): {
   value: string;
   label: string;
 }[] {
-  return Array.from(
-    { length: 180 },
-    (_, index) => {
-      const date =
-        new Date();
+  return Array.from({ length: 180 }, (_, index) => {
+    const date = new Date();
 
-      date.setMonth(
-        date.getMonth() -
-        120 +
-        index
-      );
+    date.setMonth(date.getMonth() - 120 + index);
 
-      const value =
-        `${date.getFullYear()}-${String(
-          date.getMonth() +
-          1
-        ).padStart(
-          2,
-          "0"
-        )}`;
+    const value = `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, "0")}`;
 
-      return {
-        value,
-        label:
-          formatMonth(
-            value
-          ),
-      };
-    }
-  );
+    return {
+      value,
+      label: formatMonth(value),
+    };
+  });
 }
 
 const MONTH_OPTIONS = buildMonths();
@@ -58,11 +36,18 @@ export default function BuilderMonthSelect({
   value,
   onChange,
   label = "Month",
+  minMonth,
 }: Props) {
+  const options = minMonth
+    ? MONTH_OPTIONS.filter(
+        (month) => month.value >= minMonth
+      )
+    : MONTH_OPTIONS;
+
   return (
     <Select
       label={label}
-      data={MONTH_OPTIONS}
+      data={options}
       value={value}
       onChange={onChange}
       searchable

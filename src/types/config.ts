@@ -36,8 +36,10 @@ export interface OneOffExpense {
 }
 
 export interface CreditCardBill {
+  id: string;
   month: MonthKey;
   amount: number;
+  label: string;
 }
 
 export interface PlannerConfig {

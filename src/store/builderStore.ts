@@ -6,6 +6,7 @@ import type {
   BuilderBonusIncome,
   BuilderOneOffExpense,
   BuilderSalaryChange,
+  BuilderCreditCardBill,
 } from "../types/builder";
 
 import type {
@@ -85,6 +86,14 @@ interface BuilderStore {
   ) => void;
 
   removeOneOffExpense: (
+    id: string
+  ) => void;
+
+  addCreditCardBill: (
+    bill: BuilderCreditCardBill
+  ) => void;
+
+  removeCreditCardBill: (
     id: string
   ) => void;
 
@@ -279,6 +288,39 @@ export const useBuilderStore =
               },
             })
           ),
+
+      addCreditCardBill:
+        (
+          bill
+        ) =>
+          set(
+            (
+              store
+            ) => ({
+              state: {
+                ...store.state,
+
+                creditCardBills: [
+                  ...store.state.creditCardBills,
+                  bill,
+                ],
+              },
+            })
+          ),
+
+      removeCreditCardBill:
+        (id) =>
+          set((store) => ({
+            state: {
+              ...store.state,
+
+              creditCardBills:
+                store.state.creditCardBills.filter(
+                  (bill) =>
+                    bill.id !== id
+                ),
+            },
+          })),
 
       addBonusIncome:
         (

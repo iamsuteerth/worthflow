@@ -14,6 +14,9 @@ import {
 import AddExpenseForm
   from "./AddExpenseForm";
 
+import AddCreditCardExpenseForm
+  from "./AddCreditCardExpenseForm";
+
 import AddBonusForm
   from "./AddBonusForm";
 
@@ -143,6 +146,10 @@ export default function ScenarioPanel() {
             Expense
           </Tabs.Tab>
 
+          <Tabs.Tab value="card">
+            Card
+          </Tabs.Tab>
+
           <Tabs.Tab value="bonus">
             Bonus
           </Tabs.Tab>
@@ -165,6 +172,13 @@ export default function ScenarioPanel() {
           pt="lg"
         >
           <AddExpenseForm />
+        </Tabs.Panel>
+
+        <Tabs.Panel
+          value="card"
+          pt="lg"
+        >
+          <AddCreditCardExpenseForm />
         </Tabs.Panel>
 
         <Tabs.Panel

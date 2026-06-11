@@ -36,6 +36,27 @@ export function buildCashflowEvents(
           expense.label,
       });
     });
+  config.creditCardBills
+    .filter(
+      (bill) =>
+        bill.month === month
+    )
+    .forEach((bill, _) => {
+      events.push({
+        id: bill.id,
+
+        month,
+
+        type:
+          "CREDIT_CARD_EXPENSE",
+
+        amount:
+          bill.amount,
+
+        description:
+          bill.label
+      });
+    });
   config.bonusIncome
     .filter(
       (bonus) =>

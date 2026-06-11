@@ -68,9 +68,22 @@ export interface RuntimeSalaryChange {
   description: string;
 }
 
+export interface RuntimeCreditCardExpense {
+  id: string;
+
+  type: "CREDIT_CARD_EXPENSE";
+
+  month: MonthKey;
+
+  amount: number;
+
+  label: string;
+}
+
 export type RuntimeEvent =
   | RuntimeOneOffExpense
   | RuntimeFixedDeposit
   | RuntimeRecurringDeposit
   | RuntimeBonusIncome
-  | RuntimeSalaryChange;
+  | RuntimeSalaryChange
+  | RuntimeCreditCardExpense;

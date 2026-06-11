@@ -50,6 +50,18 @@ export default function EventsStep() {
         store.removeOneOffExpense
     );
 
+  const addCreditCardBill =
+    useBuilderStore(
+      (store) =>
+        store.addCreditCardBill
+    );
+
+  const removeCreditCardBill =
+    useBuilderStore(
+      (store) =>
+        store.removeCreditCardBill
+    );
+
   const addBonusIncome =
     useBuilderStore(
       (store) =>
@@ -91,6 +103,26 @@ export default function EventsStep() {
   const [
     expenseAmount,
     setExpenseAmount,
+  ] =
+    useState(0);
+
+  const [
+    creditCardMonth,
+    setCreditCardMonth,
+  ] =
+    useState<MonthKey>(
+      state.startMonth
+    );
+
+  const [
+    creditCardLabel,
+    setCreditCardLabel,
+  ] =
+    useState("");
+
+  const [
+    creditCardAmount,
+    setCreditCardAmount,
   ] =
     useState(0);
 
@@ -160,6 +192,27 @@ export default function EventsStep() {
           })
         ),
 
+        ...state.creditCardBills.map(
+          (
+            event
+          ) => ({
+            id:
+              event.id,
+
+            month:
+              event.month,
+
+            type:
+              "Credit Card",
+
+            description:
+              event.label,
+
+            value:
+              `₹${event.amount.toLocaleString()}`,
+          })
+        ),
+
         ...state.bonusIncome.map(
           (
             event
@@ -216,7 +269,13 @@ export default function EventsStep() {
       state.oneOffExpenses,
       state.bonusIncome,
       state.salaryChanges,
+      state.creditCardBills
     ]);
+
+  const startMonth =
+    useBuilderStore(
+      (s) => s.state.startMonth
+    );
 
   return (
     <BuilderStepContainer>
@@ -232,6 +291,7 @@ export default function EventsStep() {
             value={
               expenseMonth
             }
+            minMonth={startMonth}
             label="Month"
             onChange={(
               value
@@ -281,7 +341,7 @@ export default function EventsStep() {
             disabled={
               !expenseLabel.trim() ||
               expenseAmount <=
-                0
+              0
             }
             onClick={() => {
               addOneOffExpense(
@@ -319,6 +379,98 @@ export default function EventsStep() {
       >
         <Stack>
           <Text fw={600}>
+            Credit Card Bill
+          </Text>
+
+          <BuilderMonthSelect
+            value={
+              creditCardMonth
+            }
+            minMonth={startMonth}
+            label="Month"
+            onChange={(
+              value
+            ) =>
+              value &&
+              setCreditCardMonth(
+                value as MonthKey
+              )
+            }
+          />
+
+          <TextInput
+            label="Label"
+            value={
+              creditCardLabel
+            }
+            onChange={(
+              event
+            ) =>
+              setCreditCardLabel(
+                event
+                  .currentTarget
+                  .value
+              )
+            }
+          />
+
+          <NumberInput
+            label="Amount"
+            value={
+              creditCardAmount
+            }
+            min={1}
+            thousandSeparator=","
+            onChange={(
+              value
+            ) =>
+              setCreditCardAmount(
+                Number(
+                  value
+                )
+              )
+            }
+          />
+
+          <Button
+            disabled={
+              !creditCardLabel.trim() ||
+              creditCardAmount <= 0
+            }
+            onClick={() => {
+              addCreditCardBill({
+                id:
+                  crypto.randomUUID(),
+
+                month:
+                  creditCardMonth,
+
+                amount:
+                  creditCardAmount,
+
+                label:
+                  creditCardLabel,
+              });
+
+              setCreditCardLabel(
+                ""
+              );
+
+              setCreditCardAmount(
+                0
+              );
+            }}
+          >
+            Add Credit Card Bill
+          </Button>
+        </Stack>
+      </Card>
+
+      <Card
+        withBorder
+      >
+        <Stack>
+          <Text fw={600}>
             Bonus Income
           </Text>
 
@@ -326,6 +478,7 @@ export default function EventsStep() {
             value={
               bonusMonth
             }
+            minMonth={startMonth}
             label="Month"
             onChange={(
               value
@@ -375,7 +528,7 @@ export default function EventsStep() {
             disabled={
               !bonusDescription.trim() ||
               bonusAmount <=
-                0
+              0
             }
             onClick={() => {
               addBonusIncome(
@@ -420,6 +573,7 @@ export default function EventsStep() {
             value={
               salaryMonth
             }
+            minMonth={startMonth}
             label="Effective Month"
             onChange={(
               value
@@ -469,7 +623,7 @@ export default function EventsStep() {
             disabled={
               !salaryDescription.trim() ||
               salaryIncome <=
-                state.monthlyIncome
+              state.monthlyIncome
             }
             onClick={() => {
               addSalaryChange(
@@ -507,7 +661,7 @@ export default function EventsStep() {
           </Text>
 
           {timeline.length ===
-          0 ? (
+            0 ? (
             <Text
               size="sm"
               c="dimmed"
@@ -576,51 +730,67 @@ export default function EventsStep() {
                       <Table.Td>
                         {event.type ===
                           "Expense" && (
-                          <Button
-                            size="xs"
-                            color="red"
-                            variant="light"
-                            onClick={() =>
-                              removeOneOffExpense(
-                                event.id
-                              )
-                            }
-                          >
-                            Remove
-                          </Button>
-                        )}
+                            <Button
+                              size="xs"
+                              color="red"
+                              variant="light"
+                              onClick={() =>
+                                removeOneOffExpense(
+                                  event.id
+                                )
+                              }
+                            >
+                              Remove
+                            </Button>
+                          )}
+
+                        {event.type ===
+                          "Credit Card" && (
+                            <Button
+                              size="xs"
+                              color="red"
+                              variant="light"
+                              onClick={() =>
+                                removeCreditCardBill(
+                                  event.id
+                                )
+                              }
+                            >
+                              Remove
+                            </Button>
+                          )}
 
                         {event.type ===
                           "Bonus" && (
-                          <Button
-                            size="xs"
-                            color="red"
-                            variant="light"
-                            onClick={() =>
-                              removeBonusIncome(
-                                event.id
-                              )
-                            }
-                          >
-                            Remove
-                          </Button>
-                        )}
+                            <Button
+                              size="xs"
+                              color="red"
+                              variant="light"
+                              onClick={() =>
+                                removeBonusIncome(
+                                  event.id
+                                )
+                              }
+                            >
+                              Remove
+                            </Button>
+                          )}
 
                         {event.type ===
                           "Salary Change" && (
-                          <Button
-                            size="xs"
-                            color="red"
-                            variant="light"
-                            onClick={() =>
-                              removeSalaryChange(
-                                event.id
-                              )
-                            }
-                          >
-                            Remove
-                          </Button>
-                        )}
+                            <Button
+                              size="xs"
+                              color="red"
+                              variant="light"
+                              onClick={() =>
+                                removeSalaryChange(
+                                  event.id
+                                )
+                              }
+                            >
+                              Remove
+                            </Button>
+                          )}
                       </Table.Td>
                     </Table.Tr>
                   )

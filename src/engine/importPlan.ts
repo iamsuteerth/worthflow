@@ -14,7 +14,7 @@ const MonthKeySchema =
   z.custom<MonthKey>(
     (value) =>
       typeof value ===
-        "string" &&
+      "string" &&
       /^\d{4}-(0[1-9]|1[0-2])$/.test(
         value
       )
@@ -62,10 +62,13 @@ const RecurringDepositSchema =
 
 const CreditCardBillSchema =
   z.object({
+    id: z.string(),
     month:
       MonthKeySchema,
     amount:
       z.number().nonnegative(),
+    label:
+      z.string(),
   });
 
 const OneOffExpenseSchema =
@@ -113,6 +116,27 @@ const RuntimeOneOffExpenseSchema =
     amount:
       z.number()
         .nonnegative(),
+    label:
+      z.string(),
+  });
+
+const RuntimeCreditCardExpenseSchema =
+  z.object({
+    id:
+      z.string(),
+
+    type:
+      z.literal(
+        "CREDIT_CARD_EXPENSE"
+      ),
+
+    month:
+      MonthKeySchema,
+
+    amount:
+      z.number()
+        .nonnegative(),
+
     label:
       z.string(),
   });
@@ -200,6 +224,7 @@ const RuntimeEventSchema =
       RuntimeRecurringDepositSchema,
       RuntimeBonusIncomeSchema,
       RuntimeSalaryChangeSchema,
+      RuntimeCreditCardExpenseSchema,
     ]
   );
 

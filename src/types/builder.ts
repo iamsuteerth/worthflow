@@ -20,6 +20,13 @@ export interface BuilderOneOffExpense {
   amount: number;
 }
 
+export interface BuilderCreditCardBill {
+  id: string;
+  month: MonthKey;
+  amount: number;
+  label: string;
+}
+
 export interface BuilderSalaryChange {
   id: string;
   effectiveMonth: MonthKey;
@@ -47,10 +54,8 @@ export interface BuilderState {
 
   investmentRanges: InvestmentRange[];
 
-  creditCardBills: {
-    month: MonthKey;
-    amount: number;
-  }[];
+  creditCardBills:
+  BuilderCreditCardBill[];
 
   oneOffExpenses:
   BuilderOneOffExpense[];

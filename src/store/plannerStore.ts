@@ -33,6 +33,12 @@ interface PlannerStore {
     label: string
   ) => void;
 
+  addTransientCreditCardExpense: (
+    month: MonthKey,
+    amount: number,
+    label: string
+  ) => void;
+
   addTransientFd: (
     month: MonthKey,
     principal: number,
@@ -125,6 +131,46 @@ export const usePlannerStore = create<PlannerStore>()(
               state.baseConfig,
               overrides
             ),
+          };
+        }),
+      addTransientCreditCardExpense: (
+        month,
+        amount,
+        label
+      ) =>
+        set((state) => {
+          const current =
+            state.overrides.runtimeEvents ?? [];
+
+          const overrides: PlannerOverrides = {
+            ...state.overrides,
+
+            runtimeEvents: [
+              ...current,
+
+              {
+                id: crypto.randomUUID(),
+
+                type:
+                  "CREDIT_CARD_EXPENSE",
+
+                month,
+
+                amount,
+
+                label,
+              },
+            ],
+          };
+
+          return {
+            overrides,
+
+            config:
+              buildEffectiveConfig(
+                state.baseConfig,
+                overrides
+              ),
           };
         }),
 

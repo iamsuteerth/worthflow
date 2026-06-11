@@ -126,6 +126,7 @@ export default function NetWorthChart() {
     const summary = {
       bonus: 0,
       expenses: 0,
+      creditCard: 0,
       fdCreated: 0,
       fdMatured: 0,
       rdCreated: 0,
@@ -144,6 +145,11 @@ export default function NetWorthChart() {
 
           case "ONE_OFF_EXPENSE":
             summary.expenses +=
+              event.amount;
+            break;
+
+          case "CREDIT_CARD_EXPENSE":
+            summary.creditCard +=
               event.amount;
             break;
 
@@ -328,6 +334,21 @@ export default function NetWorthChart() {
                               -
                               {formatMoney(
                                 eventSummary.expenses
+                              )}
+                            </Text>
+                          )}
+
+                        {eventSummary.creditCard >
+                          0 && (
+                            <Text
+                              size="xs"
+                              c="orange"
+                            >
+                              Credit Card
+                              {" • "}
+                              -
+                              {formatMoney(
+                                eventSummary.creditCard
                               )}
                             </Text>
                           )}

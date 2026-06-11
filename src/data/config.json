@@ -56,8 +56,10 @@
   },
   "creditCardBills": [
     {
+      "id": "cc-1",
       "month": "2026-07",
-      "amount": 30040
+      "amount": 30040,
+      "label": "Credit Card Statement"
     }
   ],
   "oneOffExpenses": [

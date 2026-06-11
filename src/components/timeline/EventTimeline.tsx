@@ -50,6 +50,11 @@ function getEventIcon(
         />
       );
 
+    case "CREDIT_CARD_EXPENSE":
+      return (
+        <IconWallet size={16} />
+      );
+
     case "FD_CREATED":
       return (
         <IconWallet
@@ -100,6 +105,9 @@ function getEventLabel(
     case "ONE_OFF_EXPENSE":
       return "Expense";
 
+    case "CREDIT_CARD_EXPENSE":
+      return "Credit Card";
+
     case "FD_CREATED":
       return "FD Created";
 
@@ -148,6 +156,9 @@ function getEventColor(
     case "RD_CREATED":
     case "RD_MATURED":
       return "grape";
+
+    case "CREDIT_CARD_EXPENSE":
+      return "orange";
 
     default:
       return "gray";

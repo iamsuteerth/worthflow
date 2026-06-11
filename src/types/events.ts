@@ -7,7 +7,8 @@ export type EventType =
   | "RD_CREATED"
   | "RD_MATURED"
   | "BONUS_INCOME"
-  | "SALARY_CHANGE";
+  | "SALARY_CHANGE"
+  | "CREDIT_CARD_EXPENSE";
 
 export interface FinancialEvent {
   id: string;

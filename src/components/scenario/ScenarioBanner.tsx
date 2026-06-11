@@ -29,6 +29,12 @@ export default function ScenarioBanner() {
         "ONE_OFF_EXPENSE"
     ).length,
 
+    credit_card_expense: events.filter(
+      (event) =>
+        event.type ===
+        "CREDIT_CARD_EXPENSE"
+    ).length,
+
     bonus: events.filter(
       (event) =>
         event.type ===
@@ -92,6 +98,17 @@ export default function ScenarioBanner() {
               Expense ×
               {" "}
               {counts.expense}
+            </Badge>
+          )}
+
+          {counts.credit_card_expense > 0 && (
+            <Badge
+              color="orange"
+              variant="light"
+            >
+              Credit Card ×
+              {" "}
+              {counts.credit_card_expense}
             </Badge>
           )}
 
