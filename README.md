@@ -10,7 +10,7 @@ Build realistic financial plans, simulate life events, and understand how your w
 
 💵 Track cash, investments, FDs, and RDs
 
-🎯 Model real-life financial events
+🎯 Model real-life financial events, including salary cuts and job loss
 
 🔄 Compare alternate scenarios
 
@@ -65,7 +65,7 @@ Create and edit plans through an intuitive UI.
 #### 💼 Income
 
 * Monthly Salary
-* Salary Changes
+* Salary Changes (Increase or Reduction)
 * Bonus Income
 
 #### 💸 Expenses
@@ -96,6 +96,8 @@ Create alternate futures without modifying your base forecast.
 ### Simulate
 
 * 📈 Salary Increases
+* 📉 Salary Reductions
+* 🚫 Job Loss / Unemployment
 * 🎁 Bonus Income
 * 🏠 Major Purchases
 * 🏦 New FDs
@@ -321,5 +323,6 @@ Finance Planner helps answer questions like:
 * Should I invest or create an FD?
 * What is my lowest future cash position?
 * How do different scenarios compare?
+* How long can I sustain myself without income?
 
 Plan smarter. Forecast confidently. Build wealth intentionally. 💰📈

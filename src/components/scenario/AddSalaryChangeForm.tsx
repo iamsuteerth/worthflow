@@ -60,7 +60,7 @@ export default function AddSalaryChangeForm() {
       <NumberInput
         label="New Monthly Salary"
         value={newSalary}
-        min={1}
+        min={0}
         thousandSeparator=","
         onChange={(value) =>
           setNewSalary(
@@ -86,7 +86,7 @@ export default function AddSalaryChangeForm() {
       <Button
         disabled={
           !month ||
-          newSalary <= 0 ||
+          newSalary < 0 ||
           !description.trim()
         }
         onClick={() => {

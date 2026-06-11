@@ -73,7 +73,7 @@ export default function BuilderWizard() {
 
         case 1:
           return (
-            builderState.monthlyIncome >= 10000 &&
+            builderState.monthlyIncome >= 1000 &&
             builderState.defaultMonthlyExpense >= 0 &&
             builderState.openingCash >= 0 &&
             builderState.openingInvestmentCorpus >= 0

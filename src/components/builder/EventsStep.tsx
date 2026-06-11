@@ -622,8 +622,7 @@ export default function EventsStep() {
           <Button
             disabled={
               !salaryDescription.trim() ||
-              salaryIncome <=
-              state.monthlyIncome
+              salaryIncome < 0
             }
             onClick={() => {
               addSalaryChange(
