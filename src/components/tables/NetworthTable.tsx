@@ -62,7 +62,7 @@ export default function NetWorthTable() {
   return (
     <ScrollArea>
       <Table
-        miw={750}
+        miw={840}
         striped
         highlightOnHover
         verticalSpacing="sm"

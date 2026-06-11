@@ -75,7 +75,7 @@ export default function ForecastTable() {
 
       <ScrollArea>
         <Table
-          miw={600}
+          miw={1080}
           striped
           highlightOnHover
           verticalSpacing="sm"

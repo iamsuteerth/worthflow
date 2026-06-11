@@ -62,7 +62,7 @@ export default function CashflowTable() {
   return (
     <ScrollArea>
       <Table
-        miw={1080}
+        miw={1200}
         striped
         highlightOnHover
         verticalSpacing="sm"
