@@ -4,7 +4,6 @@ import {
   Burger,
   Drawer,
   Group,
-  ScrollArea,
   Stack,
   Text,
   Title,
@@ -66,7 +65,6 @@ export default function PlannerShell({
           <Drawer
             opened={opened}
             onClose={close}
-            scrollAreaComponent={ScrollArea.Autosize}
             title={
               <div>
                 <Text fw={700}>
