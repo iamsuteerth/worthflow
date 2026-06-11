@@ -1,0 +1,164 @@
+{
+  "forecast": {
+    "startMonth": "2026-07",
+    "totalMonths": 36
+  },
+  "income": {
+    "monthly": 114400
+  },
+  "cash": {
+    "openingBalance": 294400
+  },
+  "expenses": {
+    "defaultMonthly": 35000,
+    "overrides": {
+      "2026-07": 29000
+    }
+  },
+  "investments": {
+    "openingCorpus": 236000,
+    "schedule": {
+      "2026-07": 40000,
+      "2026-08": 40000,
+      "2026-09": 40000,
+      "2026-10": 40000,
+      "2026-11": 40000,
+      "2026-12": 40000,
+      "2027-01": 45000,
+      "2027-02": 45000,
+      "2027-03": 45000,
+      "2027-04": 45000,
+      "2027-05": 45000,
+      "2027-06": 45000,
+      "2027-07": 50000,
+      "2027-08": 50000,
+      "2027-09": 50000,
+      "2027-10": 50000,
+      "2027-11": 50000,
+      "2027-12": 50000,
+      "2028-01": 45000,
+      "2028-02": 45000,
+      "2028-03": 45000,
+      "2028-04": 45000,
+      "2028-05": 45000,
+      "2028-06": 45000,
+      "2028-07": 40000,
+      "2028-08": 40000,
+      "2028-09": 40000,
+      "2028-10": 40000,
+      "2028-11": 40000,
+      "2028-12": 40000,
+      "2029-01": 35000,
+      "2029-02": 35000,
+      "2029-03": 35000,
+      "2029-04": 30000
+    }
+  },
+  "creditCardBills": [
+    {
+      "month": "2026-07",
+      "amount": 30040
+    }
+  ],
+  "oneOffExpenses": [
+    {
+      "id": "expense-1",
+      "month": "2026-07",
+      "label": "One-off Expense",
+      "amount": 3000
+    },
+    {
+      "id": "expense-2",
+      "month": "2026-08",
+      "label": "AppleCare+",
+      "amount": 4900
+    },
+    {
+      "id": "expense-3",
+      "month": "2026-08",
+      "label": "Apple Music Annual",
+      "amount": 1200
+    },
+    {
+      "id": "expense-4",
+      "month": "2026-08",
+      "label": "YouTube Premium Annual",
+      "amount": 1500
+    },
+    {
+      "id": "expense-5",
+      "month": "2026-09",
+      "label": "Major Expense",
+      "amount": 43000
+    },
+    {
+      "id": "expense-6",
+      "month": "2026-10",
+      "label": "Video Game",
+      "amount": 6000
+    },
+    {
+      "id": "expense-7",
+      "month": "2026-11",
+      "label": "Major Expense",
+      "amount": 34000
+    },
+    {
+      "id": "expense-8",
+      "month": "2026-12",
+      "label": "Major Expense",
+      "amount": 12000
+    },
+    {
+      "id": "expense-9",
+      "month": "2027-02",
+      "label": "Gym Renewal",
+      "amount": 10000
+    },
+    {
+      "id": "expense-10",
+      "month": "2027-08",
+      "label": "Apple Music Annual",
+      "amount": 1200
+    },
+    {
+      "id": "expense-11",
+      "month": "2027-08",
+      "label": "YouTube Premium Annual",
+      "amount": 1500
+    },
+    {
+      "id": "expense-12",
+      "month": "2027-10",
+      "label": "Video Game",
+      "amount": 7200
+    },
+    {
+      "id": "expense-13",
+      "month": "2028-01",
+      "label": "Gym Membership",
+      "amount": 10000
+    },
+    {
+      "id": "expense-14",
+      "month": "2028-08",
+      "label": "Apple Music Annual",
+      "amount": 1200
+    },
+    {
+      "id": "expense-15",
+      "month": "2028-08",
+      "label": "YouTube Premium Annual",
+      "amount": 1500
+    },
+    {
+      "id": "expense-16",
+      "month": "2029-01",
+      "label": "Gym Renewal",
+      "amount": 7000
+    }
+  ],
+  "instruments": [],
+  "salaryChanges": [],
+  "bonusIncome": []
+}

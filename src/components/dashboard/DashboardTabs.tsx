@@ -1,0 +1,103 @@
+import {
+  Card,
+  Tabs,
+} from "@mantine/core";
+
+import ForecastTable
+  from "../tables/ForecastTable";
+
+import CashflowTable
+  from "../tables/CashflowTable";
+
+import EventTimeline
+  from "../timeline/EventTimeline";
+
+import NetWorthTable
+  from "../tables/NetworthTable";
+
+import InstrumentsTable
+  from "../tables/InstrumentsTable";
+import OneOffExpensesTable from "../tables/OneOffExpenses";
+
+export default function DashboardTabs() {
+  return (
+    <Card
+      mt="lg"
+      radius="xl"
+      withBorder
+      p="lg"
+    >
+      <Tabs
+        defaultValue="forecast"
+      >
+        <Tabs.List>
+          <Tabs.Tab value="forecast">
+            Forecast
+          </Tabs.Tab>
+
+          <Tabs.Tab value="cashflow">
+            Cashflow
+          </Tabs.Tab>
+
+          <Tabs.Tab value="networth">
+            Net Worth
+          </Tabs.Tab>
+
+          <Tabs.Tab value="instruments">
+            Instruments
+          </Tabs.Tab>
+
+          <Tabs.Tab value="expenses">
+            One-Offs
+          </Tabs.Tab>
+
+          <Tabs.Tab value="timeline">
+            Timeline
+          </Tabs.Tab>
+        </Tabs.List>
+
+        <Tabs.Panel
+          value="forecast"
+          pt="lg"
+        >
+          <ForecastTable />
+        </Tabs.Panel>
+
+        <Tabs.Panel
+          value="cashflow"
+          pt="lg"
+        >
+          <CashflowTable />
+        </Tabs.Panel>
+
+        <Tabs.Panel
+          value="networth"
+          pt="lg"
+        >
+          <NetWorthTable />
+        </Tabs.Panel>
+
+        <Tabs.Panel
+          value="instruments"
+          pt="lg"
+        >
+          <InstrumentsTable />
+        </Tabs.Panel>
+
+        <Tabs.Panel
+          value="expenses"
+          pt="lg"
+        >
+          <OneOffExpensesTable />
+        </Tabs.Panel>
+
+        <Tabs.Panel
+          value="timeline"
+          pt="lg"
+        >
+          <EventTimeline />
+        </Tabs.Panel>
+      </Tabs>
+    </Card>
+  );
+}

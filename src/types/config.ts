@@ -1,0 +1,63 @@
+import type { Instrument } from "./instrument";
+import type { MonthKey } from "./simulation";
+import type {
+  SalaryChange,
+  BonusIncome,
+} from "./incomeEvents";
+
+export interface ForecastConfig {
+  startMonth: MonthKey;
+  totalMonths: number;
+}
+
+export interface IncomeConfig {
+  monthly: number;
+}
+
+export interface CashConfig {
+  openingBalance: number;
+}
+
+export interface ExpenseConfig {
+  defaultMonthly: number;
+  overrides: Record<string, number>;
+}
+
+export interface InvestmentConfig {
+  openingCorpus: number;
+  schedule: Record<string, number>;
+}
+
+export interface OneOffExpense {
+  id: string;
+  month: MonthKey;
+  label: string;
+  amount: number;
+}
+
+export interface CreditCardBill {
+  month: MonthKey;
+  amount: number;
+}
+
+export interface PlannerConfig {
+  forecast: ForecastConfig;
+
+  income: IncomeConfig;
+
+  cash: CashConfig;
+
+  expenses: ExpenseConfig;
+
+  investments: InvestmentConfig;
+
+  oneOffExpenses: OneOffExpense[];
+
+  creditCardBills: CreditCardBill[];
+
+  instruments: Instrument[];
+
+  salaryChanges: SalaryChange[];
+
+  bonusIncome: BonusIncome[];
+}
