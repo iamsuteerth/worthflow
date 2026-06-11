@@ -44,6 +44,33 @@ export function AppProvider({
       }}
     >
       <MantineProvider
+        theme={{
+          components: {
+            Input: {
+              styles: {
+                input: {
+                  fontSize: "16px",
+                },
+              },
+            },
+
+            Select: {
+              styles: {
+                input: {
+                  fontSize: "16px",
+                },
+              },
+            },
+
+            NumberInput: {
+              styles: {
+                input: {
+                  fontSize: "16px",
+                },
+              },
+            },
+          },
+        }}
         forceColorScheme={
           colorScheme
         }

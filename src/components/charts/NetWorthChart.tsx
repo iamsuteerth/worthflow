@@ -187,6 +187,30 @@ export default function NetWorthChart() {
     );
   }
 
+  function formatMoneyCompact(
+    value: number
+  ) {
+    if (value >= 10000000) {
+      return `₹${(
+        value / 10000000
+      ).toFixed(2)} Cr`;
+    }
+
+    if (value >= 100000) {
+      return `₹${(
+        value / 100000
+      ).toFixed(2)} L`;
+    }
+
+    if (value >= 1000) {
+      return `₹${(
+        value / 1000
+      ).toFixed(1)} K`;
+    }
+
+    return `₹${Math.round(value)}`;
+  }
+
   return (
     <Card
       mt="lg"
@@ -217,8 +241,9 @@ export default function NetWorthChart() {
           withLegend
           curveType="monotone"
           valueFormatter={(value) =>
-            "₹" +
-            Number(value).toLocaleString()
+            formatMoneyCompact(
+              Number(value)
+            )
           }
           series={[
             {
