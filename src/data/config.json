@@ -158,7 +158,17 @@
       "amount": 7000
     }
   ],
-  "instruments": [],
+  "instruments": [
+    {
+      "id": "rd-1",
+      "type": "RD",
+      "name": "RD1 Tech Fund",
+      "monthlyContribution": 5000,
+      "rate": 7.5,
+      "startMonth": "2026-06",
+      "durationMonths": 9
+    }
+  ],
   "salaryChanges": [],
   "bonusIncome": []
 }

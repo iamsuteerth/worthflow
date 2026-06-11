@@ -50,7 +50,7 @@ export function processRdLifecycle(
 
       if (
         instrument.startMonth ===
-          month &&
+        month &&
         !nextState.rds.some(
           (rd) =>
             rd.id ===
@@ -91,7 +91,7 @@ export function processRdLifecycle(
       if (
         month >= rd.startMonth &&
         month <
-          rd.maturityMonth
+        rd.maturityMonth
       ) {
         nextState.cash -=
           rd.monthlyContribution;
@@ -117,6 +117,15 @@ export function processRdLifecycle(
     );
 
   maturedRds.forEach((rd) => {
+    console.log(
+      "RD MATURE EVENT",
+      month,
+      rd.currentValue,
+      Math.round(
+        rd.currentValue
+      )
+    );
+
     nextState.cash +=
       rd.currentValue;
 

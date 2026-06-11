@@ -164,6 +164,21 @@ export function simulate(
       ...lifecycle.events,
     ];
 
+    events.forEach(
+      (event) => {
+        if (
+          event.type ===
+          "RD_MATURED"
+        ) {
+          console.log(
+            "SIM EVENT",
+            month,
+            event.amount
+          );
+        }
+      }
+    );
+
     rows.push({
       month,
 

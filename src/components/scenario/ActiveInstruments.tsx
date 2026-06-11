@@ -111,23 +111,27 @@ export default function ActiveInstruments() {
                 mb="xs"
               >
                 <Text fw={700}>
-                  {
-                    instrument.name
-                  }
+                  {instrument.name}
                 </Text>
 
-                <Badge
-                  color={
-                    instrument.type ===
-                      "FD"
-                      ? "blue"
-                      : "violet"
-                  }
-                >
-                  {
-                    instrument.type
-                  }
-                </Badge>
+                <Group gap="xs">
+                  <Badge
+                    color={
+                      instrument.type === "FD"
+                        ? "blue"
+                        : "violet"
+                    }
+                  >
+                    {instrument.type}
+                  </Badge>
+
+                  <Badge
+                    variant="light"
+                    color="green"
+                  >
+                    {instrument.rate}%
+                  </Badge>
+                </Group>
               </Group>
 
               <Text
@@ -163,13 +167,28 @@ export default function ActiveInstruments() {
               </Text>
 
               <Text
-                size="sm"
-                c="green"
+                size="xs"
+                c="dimmed"
               >
-                +
+                Estimated maturity value (apprx)
+              </Text>
+
+              <Text
+                size="sm"
+                c={
+                  interest >= 0
+                    ? "green"
+                    : "red"
+                }
+              >
+                {interest >= 0
+                  ? "+"
+                  : "-"}
                 ₹
-                {Math.round(
-                  interest
+                {Math.abs(
+                  Math.round(
+                    interest
+                  )
                 ).toLocaleString()}
               </Text>
             </Card>

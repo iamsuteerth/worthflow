@@ -24,14 +24,15 @@ export function isFdActive(
   fd: FixedDeposit,
   month: MonthKey
 ): boolean {
-  const maturityMonth = addMonths(
-    fd.startMonth,
-    fd.durationMonths - 1
-  );
+  const maturityMonth =
+    addMonths(
+      fd.startMonth,
+      fd.durationMonths
+    );
 
   return (
     month >= fd.startMonth &&
-    month <= maturityMonth
+    month < maturityMonth
   );
 }
 
@@ -120,5 +121,68 @@ export function updateFdPosition(
         1 + position.rate / 100,
         years
       ),
+  };
+}
+
+export function getElapsedMonths(
+  startMonth: MonthKey,
+  month: MonthKey
+): number {
+  const start =
+    new Date(`${startMonth}-01`);
+
+  const current =
+    new Date(`${month}-01`);
+
+  return (
+    (current.getFullYear() -
+      start.getFullYear()) *
+      12 +
+    (
+      current.getMonth() -
+      start.getMonth()
+    )
+  );
+}
+
+export function createHistoricalFdPosition(
+  fd: FixedDeposit,
+  forecastStart: MonthKey
+): FdPosition {
+  const elapsedMonths =
+    getElapsedMonths(
+      fd.startMonth,
+      forecastStart
+    );
+
+  const years =
+    elapsedMonths / 12;
+
+  return {
+    id: fd.id,
+
+    name: fd.name,
+
+    principal: fd.principal,
+
+    currentValue:
+      fd.principal *
+      Math.pow(
+        1 + fd.rate / 100,
+        years
+      ),
+
+    rate: fd.rate,
+
+    startMonth:
+      fd.startMonth,
+
+    maturityMonth:
+      addMonths(
+        fd.startMonth,
+        fd.durationMonths
+      ),
+
+    active: true,
   };
 }

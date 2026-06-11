@@ -40,6 +40,8 @@ import { exportPlan } from "../../engine/exportPlan";
 import { useRef } from "react";
 import { importPlan } from "../../engine/importPlan";
 
+import classes from "./ScenarioPanel.module.css";
+
 export default function ScenarioPanel() {
   const baseConfig =
     usePlannerStore(
@@ -108,12 +110,30 @@ export default function ScenarioPanel() {
     };
 
   return (
-    <Stack gap="lg">
+    <Stack gap="lg" >
       <Tabs
         defaultValue="expense"
       >
-        <Tabs.List>
-          <Tabs.Tab value="expense">
+        <Tabs.List
+          className={classes.tabsList}
+          style={{
+            flexWrap: "nowrap",
+            overflowX: "auto",
+            overflowY: "hidden",
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            '&::-webkit-scrollbar': {
+              display: 'none',
+            },
+            borderBottom: "1px solid #e9ecef",
+          }}
+        >
+          <Tabs.Tab
+            value="expense"
+            style={{
+              flexShrink: 0,
+            }}
+          >
             Expense
           </Tabs.Tab>
 

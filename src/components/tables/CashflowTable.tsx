@@ -62,7 +62,7 @@ export default function CashflowTable() {
   return (
     <ScrollArea>
       <Table
-        miw={800}
+        miw={1080}
         striped
         highlightOnHover
         verticalSpacing="sm"
@@ -82,6 +82,10 @@ export default function CashflowTable() {
             </Table.Th>
 
             <Table.Th>
+              Bonus
+            </Table.Th>
+
+            <Table.Th>
               Expenses
             </Table.Th>
 
@@ -95,6 +99,10 @@ export default function CashflowTable() {
 
             <Table.Th>
               Invest
+            </Table.Th>
+
+            <Table.Th>
+              Instruments
             </Table.Th>
 
             <Table.Th>
@@ -132,6 +140,25 @@ export default function CashflowTable() {
                       row.cashflow
                         .income
                     )}
+                  </Badge>
+                </Table.Td>
+
+                <Table.Td>
+                  <Badge
+                    color="green"
+                    variant="light"
+                  >
+                    {row.events
+                      .filter(
+                        (event) =>
+                          event.type ===
+                          "BONUS_INCOME"
+                      )
+                      .reduce(
+                        (sum, event) =>
+                          sum + event.amount,
+                        0
+                      )}
                   </Badge>
                 </Table.Td>
 
@@ -180,6 +207,47 @@ export default function CashflowTable() {
                       row.cashflow
                         .investmentAmount
                     )}
+                  </Badge>
+                </Table.Td>
+
+                <Table.Td>
+                  <Badge
+                    color="grape"
+                    variant="light"
+                  >
+                    {row.events
+                      .filter(
+                        (event) =>
+                          [
+                            "FD_CREATED",
+                            "FD_MATURED",
+                            "RD_CREATED",
+                            "RD_MATURED",
+                          ].includes(
+                            event.type
+                          )
+                      )
+                      .reduce(
+                        (sum, event) => {
+                          if (
+                            event.type ===
+                            "FD_CREATED" ||
+                            event.type ===
+                            "RD_CREATED"
+                          ) {
+                            return (
+                              sum -
+                              event.amount
+                            );
+                          }
+
+                          return (
+                            sum +
+                            event.amount
+                          );
+                        },
+                        0
+                      )}
                   </Badge>
                 </Table.Td>
 

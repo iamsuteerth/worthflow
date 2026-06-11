@@ -12,6 +12,7 @@ import {
   useSimulation,
 } from "../../hooks/useSimulation";
 import { formatMonth } from "../../engine/monthFormatting";
+import type { FinancialEvent } from "../../types/events";
 
 export default function NetWorthChart() {
   const result =
@@ -55,6 +56,8 @@ export default function NetWorthChart() {
           investmentCorpus,
 
           netWorth,
+
+          events: row.events,
 
           cashDelta:
             previous
@@ -115,6 +118,73 @@ export default function NetWorthChart() {
     }
 
     return "orange";
+  }
+
+  function getEventSummary(
+    events: FinancialEvent[]
+  ) {
+    const summary = {
+      bonus: 0,
+      expenses: 0,
+      fdCreated: 0,
+      fdMatured: 0,
+      rdCreated: 0,
+      rdMatured: 0,
+    };
+
+    events.forEach(
+      (event) => {
+        switch (
+        event.type
+        ) {
+          case "BONUS_INCOME":
+            summary.bonus +=
+              event.amount;
+            break;
+
+          case "ONE_OFF_EXPENSE":
+            summary.expenses +=
+              event.amount;
+            break;
+
+          case "FD_CREATED":
+            summary.fdCreated +=
+              event.amount;
+            break;
+
+          case "FD_MATURED":
+            summary.fdMatured +=
+              event.amount;
+            break;
+
+          case "RD_CREATED":
+            summary.rdCreated +=
+              event.amount;
+            break;
+
+          case "RD_MATURED":
+            summary.rdMatured +=
+              event.amount;
+            break;
+
+          case "SALARY_CHANGE":
+            break;
+        }
+      }
+    );
+
+    return summary;
+  }
+
+  function formatMoney(
+    value: number
+  ) {
+    return (
+      "₹" +
+      Math.round(
+        value
+      ).toLocaleString()
+    );
   }
 
   return (
@@ -182,6 +252,11 @@ export default function NetWorthChart() {
                 payload[0]
                   .payload;
 
+              const eventSummary =
+                getEventSummary(
+                  point.events
+                );
+
               return (
                 <Card
                   shadow="sm"
@@ -191,6 +266,108 @@ export default function NetWorthChart() {
                     <Text fw={700}>
                       {label}
                     </Text>
+
+                    {point.events.length > 0 && (
+                      <>
+                        <Text
+                          mt="xs"
+                          fw={700}
+                          size="sm"
+                        >
+                          Events
+                        </Text>
+
+                        {eventSummary.bonus >
+                          0 && (
+                            <Text
+                              size="xs"
+                              c="green"
+                            >
+                              Bonus Income
+                              {" • "}
+                              +
+                              {formatMoney(
+                                eventSummary.bonus
+                              )}
+                            </Text>
+                          )}
+
+                        {eventSummary.expenses >
+                          0 && (
+                            <Text
+                              size="xs"
+                              c="red"
+                            >
+                              Expenses
+                              {" • "}
+                              -
+                              {formatMoney(
+                                eventSummary.expenses
+                              )}
+                            </Text>
+                          )}
+
+                        {eventSummary.fdCreated >
+                          0 && (
+                            <Text
+                              size="xs"
+                              c="orange"
+                            >
+                              FD Created
+                              {" • "}
+                              -
+                              {formatMoney(
+                                eventSummary.fdCreated
+                              )}
+                            </Text>
+                          )}
+
+                        {eventSummary.fdMatured >
+                          0 && (
+                            <Text
+                              size="xs"
+                              c="green"
+                            >
+                              FD Matured
+                              {" • "}
+                              +
+                              {formatMoney(
+                                eventSummary.fdMatured
+                              )}
+                            </Text>
+                          )}
+
+                        {eventSummary.rdCreated >
+                          0 && (
+                            <Text
+                              size="xs"
+                              c="orange"
+                            >
+                              RD Contributions
+                              {" • "}
+                              -
+                              {formatMoney(
+                                eventSummary.rdCreated
+                              )}
+                            </Text>
+                          )}
+
+                        {eventSummary.rdMatured >
+                          0 && (
+                            <Text
+                              size="xs"
+                              c="green"
+                            >
+                              RD Matured
+                              {" • "}
+                              +
+                              {formatMoney(
+                                eventSummary.rdMatured
+                              )}
+                            </Text>
+                          )}
+                      </>
+                    )}
 
                     {point.isStartingPoint && (
                       <>

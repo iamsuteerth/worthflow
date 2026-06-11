@@ -21,13 +21,14 @@ function buildMonths(): {
   label: string;
 }[] {
   return Array.from(
-    { length: 60 },
+    { length: 180 },
     (_, index) => {
       const date =
         new Date();
 
       date.setMonth(
-        date.getMonth() +
+        date.getMonth() -
+        120 +
         index
       );
 

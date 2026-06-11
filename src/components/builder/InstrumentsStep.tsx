@@ -167,6 +167,8 @@ export default function InstrumentsStep() {
               fdDurationMonths
             }
             min={1}
+            max={120}
+            clampBehavior="strict"
             onChange={(v) =>
               setFdDurationMonths(
                 Number(v)
@@ -178,10 +180,10 @@ export default function InstrumentsStep() {
             disabled={
               !fdName.trim() ||
               fdPrincipal <=
-                0 ||
+              0 ||
               fdRate <= 0 ||
               fdDurationMonths <=
-                0
+              0
             }
             onClick={() => {
               addInstrument({
@@ -272,6 +274,8 @@ export default function InstrumentsStep() {
               rdDurationMonths
             }
             min={1}
+            max={120}
+            clampBehavior="strict"
             onChange={(v) =>
               setRdDurationMonths(
                 Number(v)
@@ -283,10 +287,10 @@ export default function InstrumentsStep() {
             disabled={
               !rdName.trim() ||
               rdContribution <=
-                0 ||
+              0 ||
               rdRate <= 0 ||
               rdDurationMonths <=
-                0
+              0
             }
             onClick={() => {
               addInstrument({
@@ -324,7 +328,7 @@ export default function InstrumentsStep() {
           {state
             .instruments
             .length ===
-          0 ? (
+            0 ? (
             <Text
               c="dimmed"
             >
@@ -381,7 +385,7 @@ export default function InstrumentsStep() {
 
                       <Table.Td>
                         {instrument.type ===
-                        "FD"
+                          "FD"
                           ? `₹${instrument.principal.toLocaleString()}`
                           : `₹${instrument.monthlyContribution.toLocaleString()}/month`}
                       </Table.Td>

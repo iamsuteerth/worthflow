@@ -29,20 +29,29 @@ export function calculateRdValue(
       start.getMonth()
     );
 
+  const contributionCount =
+    Math.min(
+      elapsedMonths,
+      position.durationMonths
+    );
+
   let value = 0;
 
   for (
     let i = 0;
-    i <= elapsedMonths;
+    i < contributionCount;
     i++
   ) {
     const years =
-      (elapsedMonths - i) / 12;
+      (contributionCount - 1 - i) /
+      12;
 
     value +=
       position.monthlyContribution *
       Math.pow(
-        1 + position.rate / 100,
+        1 +
+          position.rate /
+            100,
         years
       );
   }

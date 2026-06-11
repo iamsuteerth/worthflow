@@ -170,6 +170,19 @@ export default function PlannerShell({
                   "hidden",
               }}
             >
+              <div>
+                <Text fw={500}>
+                  Scenario Lab
+                </Text>
+
+                <Text
+                  size="sm"
+                  c="dimmed"
+                >
+                  Explore financial
+                  what-if scenarios.
+                </Text>
+              </div>
               <ScenarioPanel />
             </AppShell.Navbar>
           )}

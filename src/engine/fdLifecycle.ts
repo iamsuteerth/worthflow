@@ -47,7 +47,12 @@ export function processFdLifecycle(
 
       if (
         instrument.startMonth ===
-        month
+        month &&
+        !nextState.fds.some(
+          (fd) =>
+            fd.id ===
+            instrument.id
+        )
       ) {
         nextState.cash -=
           instrument.principal;

@@ -1,4 +1,5 @@
 import {
+  Box,
   Card,
   Tabs,
 } from "@mantine/core";
@@ -19,6 +20,8 @@ import InstrumentsTable
   from "../tables/InstrumentsTable";
 import OneOffExpensesTable from "../tables/OneOffExpenses";
 
+import classes from "./DashboardTabs.module.css";
+
 export default function DashboardTabs() {
   return (
     <Card
@@ -30,31 +33,55 @@ export default function DashboardTabs() {
       <Tabs
         defaultValue="forecast"
       >
-        <Tabs.List>
-          <Tabs.Tab value="forecast">
-            Forecast
-          </Tabs.Tab>
+        <Box
+          style={{
+            overflowX: 'auto',
+          }}
+        >
+          <Tabs.List
+            className={classes.tabsList}
+            style={{
+              flexWrap: "nowrap",
+              overflowY: "hidden",
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              '&::-webkit-scrollbar': {
+                display: 'none',
+              },
+              borderBottom: "1px solid #e9ecef",
+            }}
+          >
+            <Tabs.Tab
+              value="forecast"
+              style={{
+                flexShrink: 0,
+              }}
+            >
+              Forecast
+            </Tabs.Tab>
 
-          <Tabs.Tab value="cashflow">
-            Cashflow
-          </Tabs.Tab>
+            <Tabs.Tab value="cashflow">
+              Cashflow
+            </Tabs.Tab>
 
-          <Tabs.Tab value="networth">
-            Net Worth
-          </Tabs.Tab>
+            <Tabs.Tab value="networth">
+              Net Worth
+            </Tabs.Tab>
 
-          <Tabs.Tab value="instruments">
-            Instruments
-          </Tabs.Tab>
+            <Tabs.Tab value="instruments">
+              Instruments
+            </Tabs.Tab>
 
-          <Tabs.Tab value="expenses">
-            One-Offs
-          </Tabs.Tab>
+            <Tabs.Tab value="expenses">
+              One-Offs
+            </Tabs.Tab>
 
-          <Tabs.Tab value="timeline">
-            Timeline
-          </Tabs.Tab>
-        </Tabs.List>
+            <Tabs.Tab value="timeline">
+              Timeline
+            </Tabs.Tab>
+          </Tabs.List>
+
+        </Box>
 
         <Tabs.Panel
           value="forecast"

@@ -385,7 +385,18 @@ export const useBuilderStore =
 
                 instruments: [
                   ...store.state.instruments,
-                  instrument,
+                  {
+                    ...instrument,
+
+                    durationMonths:
+                      Math.min(
+                        120,
+                        Math.max(
+                          1,
+                          instrument.durationMonths
+                        )
+                      ),
+                  },
                 ],
               },
             })
