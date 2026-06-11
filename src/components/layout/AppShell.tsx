@@ -1,4 +1,5 @@
 import {
+  ActionIcon,
   AppShell,
   Burger,
   Drawer,
@@ -26,6 +27,11 @@ import {
   usePlannerStore,
 } from "../../store/plannerStore";
 
+import {
+  IconLogout,
+} from "@tabler/icons-react";
+import { useAuthStore } from "../../store/authStore";
+
 interface Props {
   children: ReactNode;
 }
@@ -44,6 +50,12 @@ export default function PlannerShell({
     usePlannerStore(
       (state) =>
         state.activeView
+    );
+
+  const logout =
+    useAuthStore(
+      (state) =>
+        state.logout
     );
 
   return (
@@ -131,7 +143,18 @@ export default function PlannerShell({
               </Stack>
             </Group>
 
-            <ThemeToggle />
+            <Group gap="xs">
+              <ThemeToggle />
+
+              <ActionIcon
+                variant="light"
+                onClick={logout}
+              >
+                <IconLogout
+                  size={18}
+                />
+              </ActionIcon>
+            </Group>
           </Group>
         </AppShell.Header>
 

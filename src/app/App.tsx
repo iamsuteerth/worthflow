@@ -1,16 +1,6 @@
-import PlannerShell
-  from "../components/layout/AppShell";
-
 import {
-  usePlannerStore,
-  type AppView,
-} from "../store/plannerStore";
-
-import ForecastPage
-  from "../pages/ForecastPage";
-
-import ConfigBuilderPage
-  from "../pages/ConfigBuilderPage";
+  useEffect,
+} from "react";
 
 import {
   Tabs,
@@ -20,6 +10,27 @@ import {
   IconChartLine,
   IconSettings,
 } from "@tabler/icons-react";
+
+import PlannerShell
+  from "../components/layout/AppShell";
+
+import LoginPage
+  from "../components/auth/LoginPage";
+
+import ForecastPage
+  from "../pages/ForecastPage";
+
+import ConfigBuilderPage
+  from "../pages/ConfigBuilderPage";
+
+import {
+  usePlannerStore,
+  type AppView,
+} from "../store/plannerStore";
+
+import {
+  useAuthStore,
+} from "../store/authStore";
 
 export default function App() {
   const activeView =
@@ -33,6 +44,41 @@ export default function App() {
       (state) =>
         state.setActiveView
     );
+
+  const authenticated =
+    useAuthStore(
+      (state) =>
+        state.authenticated
+    );
+
+  const restore =
+    useAuthStore(
+      (state) =>
+        state.restore
+    );
+
+  useEffect(() => {
+    restore();
+
+    const interval =
+      setInterval(
+        restore,
+        60_000
+      );
+
+    return () =>
+      clearInterval(
+        interval
+      );
+  }, [restore]);
+
+  if (
+    !authenticated
+  ) {
+    return (
+      <LoginPage />
+    );
+  }
 
   return (
     <PlannerShell>
