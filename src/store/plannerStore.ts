@@ -39,6 +39,12 @@ interface PlannerStore {
     label: string
   ) => void;
 
+  addTransientInvestmentOverride: (
+    startMonth: MonthKey,
+    endMonth: MonthKey,
+    amount: number
+  ) => void;
+
   addTransientFd: (
     month: MonthKey,
     principal: number,
@@ -133,6 +139,7 @@ export const usePlannerStore = create<PlannerStore>()(
             ),
           };
         }),
+
       addTransientCreditCardExpense: (
         month,
         amount,
@@ -159,6 +166,73 @@ export const usePlannerStore = create<PlannerStore>()(
                 amount,
 
                 label,
+              },
+            ],
+          };
+
+          return {
+            overrides,
+
+            config:
+              buildEffectiveConfig(
+                state.baseConfig,
+                overrides
+              ),
+          };
+        }),
+
+      addTransientInvestmentOverride: (
+        startMonth,
+        endMonth,
+        amount
+      ) =>
+        set((state) => {
+          const current =
+            state.overrides.runtimeEvents ?? [];
+
+          const existingOverrides =
+            current.filter(
+              (event) =>
+                event.type ===
+                "INVESTMENT_OVERRIDE"
+            );
+
+          const overlap =
+            existingOverrides.some(
+              (event) =>
+                !(
+                  endMonth <
+                  event.startMonth ||
+                  startMonth >
+                  event.endMonth
+                )
+            );
+
+          if (
+            overlap ||
+            startMonth >
+            endMonth
+          ) {
+            return state;
+          }
+
+          const overrides: PlannerOverrides = {
+            ...state.overrides,
+
+            runtimeEvents: [
+              ...current,
+
+              {
+                id: crypto.randomUUID(),
+
+                type:
+                  "INVESTMENT_OVERRIDE",
+
+                startMonth,
+
+                endMonth,
+
+                amount,
               },
             ],
           };

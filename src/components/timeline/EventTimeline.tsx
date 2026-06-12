@@ -83,6 +83,13 @@ function getEventIcon(
         />
       );
 
+    case "INVESTMENT_OVERRIDE":
+      return (
+        <IconTrendingUp
+          size={16}
+        />
+      );
+
     default:
       return (
         <IconCoins
@@ -119,6 +126,9 @@ function getEventLabel(
 
     case "RD_MATURED":
       return "RD Matured";
+
+    case "INVESTMENT_OVERRIDE":
+      return "Investment Change";
 
     default:
       return type;
@@ -159,6 +169,9 @@ function getEventColor(
 
     case "CREDIT_CARD_EXPENSE":
       return "orange";
+
+    case "INVESTMENT_OVERRIDE":
+      return "violet";
 
     default:
       return "gray";

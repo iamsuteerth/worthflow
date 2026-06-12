@@ -8,7 +8,8 @@ export type EventType =
   | "RD_MATURED"
   | "BONUS_INCOME"
   | "SALARY_CHANGE"
-  | "CREDIT_CARD_EXPENSE";
+  | "CREDIT_CARD_EXPENSE"
+  | "INVESTMENT_OVERRIDE";
 
 export interface FinancialEvent {
   id: string;

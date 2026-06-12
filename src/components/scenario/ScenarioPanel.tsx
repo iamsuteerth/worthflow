@@ -44,6 +44,7 @@ import { useRef } from "react";
 import { importPlan } from "../../engine/importPlan";
 
 import classes from "./ScenarioPanel.module.css";
+import AddInvestmentOverrideForm from "./AddInvestmentOverrideForm";
 
 export default function ScenarioPanel() {
   const baseConfig =
@@ -126,16 +127,6 @@ export default function ScenarioPanel() {
       >
         <Tabs.List
           className={classes.tabsList}
-          style={{
-            flexWrap: "nowrap",
-            overflowX: "auto",
-            overflowY: "hidden",
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            '&::-webkit-scrollbar': {
-              display: 'none',
-            },
-          }}
         >
           <Tabs.Tab
             value="expense"
@@ -144,6 +135,10 @@ export default function ScenarioPanel() {
             }}
           >
             Expense
+          </Tabs.Tab>
+
+          <Tabs.Tab value="investment">
+            Investment
           </Tabs.Tab>
 
           <Tabs.Tab value="card">
@@ -172,6 +167,13 @@ export default function ScenarioPanel() {
           pt="lg"
         >
           <AddExpenseForm />
+        </Tabs.Panel>
+
+        <Tabs.Panel
+          value="investment"
+          pt="lg"
+        >
+          <AddInvestmentOverrideForm />
         </Tabs.Panel>
 
         <Tabs.Panel

@@ -10,7 +10,7 @@ Build realistic financial plans, simulate life events, and understand how your w
 
 💵 Track cash, investments, FDs, and RDs
 
-🎯 Model real-life financial events, including salary cuts and job loss
+🎯 Model real-life financial events, including salary cuts, job loss, and investment changes
 
 🔄 Compare alternate scenarios
 
@@ -100,6 +100,7 @@ Create alternate futures without modifying your base forecast.
 * 🚫 Job Loss / Unemployment
 * 🎁 Bonus Income
 * 🏠 Major Purchases
+* 📈 Investment Contribution Changes
 * 🏦 New FDs
 * 🔁 New RDs
 * 🚨 Unexpected Expenses
@@ -163,13 +164,14 @@ Asset-level wealth tracking.
 
 View active FDs and RDs.
 
-### 🕒 Event Timeline
+## 🕒 Event Timeline
 
 Chronological view of:
 
 * Salary Changes
 * Bonuses
 * Expenses
+* Investment Changes
 * FD Events
 * RD Events
 
@@ -249,6 +251,7 @@ Theme preference is automatically saved.
 ### 📈 Investments
 
 * Investment Contributions
+* Investment Contribution Overrides
 
 ### 🏦 Deposits
 

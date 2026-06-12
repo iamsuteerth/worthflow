@@ -80,10 +80,23 @@ export interface RuntimeCreditCardExpense {
   label: string;
 }
 
+export interface RuntimeInvestmentOverride {
+  id: string;
+
+  type: "INVESTMENT_OVERRIDE";
+
+  startMonth: MonthKey;
+
+  endMonth: MonthKey;
+
+  amount: number;
+}
+
 export type RuntimeEvent =
   | RuntimeOneOffExpense
   | RuntimeFixedDeposit
   | RuntimeRecurringDeposit
   | RuntimeBonusIncome
   | RuntimeSalaryChange
-  | RuntimeCreditCardExpense;
+  | RuntimeCreditCardExpense
+  | RuntimeInvestmentOverride;

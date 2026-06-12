@@ -6,6 +6,10 @@ import type {
   PlannerOverrides,
 } from "../types/overrides";
 
+import type {
+  MonthKey,
+} from "../types/simulation";
+
 export function buildEffectiveConfig(
   baseConfig: PlannerConfig,
   overrides: PlannerOverrides
@@ -77,6 +81,60 @@ export function buildEffectiveConfig(
         label: event.label,
       })
     )
+  );
+
+  const investmentOverrides =
+    overrides.runtimeEvents?.filter(
+      (event) =>
+        event.type ===
+        "INVESTMENT_OVERRIDE"
+    ) ?? [];
+
+  investmentOverrides.forEach(
+    (event) => {
+      let current =
+        event.startMonth;
+
+      if (event.startMonth > event.endMonth) {
+        return;
+      }
+
+      while (
+        current <=
+        event.endMonth
+      ) {
+        config.investments.schedule[
+          current
+        ] = event.amount;
+
+        const [
+          year,
+          month,
+        ] = current
+          .split("-")
+          .map(Number);
+
+        const date =
+          new Date(
+            year,
+            month - 1,
+            1
+          );
+
+        date.setMonth(
+          date.getMonth() +
+          1
+        );
+
+        current = `${date.getFullYear()}-${String(
+          date.getMonth() +
+          1
+        ).padStart(
+          2,
+          "0"
+        )}` as MonthKey;
+      }
+    }
   );
 
   const fdEvents =

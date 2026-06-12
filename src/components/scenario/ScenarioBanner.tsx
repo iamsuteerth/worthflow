@@ -56,6 +56,12 @@ export default function ScenarioBanner() {
       (event) =>
         event.type === "RD"
     ).length,
+
+    investment: events.filter(
+      (event) =>
+        event.type ===
+        "INVESTMENT_OVERRIDE"
+    ).length,
   };
 
   return (
@@ -66,7 +72,11 @@ export default function ScenarioBanner() {
       withBorder
     >
       <Group
-        justify="space-between"
+        gap={6}
+        style={{
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+        }}
       >
         <div>
           <Text
@@ -149,6 +159,16 @@ export default function ScenarioBanner() {
               variant="light"
             >
               RD × {counts.rd}
+            </Badge>
+          )}
+
+          {counts.investment > 0 && (
+            <Badge
+              color="violet"
+              variant="light"
+            >
+              Investment ×{" "}
+              {counts.investment}
             </Badge>
           )}
         </Group>

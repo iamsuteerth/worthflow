@@ -41,7 +41,7 @@ export function buildCashflowEvents(
       (bill) =>
         bill.month === month
     )
-    .forEach((bill, _) => {
+    .forEach((bill) => {
       events.push({
         id: bill.id,
 

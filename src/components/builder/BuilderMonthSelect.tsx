@@ -4,10 +4,14 @@ import { formatMonth } from "../../engine/monthFormatting";
 
 interface Props {
   value: string | null;
-  onChange: (value: string | null) => void;
+  onChange: (
+    value: string | null
+  ) => void;
 
   label?: string;
+
   minMonth?: string;
+  maxMonth?: string;
 }
 
 function buildMonths(): {
@@ -37,12 +41,16 @@ export default function BuilderMonthSelect({
   onChange,
   label = "Month",
   minMonth,
+  maxMonth
 }: Props) {
-  const options = minMonth
-    ? MONTH_OPTIONS.filter(
-        (month) => month.value >= minMonth
-      )
-    : MONTH_OPTIONS;
+  const options =
+    MONTH_OPTIONS.filter(
+      (month) =>
+        (!minMonth ||
+          month.value >= minMonth) &&
+        (!maxMonth ||
+          month.value <= maxMonth)
+    );
 
   return (
     <Select

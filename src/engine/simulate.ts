@@ -26,6 +26,7 @@ import { createInitialState } from "./stateFactory";
 import { processInstrumentLifecycle } from "./instrumentLifecycle";
 
 import { buildCashflowEvents } from "./buildCashflowEvents";
+import type { PlannerOverrides } from "../types/overrides";
 
 export interface SimulationResult {
   rows: SimulationRow[];
@@ -33,7 +34,8 @@ export interface SimulationResult {
 }
 
 export function simulate(
-  config: PlannerConfig
+  config: PlannerConfig,
+  overrides?: PlannerOverrides
 ): SimulationResult {
   const months = generateMonths(
     config.forecast.startMonth,
@@ -155,29 +157,44 @@ export function simulate(
       totalOutflow,
     };
 
+    const investmentOverrideEvents =
+      overrides?.runtimeEvents
+        ?.filter(
+          (event) =>
+            event.type ===
+            "INVESTMENT_OVERRIDE"
+        )
+        .filter(
+          (event) =>
+            event.startMonth ===
+            month
+        )
+        .map(
+          (event) => ({
+            id: event.id,
+
+            month,
+
+            type:
+              "INVESTMENT_OVERRIDE" as const,
+
+            amount:
+              event.amount,
+
+            description:
+              `${event.startMonth} → ${event.endMonth}`,
+          })
+        ) ?? [];
+
     const events = [
       ...buildCashflowEvents(
         config,
         month
       ),
+      ...investmentOverrideEvents,
 
       ...lifecycle.events,
     ];
-
-    events.forEach(
-      (event) => {
-        if (
-          event.type ===
-          "RD_MATURED"
-        ) {
-          console.log(
-            "SIM EVENT",
-            month,
-            event.amount
-          );
-        }
-      }
-    );
 
     rows.push({
       month,

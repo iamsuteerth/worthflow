@@ -141,6 +141,26 @@ const RuntimeCreditCardExpenseSchema =
       z.string(),
   });
 
+const RuntimeInvestmentOverrideSchema =
+  z.object({
+    id: z.string(),
+
+    type:
+      z.literal(
+        "INVESTMENT_OVERRIDE"
+      ),
+
+    startMonth:
+      MonthKeySchema,
+
+    endMonth:
+      MonthKeySchema,
+
+    amount:
+      z.number()
+        .nonnegative(),
+  });
+
 const RuntimeFixedDepositSchema =
   z.object({
     id: z.string(),
@@ -225,6 +245,7 @@ const RuntimeEventSchema =
       RuntimeBonusIncomeSchema,
       RuntimeSalaryChangeSchema,
       RuntimeCreditCardExpenseSchema,
+      RuntimeInvestmentOverrideSchema,
     ]
   );
 

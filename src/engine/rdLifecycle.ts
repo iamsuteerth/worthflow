@@ -117,14 +117,6 @@ export function processRdLifecycle(
     );
 
   maturedRds.forEach((rd) => {
-    console.log(
-      "RD MATURE EVENT",
-      month,
-      rd.currentValue,
-      Math.round(
-        rd.currentValue
-      )
-    );
 
     nextState.cash +=
       rd.currentValue;

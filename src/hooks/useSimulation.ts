@@ -10,5 +10,13 @@ export function useSimulation() {
       (state) => state.config
     );
 
-  return simulate(config);
+  const overrides =
+    usePlannerStore(
+      (state) => state.overrides
+    );
+
+  return simulate(
+    config,
+    overrides
+  );
 }
