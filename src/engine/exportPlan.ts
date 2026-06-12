@@ -9,30 +9,54 @@ import type {
 import type {
   SavedScenario,
 } from "../types/scenario";
+
+import {
+  calculateChecksum,
+} from "./checksum";
+
 export interface ExportedPlan {
   baseConfig: PlannerConfig;
   overrides: PlannerOverrides;
   savedScenarios?: SavedScenario[];
 }
 
-export function exportPlan(
+export async function exportPlan(
   data: ExportedPlan
 ) {
+  const payload =
+    btoa(
+      JSON.stringify(data)
+    );
+
+  const exported = {
+    app:
+      "wealth-forecast",
+
+    version: 2,
+
+    exportedAt:
+      new Date().toISOString(),
+
+    payload,
+
+    checksum:
+      await calculateChecksum(
+        payload
+      ),
+  };
+
   const blob =
     new Blob(
       [
         JSON.stringify(
-          {
-            version: 1,
-            ...data,
-          },
+          exported,
           null,
           2
         ),
       ],
       {
         type:
-          "application/json",
+          "application/octet-stream",
       }
     );
 
@@ -50,7 +74,10 @@ export function exportPlan(
 
   link.download = `finance-plan-${new Date()
     .toISOString()
-    .slice(0, 10)}.json`;
+    .slice(
+      0,
+      10
+    )}.wfplan`;
 
   link.click();
 

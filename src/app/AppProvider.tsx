@@ -14,6 +14,7 @@ import {
   ThemeContext,
   type ColorScheme,
 } from "./theme-context";
+import { Notifications } from "@mantine/notifications";
 
 export function AppProvider({
   children,
@@ -75,6 +76,7 @@ export function AppProvider({
           colorScheme
         }
       >
+        <Notifications />
         {children}
       </MantineProvider>
     </ThemeContext.Provider>

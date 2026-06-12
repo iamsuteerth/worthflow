@@ -10,6 +10,10 @@ import { z } from "zod";
 import type { SavedScenario } from "../types/scenario";
 import type { MonthKey } from "../types/simulation";
 
+import {
+  calculateChecksum,
+} from "./checksum";
+
 const MonthKeySchema =
   z.custom<MonthKey>(
     (value) =>
@@ -159,7 +163,15 @@ const RuntimeInvestmentOverrideSchema =
     amount:
       z.number()
         .nonnegative(),
-  });
+  }).refine(
+    (value) =>
+      value.startMonth <=
+      value.endMonth,
+    {
+      message:
+        "Investment override start month must be before end month",
+    }
+  );
 
 const RuntimeFixedDepositSchema =
   z.object({
@@ -272,10 +284,28 @@ const SavedScenarioSchema =
       PlannerOverridesSchema,
   });
 
+const WfPlanSchema =
+  z.object({
+    app:
+      z.literal(
+        "wealth-forecast"
+      ),
+
+    version:
+      z.literal(2),
+
+    exportedAt:
+      z.string(),
+
+    payload:
+      z.string(),
+
+    checksum:
+      z.string(),
+  });
+
 const ImportedPlanSchema =
   z.object({
-    version:
-      z.literal(1),
 
     baseConfig: z.object({
       forecast:
@@ -382,25 +412,72 @@ export async function importPlan(
   overrides: PlannerOverrides;
   savedScenarios?: SavedScenario[];
 }> {
+  if (
+    !file.name.endsWith(
+      ".wfplan"
+    )
+  ) {
+    throw new Error(
+      "Invalid plan file"
+    );
+  }
   const text =
     await file.text();
 
-  const parsed =
-    JSON.parse(text);
-
-  const result =
-    ImportedPlanSchema.parse(
-      parsed
+  const wrapper =
+    WfPlanSchema.parse(
+      JSON.parse(text)
     );
 
-  return {
-    baseConfig:
-      result.baseConfig as PlannerConfig,
+  if (
+    wrapper.payload.length === 0
+  ) {
+    throw new Error(
+      "Empty plan"
+    );
+  }
 
-    overrides:
-      result.overrides as PlannerOverrides,
+  const checksum =
+    await calculateChecksum(
+      wrapper.payload
+    );
 
-    savedScenarios:
-      result.savedScenarios as SavedScenario[],
-  };
+  if (
+    checksum !==
+    wrapper.checksum
+  ) {
+    throw new Error(
+      "Invalid checksum"
+    );
+  }
+
+  const decoded =
+    JSON.parse(
+      atob(
+        wrapper.payload
+      )
+    );
+
+  try {
+    const result =
+      ImportedPlanSchema.parse(
+        decoded
+      );
+
+    return {
+      baseConfig:
+        result.baseConfig as PlannerConfig,
+
+      overrides:
+        result.overrides as PlannerOverrides,
+
+      savedScenarios:
+        result.savedScenarios as SavedScenario[],
+    };
+  }
+  catch {
+    throw new Error(
+      "Invalid Plan File"
+    );
+  }
 }

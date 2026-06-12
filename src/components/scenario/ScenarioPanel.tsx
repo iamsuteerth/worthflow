@@ -115,7 +115,7 @@ export default function ScenarioPanel() {
             "Import Failed",
 
           message:
-            "Invalid plan file",
+            "Invalid Plan File",
         });
       }
     };
@@ -214,7 +214,7 @@ export default function ScenarioPanel() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".json"
+        accept=".wfplan"
         hidden
         onChange={async (
           event
