@@ -2,227 +2,118 @@ import {
   ActionIcon,
   Badge,
   Button,
+  Card,
+  Divider,
   Group,
   Modal,
-  Paper,
+  SimpleGrid,
   Stack,
   Text,
   TextInput,
+  Tooltip,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconDeviceFloppy, IconFolderOpen, IconTrash } from "@tabler/icons-react";
+import { useMemo, useState } from "react";
+import { buildEffectiveConfig } from "../../engine/buildEffectiveConfig";
+import { simulate } from "../../engine/simulate";
+import { usePlannerStore } from "../../store/plannerStore";
 
-import {
-  useDisclosure,
-} from "@mantine/hooks";
-
-import {
-  IconDeviceFloppy,
-  IconTrash,
-  IconUpload,
-} from "@tabler/icons-react";
-
-import {
-  useState,
-  useMemo,
-} from "react";
-
-import {
-  usePlannerStore,
-} from "../../store/plannerStore";
-
-import { simulate }
-  from "../../engine/simulate";
-
-import { buildEffectiveConfig }
-  from "../../engine/buildEffectiveConfig";
+function DeltaStat({ label, value }: { label: string; value: number }) {
+  const color = value > 0 ? "green" : value < 0 ? "red" : "gray";
+  const sign = value >= 0 ? "+" : "-";
+  return (
+    <div>
+      <Text size="xs" c="dimmed">
+        {label}
+      </Text>
+      <Text
+        fw={600}
+        size="sm"
+        c={color}
+        style={{ fontVariantNumeric: "tabular-nums" }}
+      >
+        {sign}₹{Math.abs(Math.round(value)).toLocaleString()}
+      </Text>
+    </div>
+  );
+}
 
 export default function SavedScenarios() {
-  const scenarios =
-    usePlannerStore(
-      (state) =>
-        state.savedScenarios
-    );
+  const scenarios = usePlannerStore((state) => state.savedScenarios);
+  const baseConfig = usePlannerStore((state) => state.baseConfig);
+  const saveScenario = usePlannerStore((state) => state.saveScenario);
+  const loadScenario = usePlannerStore((state) => state.loadScenario);
+  const deleteScenario = usePlannerStore((state) => state.deleteScenario);
 
-  const baseConfig =
-    usePlannerStore(
-      (state) =>
-        state.baseConfig
-    );
+  const [opened, { open, close }] = useDisclosure(false);
+  const [scenarioName, setScenarioName] = useState("");
 
-  const saveScenario =
-    usePlannerStore(
-      (state) =>
-        state.saveScenario
-    );
+  const handleSave = () => {
+    const trimmed = scenarioName.trim();
+    if (!trimmed) return;
+    saveScenario(trimmed);
+    setScenarioName("");
+    close();
+  };
 
-  const loadScenario =
-    usePlannerStore(
-      (state) =>
-        state.loadScenario
-    );
-
-  const deleteScenario =
-    usePlannerStore(
-      (state) =>
-        state.deleteScenario
-    );
-
-  const [
-    opened,
-    { open, close },
-  ] = useDisclosure(
-    false
-  );
-
-  const [
-    scenarioName,
-    setScenarioName,
-  ] = useState("");
-
-  const handleSave =
-    () => {
-      const trimmed =
-        scenarioName.trim();
-
-      if (!trimmed) {
-        return;
-      }
-
-      saveScenario(
-        trimmed
-      );
-
-      setScenarioName(
-        ""
-      );
-
-      close();
-    };
-
-  function formatDelta(
-    value: number
-  ) {
-    const sign =
-      value >= 0
-        ? "+"
-        : "-";
-
-    return (
-      sign +
-      "₹" +
-      Math.abs(
-        Math.round(value)
-      ).toLocaleString()
-    );
-  }
-
-  function deltaColor(
-    value: number
-  ) {
-    if (value > 0) {
-      return "green";
-    }
-
-    if (value < 0) {
-      return "red";
-    }
-
-    return "gray";
-  }
-
-  const scenarioComparisons =
-    useMemo(() => {
-      const baseResult =
-        simulate(
-          baseConfig
+  const scenarioComparisons = useMemo(() => {
+    const baseResult = simulate(baseConfig);
+    return Object.fromEntries(
+      scenarios.map((scenario) => {
+        const scenarioResult = simulate(
+          buildEffectiveConfig(baseConfig, scenario.overrides)
         );
-
-      return Object.fromEntries(
-        scenarios.map(
-          (scenario) => {
-            const scenarioResult =
-              simulate(
-                buildEffectiveConfig(
-                  baseConfig,
-                  scenario.overrides
-                )
-              );
-
-            return [
-              scenario.id,
-              {
-                netWorth:
-                  scenarioResult.summary.finalNetWorth -
-                  baseResult.summary.finalNetWorth,
-
-                cash:
-                  scenarioResult.summary.finalBalance -
-                  baseResult.summary.finalBalance,
-
-                lowestCash:
-                  scenarioResult.summary.lowestBalance -
-                  baseResult.summary.lowestBalance,
-              },
-            ];
-          }
-        )
-      );
-    }, [
-      scenarios,
-      baseConfig,
-    ]);
+        return [
+          scenario.id,
+          {
+            netWorth:
+              scenarioResult.summary.finalNetWorth - baseResult.summary.finalNetWorth,
+            cash:
+              scenarioResult.summary.finalBalance - baseResult.summary.finalBalance,
+            lowestCash:
+              scenarioResult.summary.lowestBalance - baseResult.summary.lowestBalance,
+          },
+        ];
+      })
+    );
+  }, [scenarios, baseConfig]);
 
   return (
     <>
       <Modal
         opened={opened}
         onClose={() => {
-          setScenarioName(
-            ""
-          );
-
+          setScenarioName("");
           close();
         }}
         title="Save Scenario"
         centered
+        size="sm"
       >
-        <Stack>
+        <Stack gap="sm">
           <TextInput
             label="Scenario Name"
-            placeholder="Promotion Plan"
-            value={
-              scenarioName
-            }
-            onChange={(
-              event
-            ) =>
-              setScenarioName(
-                event
-                  .currentTarget
-                  .value
-              )
-            }
+            placeholder="e.g. Promotion Plan"
+            value={scenarioName}
+            onChange={(event) => setScenarioName(event.currentTarget.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSave()}
+            autoFocus
           />
-
-          <Group
-            justify="flex-end"
-          >
+          <Group justify="flex-end" gap="xs">
             <Button
               variant="default"
               onClick={() => {
-                setScenarioName(
-                  ""
-                );
-
+                setScenarioName("");
                 close();
               }}
             >
               Cancel
             </Button>
-
             <Button
-              onClick={
-                handleSave
-              }
+              onClick={handleSave}
+              disabled={!scenarioName.trim()}
+              leftSection={<IconDeviceFloppy size={16} />}
             >
               Save
             </Button>
@@ -230,172 +121,80 @@ export default function SavedScenarios() {
         </Stack>
       </Modal>
 
-      <Stack gap="xs">
-        <Group
-          justify="space-between"
-        >
-          <Text fw={600}>
+      <Stack gap="sm">
+        <Group justify="space-between">
+          <Text fw={600} size="sm">
             Saved Scenarios
           </Text>
-
           <Button
             size="xs"
-            leftSection={
-              <IconDeviceFloppy
-                size={14}
-              />
-            }
-            onClick={
-              open
-            }
+            variant="light"
+            leftSection={<IconDeviceFloppy size={14} />}
+            onClick={open}
           >
-            Save
+            Save current
           </Button>
         </Group>
 
-        {scenarios.length ===
-          0 ? (
-          <Paper
-            withBorder
-            radius="md"
-            p="sm"
-          >
-            <Text
-              size="sm"
-              c="dimmed"
-            >
-              No saved scenarios
+        {scenarios.length === 0 ? (
+          <Card withBorder radius="md" p="md">
+            <Text size="sm" c="dimmed" ta="center">
+              No saved scenarios yet.
             </Text>
-          </Paper>
+          </Card>
         ) : (
-          scenarios.map(
-            (
-              scenario
-            ) => (
-              <Paper
-                key={
-                  scenario.id
-                }
-                withBorder
-                radius="md"
-                p="sm"
-              >
-                <Group
-                  justify="space-between"
-                  align="center"
-                >
-                  <Stack
-                    gap={2}
-                  >
-                    <Group gap="xs">
-                      <Text fw={600}>
-                        {scenario.name}
-                      </Text>
+          scenarios.map((scenario) => {
+            const comparison = scenarioComparisons[scenario.id];
+            const changeCount = scenario.overrides.runtimeEvents?.length ?? 0;
 
-                      <Badge
-                        size="sm"
+            return (
+              <Card key={scenario.id} withBorder radius="md" p="md">
+                <Group justify="space-between" align="flex-start" mb="xs">
+                  <Group gap="xs">
+                    <Text fw={700} size="sm">
+                      {scenario.name}
+                    </Text>
+                    <Badge size="sm" variant="light" color="gray">
+                      {changeCount} change{changeCount !== 1 ? "s" : ""}
+                    </Badge>
+                  </Group>
+                  <Group gap={4}>
+                    <Tooltip label="Load scenario">
+                      <ActionIcon
                         variant="light"
+                        color="blue"
+                        size="sm"
+                        onClick={() => loadScenario(scenario.id)}
                       >
-                        {(scenario.overrides.runtimeEvents?.length ?? 0)}
-                        {" "}
-                        changes
-                      </Badge>
-                    </Group>
-                    {(() => {
-                      const comparison =
-                        scenarioComparisons[
-                        scenario.id
-                        ];
-
-                      if (
-                        !comparison
-                      ) {
-                        return null;
-                      }
-
-                      return (
-                        <Group
-                          justify="start"
-                          mt="xs"
-                        >
-                          <Stack gap={0}>
-                            <Text size="xs" c="dimmed">
-                              Net Worth
-                            </Text>
-
-                            <Text
-                              fw={500}
-                              c={deltaColor(comparison.netWorth)}
-                            >
-                              {formatDelta(comparison.netWorth)}
-                            </Text>
-                          </Stack>
-
-                          <Stack gap={0}>
-                            <Text size="xs" c="dimmed">
-                              Cash
-                            </Text>
-
-                            <Text
-                              fw={500}
-                              c={deltaColor(comparison.cash)}
-                            >
-                              {formatDelta(comparison.cash)}
-                            </Text>
-                          </Stack>
-
-                          <Stack gap={0}>
-                            <Text size="xs" c="dimmed">
-                              Lowest Cash
-                            </Text>
-
-                            <Text
-                              fw={500}
-                              c={deltaColor(comparison.lowestCash)}
-                            >
-                              {formatDelta(comparison.lowestCash)}
-                            </Text>
-                          </Stack>
-                        </Group>
-                      );
-                    })()}
-                  </Stack>
-
-                  <Group
-                    gap={4}
-                  >
-                    <ActionIcon
-                      variant="light"
-                      color="blue"
-                      onClick={() =>
-                        loadScenario(
-                          scenario.id
-                        )
-                      }
-                    >
-                      <IconUpload
-                        size={14}
-                      />
-                    </ActionIcon>
-
-                    <ActionIcon
-                      variant="light"
-                      color="red"
-                      onClick={() =>
-                        deleteScenario(
-                          scenario.id
-                        )
-                      }
-                    >
-                      <IconTrash
-                        size={14}
-                      />
-                    </ActionIcon>
+                        <IconFolderOpen size={14} />
+                      </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label="Delete scenario">
+                      <ActionIcon
+                        variant="light"
+                        color="red"
+                        size="sm"
+                        onClick={() => deleteScenario(scenario.id)}
+                      >
+                        <IconTrash size={14} />
+                      </ActionIcon>
+                    </Tooltip>
                   </Group>
                 </Group>
-              </Paper>
-            )
-          )
+
+                {comparison && (
+                  <>
+                    <Divider mb="xs" />
+                    <SimpleGrid cols={3} spacing="xs">
+                      <DeltaStat label="Net Worth" value={comparison.netWorth} />
+                      <DeltaStat label="Final Cash" value={comparison.cash} />
+                      <DeltaStat label="Lowest Cash" value={comparison.lowestCash} />
+                    </SimpleGrid>
+                  </>
+                )}
+              </Card>
+            );
+          })
         )}
       </Stack>
     </>

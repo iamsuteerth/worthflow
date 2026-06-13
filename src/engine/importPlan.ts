@@ -173,6 +173,69 @@ const RuntimeInvestmentOverrideSchema =
     }
   );
 
+const RuntimeInvestmentReturnOverrideSchema =
+  z.object({
+    id: z.string(),
+
+    type:
+      z.literal(
+        "INVESTMENT_RETURN_OVERRIDE"
+      ),
+
+    startMonth:
+      MonthKeySchema,
+
+    endMonth:
+      MonthKeySchema,
+
+    annualReturn:
+      z.number()
+        .min(-99.99)
+        .max(100),
+  }).refine(
+    (value) =>
+      value.startMonth <=
+      value.endMonth,
+    {
+      message:
+        "Return override start month must be before end month",
+    }
+  );
+
+const RuntimeInvestmentDepositSchema =
+  z.object({
+    id: z.string(),
+
+    type:
+      z.literal(
+        "INVESTMENT_DEPOSIT"
+      ),
+
+    month:
+      MonthKeySchema,
+
+    amount:
+      z.number()
+        .positive(),
+  });
+
+const RuntimeInvestmentWithdrawalSchema =
+  z.object({
+    id: z.string(),
+
+    type:
+      z.literal(
+        "INVESTMENT_WITHDRAWAL"
+      ),
+
+    month:
+      MonthKeySchema,
+
+    amount:
+      z.number()
+        .positive(),
+  });
+
 const RuntimeFixedDepositSchema =
   z.object({
     id: z.string(),
@@ -258,6 +321,9 @@ const RuntimeEventSchema =
       RuntimeSalaryChangeSchema,
       RuntimeCreditCardExpenseSchema,
       RuntimeInvestmentOverrideSchema,
+      RuntimeInvestmentReturnOverrideSchema,
+      RuntimeInvestmentDepositSchema,
+      RuntimeInvestmentWithdrawalSchema
     ]
   );
 
@@ -356,6 +422,27 @@ const ImportedPlanSchema =
             z.record(
               MonthKeySchema,
               z.number()
+            ),
+
+          defaultAnnualReturn:
+            z.number()
+              .min(-99.99)
+              .max(100),
+
+          returnOverrides:
+            z.array(
+              z.object({
+                startMonth:
+                  MonthKeySchema,
+
+                endMonth:
+                  MonthKeySchema,
+
+                annualReturn:
+                  z.number()
+                    .min(-99.99)
+                    .max(100),
+              }),
             ),
         }),
 

@@ -83,3 +83,24 @@ export function getBonusIncome(
       0
     );
 }
+
+export function getInvestmentReturn(
+  config: PlannerConfig,
+  month: MonthKey
+): number {
+  const override =
+    config.investments.returnOverrides.find(
+      (entry) =>
+        month >=
+          entry.startMonth &&
+        month <=
+          entry.endMonth
+    );
+
+  return (
+    override
+      ?.annualReturn ??
+    config.investments
+      .defaultAnnualReturn
+  );
+}

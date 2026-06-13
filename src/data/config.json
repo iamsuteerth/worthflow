@@ -17,6 +17,7 @@
   },
   "investments": {
     "openingCorpus": 236000,
+    "defaultAnnualReturn": 0,
     "schedule": {
       "2026-07": 40000,
       "2026-08": 40000,
@@ -52,7 +53,8 @@
       "2029-02": 35000,
       "2029-03": 35000,
       "2029-04": 30000
-    }
+    },
+    "returnOverrides": []
   },
   "creditCardBills": [
     {

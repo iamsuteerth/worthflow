@@ -8,7 +8,6 @@ import {
 } from "@mantine/core";
 
 import {
-  IconBuildingBank,
   IconChartLine,
   IconCoins,
   IconWallet,
@@ -18,10 +17,6 @@ import {
   useSimulation,
 } from "../hooks/useSimulation";
 
-import {
-  usePlannerStore,
-} from "../store/plannerStore";
-
 import type {
   ReactNode,
 } from "react";
@@ -30,10 +25,12 @@ function MetricCard({
   title,
   value,
   icon,
+  negative = false,
 }: {
   title: string;
   value: string;
   icon: ReactNode;
+  negative?: boolean;
 }) {
   return (
     <Card
@@ -62,10 +59,10 @@ function MetricCard({
             title === "Net Worth"
               ? "green"
               : title === "Cash"
-              ? "blue"
-              : title === "Investments"
-              ? "grape"
-              : "orange"
+                ? "blue"
+                : title === "Investments"
+                  ? "grape"
+                  : "orange"
           }
         >
           {icon}
@@ -75,6 +72,11 @@ function MetricCard({
       <Title
         order={2}
         fw={700}
+        c={
+          negative
+            ? "red.6"
+            : undefined
+        }
       >
         {value}
       </Title>
@@ -94,11 +96,11 @@ export default function SummaryCards() {
   const result =
     useSimulation();
 
-  const config =
-    usePlannerStore(
-      (state) =>
-        state.config
-    );
+  if (
+    result.rows.length === 0
+  ) {
+    return null;
+  }
 
   const finalRow =
     result.rows[
@@ -119,6 +121,10 @@ export default function SummaryCards() {
             finalRow.assets
               .netWorth
           ).toLocaleString()}`}
+          negative={
+            finalRow.assets
+              .netWorth < 0
+          }
           icon={
             <IconChartLine
               size={18}
@@ -139,6 +145,10 @@ export default function SummaryCards() {
             finalRow.assets
               .cash
           ).toLocaleString()}`}
+          negative={
+            finalRow.assets
+              .cash < 0
+          }
           icon={
             <IconWallet
               size={18}
@@ -159,6 +169,11 @@ export default function SummaryCards() {
             finalRow.assets
               .investmentCorpus
           ).toLocaleString()}`}
+          negative={
+            finalRow.assets
+              .investmentCorpus <
+            0
+          }
           icon={
             <IconCoins
               size={18}
@@ -174,13 +189,23 @@ export default function SummaryCards() {
         }}
       >
         <MetricCard
-          title="Instruments"
-          value={String(
-            config.instruments
-              .length
-          )}
+          title="XIRR"
+          value={
+            result.summary
+              .xirr === null
+              ? "N/A"
+              : `${result.summary.xirr.toFixed(
+                  2
+                )}%`
+          }
+          negative={
+            result.summary
+              .xirr !== null &&
+            result.summary
+              .xirr < 0
+          }
           icon={
-            <IconBuildingBank
+            <IconChartLine
               size={18}
             />
           }

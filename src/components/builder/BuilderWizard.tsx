@@ -1,227 +1,125 @@
 import {
+  Box,
   Button,
   Group,
-  Text,
   Progress,
   Stepper,
-  Box,
+  Text,
 } from "@mantine/core";
-
-import {
-  useState,
-} from "react";
-
-import ForecastStep
-  from "./ForecastStep";
-
-import BaselineStep
-  from "./BaselineStep";
-
-import InvestmentsStep
-  from "./InvestmentsStep";
-
-import EventsStep
-  from "./EventsStep";
-
-import InstrumentsStep
-  from "./InstrumentsStep";
-
-import ReviewStep
-  from "./ReviewStep";
+import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
+import { useState } from "react";
 import { useBuilderStore } from "../../store/builderStore";
+import BaselineStep from "./BaselineStep";
+import EventsStep from "./EventsStep";
+import ForecastStep from "./ForecastStep";
+import InstrumentsStep from "./InstrumentsStep";
+import InvestmentsStep from "./InvestmentsStep";
+import ReviewStep from "./ReviewStep";
+
+const STEPS = [
+  { label: "Forecast", description: "Timeline" },
+  { label: "Baseline", description: "Income & Cash" },
+  { label: "Investments", description: "Recurring" },
+  { label: "Events", description: "Bonuses & Expenses" },
+  { label: "Instruments", description: "FD & RD" },
+  { label: "Review", description: "Generate" },
+];
 
 export default function BuilderWizard() {
-  const [
-    active,
-    setActive,
-  ] = useState(0);
+  const [active, setActive] = useState(0);
 
-  const builderState =
-    useBuilderStore(
-      (store) =>
-        store.state
-    );
+  const builderState = useBuilderStore((store) => store.state);
 
-  const nextStep = () =>
-    setActive(
-      (current) =>
-        Math.min(
-          current + 1,
-          5
-        )
-    );
+  const nextStep = () => setActive((current) => Math.min(current + 1, 5));
+  const prevStep = () => setActive((current) => Math.max(current - 1, 0));
 
-  const prevStep =
-    () =>
-      setActive(
-        (current) =>
-          Math.max(
-            current - 1,
-            0
-          )
-      );
+  const isCurrentStepValid = (() => {
+    switch (active) {
+      case 0:
+        return (
+          !!builderState.startMonth &&
+          builderState.totalMonths >= 12 &&
+          builderState.totalMonths <= 48
+        );
+      case 1:
+        return (
+          builderState.monthlyIncome >= 1000 &&
+          builderState.defaultMonthlyExpense >= 0 &&
+          builderState.openingCash >= 0 &&
+          builderState.openingInvestmentCorpus >= 0
+        );
+      case 2:
+        return builderState.investmentRanges.length > 0;
+      case 3:
+      case 4:
+      case 5:
+        return true;
+      default:
+        return false;
+    }
+  })();
 
-  const isCurrentStepValid =
-    (() => {
-      switch (active) {
-        case 0:
-          return (
-            !!builderState.startMonth &&
-            builderState.totalMonths >= 12 &&
-            builderState.totalMonths <= 48
-          );
-
-        case 1:
-          return (
-            builderState.monthlyIncome >= 1000 &&
-            builderState.defaultMonthlyExpense >= 0 &&
-            builderState.openingCash >= 0 &&
-            builderState.openingInvestmentCorpus >= 0
-          );
-
-        case 2:
-          return (
-            builderState.investmentRanges
-              .length > 0
-          );
-
-        case 3:
-          return true;
-
-        case 4:
-          return true;
-
-        case 5:
-          return true;
-
-        default:
-          return false;
-      }
-    })();
+  const stepContent = [
+    <ForecastStep />,
+    <BaselineStep />,
+    <InvestmentsStep />,
+    <EventsStep />,
+    <InstrumentsStep />,
+    <ReviewStep />,
+  ];
 
   return (
     <>
       <Stepper
         active={active}
-        allowNextStepsSelect={
-          false
-        }
+        allowNextStepsSelect={false}
         visibleFrom="md"
+        styles={{
+          stepLabel: { fontWeight: 600 },
+          stepDescription: { fontSize: 12 },
+        }}
       >
-        <Stepper.Step
-          label="Forecast"
-          description="Timeline"
-        >
-          <ForecastStep />
-        </Stepper.Step>
-
-        <Stepper.Step
-          label="Baseline"
-          description="Income & Cash"
-        >
-          <BaselineStep />
-        </Stepper.Step>
-
-        <Stepper.Step
-          label="Investments"
-          description="Recurring Investments"
-        >
-          <InvestmentsStep />
-        </Stepper.Step>
-
-        <Stepper.Step
-          label="Events"
-          description="Bonuses & Expenses"
-        >
-          <EventsStep />
-        </Stepper.Step>
-
-        <Stepper.Step
-          label="Instruments"
-          description="FD & RD"
-        >
-          <InstrumentsStep />
-        </Stepper.Step>
-
-        <Stepper.Step
-          label="Review"
-          description="Generate"
-        >
-          <ReviewStep />
-        </Stepper.Step>
+        {STEPS.map((step) => (
+          <Stepper.Step key={step.label} label={step.label} description={step.description} />
+        ))}
       </Stepper>
 
-      <Box hiddenFrom="md">
-        <Text
-          ta="center"
-          fw={600}
-          mb="xs"
-        >
-          Step {active + 1} of 6
-        </Text>
+      <Box visibleFrom="md">{stepContent[active]}</Box>
 
+      <Box hiddenFrom="md">
+        <Group justify="space-between" mb={4}>
+          <Text size="sm" fw={600} c="dimmed">
+            Step {active + 1} of 6
+          </Text>
+          <Text size="sm" fw={700}>
+            {STEPS[active].label}
+          </Text>
+        </Group>
         <Progress
-          value={
-            ((active + 1) / 6) *
-            100
-          }
-          size="lg"
+          value={((active + 1) / 6) * 100}
+          size="sm"
           radius="xl"
           mb="lg"
+          color="indigo"
         />
-
-        {active === 0 && (
-          <ForecastStep />
-        )}
-
-        {active === 1 && (
-          <BaselineStep />
-        )}
-
-        {active === 2 && (
-          <InvestmentsStep />
-        )}
-
-        {active === 3 && (
-          <EventsStep />
-        )}
-
-        {active === 4 && (
-          <InstrumentsStep />
-        )}
-
-        {active === 5 && (
-          <ReviewStep />
-        )}
+        {stepContent[active]}
       </Box>
 
-      <Group
-        justify="center"
-        gap="xl"
-        mt="xl"
-      >
+      <Group justify="center" gap="md" mt="xl" pb="xl">
         <Button
           variant="default"
-          disabled={
-            active === 0
-          }
-          onClick={
-            prevStep
-          }
+          disabled={active === 0}
+          onClick={prevStep}
+          leftSection={<IconArrowLeft size={16} />}
         >
           Back
         </Button>
-
         <Button
-          onClick={
-            nextStep
-          }
-          disabled={
-            active === 5 ||
-            !isCurrentStepValid
-          }
+          onClick={nextStep}
+          disabled={active === 5 || !isCurrentStepValid}
+          rightSection={<IconArrowRight size={16} />}
         >
-          Next
+          {active === 4 ? "Review" : "Next"}
         </Button>
       </Group>
     </>

@@ -23,9 +23,17 @@ export interface ExpenseConfig {
   overrides: Record<string, number>;
 }
 
+export interface InvestmentReturnOverride {
+  startMonth: MonthKey;
+  endMonth: MonthKey;
+  annualReturn: number;
+}
+
 export interface InvestmentConfig {
   openingCorpus: number;
   schedule: Record<string, number>;
+  defaultAnnualReturn: number;
+  returnOverrides: InvestmentReturnOverride[];
 }
 
 export interface OneOffExpense {

@@ -9,7 +9,10 @@ export type EventType =
   | "BONUS_INCOME"
   | "SALARY_CHANGE"
   | "CREDIT_CARD_EXPENSE"
-  | "INVESTMENT_OVERRIDE";
+  | "INVESTMENT_OVERRIDE"
+  | "INVESTMENT_RETURN_OVERRIDE"
+  | "INVESTMENT_DEPOSIT"
+  | "INVESTMENT_WITHDRAWAL";
 
 export interface FinancialEvent {
   id: string;

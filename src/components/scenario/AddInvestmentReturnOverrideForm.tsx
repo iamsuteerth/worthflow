@@ -1,15 +1,15 @@
 import { Alert, Button, Grid, NumberInput, Stack, Text } from "@mantine/core";
-import { IconAlertCircle, IconChartLine } from "@tabler/icons-react";
+import { IconAlertCircle, IconTrendingUp } from "@tabler/icons-react";
 import { useState } from "react";
 import { generateMonths } from "../../engine/dateUtils";
 import { usePlannerStore } from "../../store/plannerStore";
 import type { MonthKey } from "../../types/simulation";
 import MonthSelect from "../common/MonthSelect";
 
-export default function AddInvestmentOverrideForm() {
+export default function AddInvestmentReturnOverrideForm() {
   const config = usePlannerStore((state) => state.config);
-  const addInvestmentOverride = usePlannerStore(
-    (state) => state.addTransientInvestmentOverride
+  const addReturnOverride = usePlannerStore(
+    (state) => state.addTransientInvestmentReturnOverride
   );
   const runtimeEvents = usePlannerStore((state) => state.overrides.runtimeEvents);
 
@@ -19,25 +19,25 @@ export default function AddInvestmentOverrideForm() {
 
   const [startMonth, setStartMonth] = useState<MonthKey | null>(forecastStart);
   const [endMonth, setEndMonth] = useState<MonthKey | null>(forecastStart);
-  const [amount, setAmount] = useState(0);
+  const [annualReturn, setAnnualReturn] = useState(0);
 
   const validRange = !!startMonth && !!endMonth && startMonth <= endMonth;
 
-  const investmentOverrides = (runtimeEvents ?? []).filter(
-    (event) => event.type === "INVESTMENT_OVERRIDE"
+  const existing = (runtimeEvents ?? []).filter(
+    (event) => event.type === "INVESTMENT_RETURN_OVERRIDE"
   );
 
   const overlap =
     !!startMonth &&
     !!endMonth &&
-    investmentOverrides.some(
+    existing.some(
       (event) => !(endMonth < event.startMonth || startMonth > event.endMonth)
     );
 
   return (
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
-        Override the monthly investment amount for a date range. Use ₹0 to temporarily pause investing.
+        Override portfolio growth assumptions for a date range.
       </Text>
 
       <Grid gap="sm">
@@ -62,12 +62,13 @@ export default function AddInvestmentOverrideForm() {
       </Grid>
 
       <NumberInput
-        label="Monthly Investment"
-        value={amount}
-        min={0}
-        thousandSeparator=","
-        prefix="₹"
-        onChange={(value) => setAmount(Number(value))}
+        label="Annual Return"
+        value={annualReturn}
+        min={-99.99}
+        max={100}
+        decimalScale={2}
+        suffix="%"
+        onChange={(value) => setAnnualReturn(Number(value))}
       />
 
       {!validRange && startMonth && endMonth && (
@@ -78,21 +79,21 @@ export default function AddInvestmentOverrideForm() {
 
       {overlap && (
         <Alert icon={<IconAlertCircle size={16} />} color="orange" variant="light" p="xs">
-          This range overlaps an existing investment override.
+          This range overlaps an existing return override.
         </Alert>
       )}
 
       <Button
-        leftSection={<IconChartLine size={16} />}
-        color="violet"
-        disabled={!validRange || overlap || amount < 0}
+        leftSection={<IconTrendingUp size={16} />}
+        color="indigo"
+        disabled={!validRange || overlap || annualReturn < -99.99 || annualReturn > 100}
         onClick={() => {
           if (!startMonth || !endMonth) return;
-          addInvestmentOverride(startMonth, endMonth, amount);
-          setAmount(0);
+          addReturnOverride(startMonth, endMonth, annualReturn);
+          setAnnualReturn(0);
         }}
       >
-        Add Investment Override
+        Add Return Override
       </Button>
     </Stack>
   );

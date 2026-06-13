@@ -49,8 +49,8 @@ export interface BuilderState {
 
   openingCash: number;
   openingInvestmentCorpus: number;
-
   defaultMonthlyExpense: number;
+  defaultAnnualReturn: number;
 
   investmentRanges: InvestmentRange[];
 

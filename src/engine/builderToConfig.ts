@@ -92,6 +92,11 @@ export function builderToConfig(
 
       schedule:
         investmentSchedule,
+
+      defaultAnnualReturn:
+        state.defaultAnnualReturn,
+
+      returnOverrides: [],
     },
 
     creditCardBills:

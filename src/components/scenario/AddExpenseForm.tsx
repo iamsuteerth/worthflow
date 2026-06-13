@@ -1,57 +1,22 @@
-import {
-  Button,
-  NumberInput,
-  Stack,
-  TextInput,
-} from "@mantine/core";
-
+import { Button, NumberInput, Stack, TextInput } from "@mantine/core";
+import { IconBolt } from "@tabler/icons-react";
 import { useState } from "react";
-
-import { usePlannerStore }
-  from "../../store/plannerStore";
-
-import MonthSelect
-  from "../common/MonthSelect";
-
+import { usePlannerStore } from "../../store/plannerStore";
+import MonthSelect from "../common/MonthSelect";
 import type { MonthKey } from "../../types/simulation";
 
 export default function AddExpenseForm() {
-  const addExpense =
-    usePlannerStore(
-      (state) =>
-        state.addTransientOneOffExpense
-    );
+  const addExpense = usePlannerStore((state) => state.addTransientOneOffExpense);
 
-  const [
-    month,
-    setMonth,
-  ] = useState<
-    MonthKey | null
-  >(
-    "2027-01"
-  );
-
-  const [
-    amount,
-    setAmount,
-  ] = useState<number>(
-    10000
-  );
-
-  const [
-    label,
-    setLabel,
-  ] = useState("");
+  const [month, setMonth] = useState<MonthKey | null>("2027-01");
+  const [amount, setAmount] = useState<number>(10000);
+  const [label, setLabel] = useState("");
 
   return (
-    <Stack>
+    <Stack gap="sm">
       <MonthSelect
         value={month}
-        onChange={(value) =>
-          setMonth(
-            value as MonthKey | null
-          )
-        }
+        onChange={(value) => setMonth(value as MonthKey | null)}
       />
 
       <NumberInput
@@ -59,48 +24,27 @@ export default function AddExpenseForm() {
         value={amount}
         min={1}
         thousandSeparator=","
-        onChange={(value) =>
-          setAmount(
-            Number(value)
-          )
-        }
+        prefix="₹"
+        onChange={(value) => setAmount(Number(value))}
       />
 
       <TextInput
+        maxLength={50}
         label="Description"
-        placeholder="Laptop Repair"
+        placeholder="e.g. Laptop repair"
         value={label}
-        onChange={(e) =>
-          setLabel(
-            e.currentTarget.value
-          )
-        }
+        onChange={(e) => setLabel(e.currentTarget.value)}
       />
 
       <Button
-        disabled={
-          !month ||
-          amount <= 0 ||
-          !label.trim()
-        }
+        leftSection={<IconBolt size={16} />}
+        color="red"
+        disabled={!month || amount <= 0 || !label.trim()}
         onClick={() => {
-          if (
-            !month
-          ) {
-            return;
-          }
-
-          addExpense(
-            month,
-            amount,
-            label.trim()
-          );
-
+          if (!month) return;
+          addExpense(month, amount, label.trim());
           setLabel("");
-
-          setAmount(
-            10000
-          );
+          setAmount(10000);
         }}
       >
         Add Expense

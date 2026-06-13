@@ -39,6 +39,9 @@ const initialState: BuilderState = {
   defaultMonthlyExpense:
     0,
 
+  defaultAnnualReturn:
+    0,
+
   investmentRanges:
     [],
 

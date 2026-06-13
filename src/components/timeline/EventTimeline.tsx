@@ -83,9 +83,16 @@ function getEventIcon(
         />
       );
 
-    case "INVESTMENT_OVERRIDE":
+    case "INVESTMENT_DEPOSIT":
       return (
-        <IconTrendingUp
+        <IconArrowDown
+          size={16}
+        />
+      );
+
+    case "INVESTMENT_WITHDRAWAL":
+      return (
+        <IconArrowUp
           size={16}
         />
       );
@@ -127,8 +134,11 @@ function getEventLabel(
     case "RD_MATURED":
       return "RD Matured";
 
-    case "INVESTMENT_OVERRIDE":
-      return "Investment Change";
+    case "INVESTMENT_DEPOSIT":
+      return "Portfolio Deposit";
+
+    case "INVESTMENT_WITHDRAWAL":
+      return "Portfolio Withdrawal";
 
     default:
       return type;
@@ -170,8 +180,11 @@ function getEventColor(
     case "CREDIT_CARD_EXPENSE":
       return "orange";
 
-    case "INVESTMENT_OVERRIDE":
-      return "violet";
+    case "INVESTMENT_DEPOSIT":
+      return "blue";
+
+    case "INVESTMENT_WITHDRAWAL":
+      return "orange";
 
     default:
       return "gray";
@@ -225,7 +238,15 @@ export default function EventTimeline() {
     >
       {rows.flatMap(
         (row) =>
-          row.events.map(
+          row.events.filter(
+            (event) =>
+              event.type !==
+              "INVESTMENT_OVERRIDE"
+          ).filter(
+            (event) =>
+              event.type !==
+              "INVESTMENT_RETURN_OVERRIDE"
+          ).map(
             (event) => (
               <Timeline.Item
                 key={

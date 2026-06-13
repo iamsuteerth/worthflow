@@ -32,9 +32,15 @@ export interface SimulationSummary {
 
   totalOneOffExpenses: number;
 
+  investmentDepositsTotal: number;
+
+  investmentWithdrawalsTotal: number;
+
   finalInvestmentCorpus: number;
 
   finalNetWorth: number;
+
+  xirr: number | null;
 }
 
 export interface MonthlyCashflow {

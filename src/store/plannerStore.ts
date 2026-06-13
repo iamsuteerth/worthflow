@@ -45,6 +45,22 @@ interface PlannerStore {
     amount: number
   ) => void;
 
+  addTransientInvestmentReturnOverride: (
+    startMonth: MonthKey,
+    endMonth: MonthKey,
+    annualReturn: number
+  ) => void;
+
+  addTransientInvestmentDeposit: (
+    month: MonthKey,
+    amount: number
+  ) => void;
+
+  addTransientInvestmentWithdrawal: (
+    month: MonthKey,
+    amount: number
+  ) => void;
+
   addTransientFd: (
     month: MonthKey,
     principal: number,
@@ -245,6 +261,126 @@ export const usePlannerStore = create<PlannerStore>()(
                 state.baseConfig,
                 overrides
               ),
+          };
+        }),
+
+      addTransientInvestmentReturnOverride: (
+        startMonth,
+        endMonth,
+        annualReturn
+      ) =>
+        set((state) => {
+          const current =
+            state.overrides.runtimeEvents ?? [];
+
+          const existingOverrides =
+            current.filter(
+              (event) =>
+                event.type ===
+                "INVESTMENT_RETURN_OVERRIDE"
+            );
+
+          const overlap =
+            existingOverrides.some(
+              (event) =>
+                !(
+                  endMonth <
+                  event.startMonth ||
+                  startMonth >
+                  event.endMonth
+                )
+            );
+
+          if (
+            overlap ||
+            startMonth >
+            endMonth
+          ) {
+            return state;
+          }
+
+          const overrides: PlannerOverrides = {
+            ...state.overrides,
+
+            runtimeEvents: [
+              ...current,
+
+              {
+                id: crypto.randomUUID(),
+
+                type:
+                  "INVESTMENT_RETURN_OVERRIDE",
+
+                startMonth,
+
+                endMonth,
+
+                annualReturn,
+              },
+            ],
+          };
+
+          return {
+            overrides,
+
+            config:
+              buildEffectiveConfig(
+                state.baseConfig,
+                overrides
+              ),
+          };
+        }),
+
+      addTransientInvestmentDeposit: (month, amount) =>
+        set((state) => {
+          const current = state.overrides.runtimeEvents ?? [];
+
+          const overrides: PlannerOverrides = {
+            ...state.overrides,
+            runtimeEvents: [
+              ...current,
+              {
+                id: crypto.randomUUID(),
+                type: "INVESTMENT_DEPOSIT",
+                month,
+                amount
+              },
+            ],
+          };
+
+          return {
+            overrides,
+            config: buildEffectiveConfig(
+              state.baseConfig,
+              overrides
+            ),
+          };
+        }),
+
+
+      addTransientInvestmentWithdrawal: (month, amount) =>
+        set((state) => {
+          const current = state.overrides.runtimeEvents ?? [];
+
+          const overrides: PlannerOverrides = {
+            ...state.overrides,
+            runtimeEvents: [
+              ...current,
+              {
+                id: crypto.randomUUID(),
+                type: "INVESTMENT_WITHDRAWAL",
+                month,
+                amount,
+              },
+            ],
+          };
+
+          return {
+            overrides,
+            config: buildEffectiveConfig(
+              state.baseConfig,
+              overrides
+            ),
           };
         }),
 

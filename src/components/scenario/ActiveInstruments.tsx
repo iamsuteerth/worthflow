@@ -1,43 +1,61 @@
 import {
   Badge,
   Card,
+  Divider,
   Group,
+  SimpleGrid,
   Stack,
   Text,
+  ThemeIcon,
   Title,
 } from "@mantine/core";
+import { useMemo } from "react";
+import { IconBuildingBank, IconRefresh } from "@tabler/icons-react";
+import { addMonths } from "../../engine/dateUtils";
+import { formatMonth } from "../../engine/monthFormatting";
+import { usePlannerStore } from "../../store/plannerStore";
+import { money } from "../tables/tableUtils";
+import type { Instrument } from "../../types/instrument";
 
-import {
-  usePlannerStore,
-} from "../../store/plannerStore";
-
-import {
-  addMonths,
-} from "../../engine/dateUtils";
-
-import {
-  formatMonth,
-} from "../../engine/monthFormatting";
+function calcMaturityValue(instrument: Instrument): {
+  principal: number;
+  maturityValue: number;
+  interest: number;
+} {
+  if (instrument.type === "FD") {
+    const p = instrument.principal;
+    const maturityValue =
+      p * Math.pow(1 + instrument.rate / 100, instrument.durationMonths / 12);
+    return { principal: p, maturityValue, interest: maturityValue - p };
+  } else {
+    const { monthlyContribution, rate, durationMonths } = instrument;
+    let maturityValue = 0;
+    for (let i = 1; i <= durationMonths; i++) {
+      maturityValue += monthlyContribution * Math.pow(1 + rate / 100, i / 12);
+    }
+    const principal = monthlyContribution * durationMonths;
+    return { principal, maturityValue, interest: maturityValue - principal };
+  }
+}
 
 export default function ActiveInstruments() {
-  const config =
-    usePlannerStore(
-      (state) => state.config
-    );
+  const config = usePlannerStore((state) => state.config);
+  const instruments = config.instruments;
 
-  const instruments =
-    config.instruments;
+  const rows = useMemo(
+    () =>
+      instruments.map((instrument) => ({
+        instrument,
+        maturityMonth: addMonths(instrument.startMonth, instrument.durationMonths),
+        ...calcMaturityValue(instrument),
+      })),
+    [instruments]
+  );
 
-  if (
-    instruments.length === 0
-  ) {
+  if (instruments.length === 0) {
     return (
-      <Card
-        withBorder
-        radius="xl"
-        p="lg"
-      >
-        <Text c="dimmed">
+      <Card withBorder radius="md" p="lg">
+        <Text size="sm" c="dimmed" ta="center">
           No active instruments
         </Text>
       </Card>
@@ -46,155 +64,93 @@ export default function ActiveInstruments() {
 
   return (
     <Stack gap="sm" mb="md">
-      <Group
-        justify="space-between"
-      >
-        <Title order={5}>
-          Active Instruments
-        </Title>
-
-        <Badge
-          size="lg"
-          variant="light"
-        >
-          {
-            instruments.length
-          }
+      <Group justify="space-between">
+        <Title order={5}>Active Instruments</Title>
+        <Badge size="lg" variant="light" color="gray">
+          {instruments.length}
         </Badge>
       </Group>
 
-      {instruments.map(
-        (instrument) => {
-          const maturityMonth =
-            addMonths(
-              instrument.startMonth,
-              instrument.durationMonths
-            );
+      {rows.map(({ instrument, maturityMonth, principal, maturityValue, interest }) => {
+        const isFD = instrument.type === "FD";
+        const color = isFD ? "teal" : "violet";
+        const accentColor = isFD
+          ? "var(--mantine-color-teal-5)"
+          : "var(--mantine-color-violet-5)";
 
-          const principal =
-            instrument.type === "FD"
-              ? instrument.principal
-              : instrument.monthlyContribution *
-              instrument.durationMonths;
-
-          const maturityValue =
-            principal *
-            Math.pow(
-              1 +
-              instrument.rate /
-              100,
-              instrument.type === "FD"
-                ? instrument
-                  .durationMonths /
-                12
-                : instrument
-                  .durationMonths /
-                24
-            );
-
-          const interest =
-            maturityValue -
-            principal;
-
-          return (
-            <Card
-              key={
-                instrument.id
-              }
-              withBorder
-              radius="xl"
-              shadow="xs"
-              p="md"
-            >
-              <Group
-                justify="space-between"
-                mb="xs"
-              >
-                <Text fw={700}>
-                  {instrument.name}
-                </Text>
-
-                <Group gap="xs">
-                  <Badge
-                    color={
-                      instrument.type === "FD"
-                        ? "blue"
-                        : "violet"
-                    }
-                  >
-                    {instrument.type}
-                  </Badge>
-
-                  <Badge
-                    variant="light"
-                    color="green"
-                  >
-                    {instrument.rate}%
-                  </Badge>
-                </Group>
+        return (
+          <Card
+            key={instrument.id}
+            withBorder
+            radius="md"
+            p="md"
+            style={{ borderLeft: `3px solid ${accentColor}` }}
+          >
+            <Group justify="space-between" mb="sm">
+              <Group gap="xs">
+                <ThemeIcon variant="light" color={color} size="md" radius="md">
+                  {isFD ? <IconBuildingBank size={16} /> : <IconRefresh size={16} />}
+                </ThemeIcon>
+                <Text fw={700}>{instrument.name}</Text>
               </Group>
+              <Group gap="xs">
+                <Badge color={color} variant="light" size="sm">
+                  {instrument.type}
+                </Badge>
+                <Badge variant="light" color="green" size="sm">
+                  {instrument.rate}%
+                </Badge>
+              </Group>
+            </Group>
 
-              <Text
-                size="sm"
-                c="dimmed"
-              >
-                {
-                  formatMonth(
-                    instrument.startMonth
-                  )
-                }
-                {" → "}
-                {
-                  formatMonth(
-                    maturityMonth
-                  )
-                }
-              </Text>
+            <Text size="xs" c="dimmed" mb="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
+              {formatMonth(instrument.startMonth)} → {formatMonth(maturityMonth)}
+            </Text>
 
-              <Text
-                mt="sm"
-                fw={600}
-              >
-                ₹
-                {Math.round(
-                  principal
-                ).toLocaleString()}
-                {" → "}
-                ₹
-                {Math.round(
-                  maturityValue
-                ).toLocaleString()}
-              </Text>
+            <Divider mb="sm" />
 
-              <Text
-                size="xs"
-                c="dimmed"
-              >
-                Estimated maturity value (apprx)
-              </Text>
-
-              <Text
-                size="sm"
-                c={
-                  interest >= 0
-                    ? "green"
-                    : "red"
-                }
-              >
-                {interest >= 0
-                  ? "+"
-                  : "-"}
-                ₹
-                {Math.abs(
-                  Math.round(
-                    interest
-                  )
-                ).toLocaleString()}
-              </Text>
-            </Card>
-          );
-        }
-      )}
+            <SimpleGrid cols={2} spacing="xs">
+              <div>
+                <Text size="xs" c="dimmed">
+                  {isFD ? "Principal" : "Total Contribution"}
+                </Text>
+                <Text fw={600} size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
+                  {money(principal)}
+                </Text>
+              </div>
+              <div>
+                <Text size="xs" c="dimmed">
+                  Maturity Value
+                </Text>
+                <Text fw={700} size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
+                  {money(maturityValue)}
+                </Text>
+              </div>
+              <div>
+                <Text size="xs" c="dimmed">
+                  Estimated Interest
+                </Text>
+                <Text
+                  fw={600}
+                  size="sm"
+                  c={interest >= 0 ? "green" : "red"}
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                >
+                  {interest >= 0 ? "+" : "-"}{money(Math.abs(interest))}
+                </Text>
+              </div>
+              <div>
+                <Text size="xs" c="dimmed">
+                  Matures
+                </Text>
+                <Text fw={600} size="sm">
+                  {formatMonth(maturityMonth)}
+                </Text>
+              </div>
+            </SimpleGrid>
+          </Card>
+        );
+      })}
     </Stack>
   );
 }

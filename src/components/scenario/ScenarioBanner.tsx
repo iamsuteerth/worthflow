@@ -1,178 +1,60 @@
-import {
-  Badge,
-  Group,
-  Paper,
-  Text,
-} from "@mantine/core";
+import { Badge, Card, Divider, Group, Text } from "@mantine/core";
+import { IconAdjustments } from "@tabler/icons-react";
+import { usePlannerStore } from "../../store/plannerStore";
 
-import {
-  usePlannerStore,
-} from "../../store/plannerStore";
+const BADGE_CONFIG: Record<
+  string,
+  { label: string; color: string }
+> = {
+  ONE_OFF_EXPENSE: { label: "Expense", color: "red" },
+  CREDIT_CARD_EXPENSE: { label: "Credit Card", color: "orange" },
+  BONUS_INCOME: { label: "Bonus", color: "green" },
+  SALARY_CHANGE: { label: "Salary", color: "blue" },
+  FD: { label: "FD", color: "teal" },
+  RD: { label: "RD", color: "violet" },
+  INVESTMENT_OVERRIDE: { label: "Inv. Override", color: "indigo" },
+  INVESTMENT_RETURN_OVERRIDE: { label: "Return Override", color: "grape" },
+  INVESTMENT_DEPOSIT: { label: "Deposit", color: "cyan" },
+  INVESTMENT_WITHDRAWAL: { label: "Withdrawal", color: "orange" },
+};
 
 export default function ScenarioBanner() {
-  const events =
-    usePlannerStore(
-      (state) =>
-        state.overrides
-          .runtimeEvents
-    ) ?? [];
-  if (
-    events.length === 0
-  ) {
-    return null;
+  const events = usePlannerStore((state) => state.overrides.runtimeEvents) ?? [];
+
+  if (events.length === 0) return null;
+
+  const counts: Record<string, number> = {};
+  for (const event of events) {
+    counts[event.type] = (counts[event.type] ?? 0) + 1;
   }
 
-  const counts = {
-    expense: events.filter(
-      (event) =>
-        event.type ===
-        "ONE_OFF_EXPENSE"
-    ).length,
-
-    credit_card_expense: events.filter(
-      (event) =>
-        event.type ===
-        "CREDIT_CARD_EXPENSE"
-    ).length,
-
-    bonus: events.filter(
-      (event) =>
-        event.type ===
-        "BONUS_INCOME"
-    ).length,
-
-    salary: events.filter(
-      (event) =>
-        event.type ===
-        "SALARY_CHANGE"
-    ).length,
-
-    fd: events.filter(
-      (event) =>
-        event.type === "FD"
-    ).length,
-
-    rd: events.filter(
-      (event) =>
-        event.type === "RD"
-    ).length,
-
-    investment: events.filter(
-      (event) =>
-        event.type ===
-        "INVESTMENT_OVERRIDE"
-    ).length,
-  };
-
   return (
-    <Paper
-      radius="xl"
-      p="md"
-      mt="md"
-      withBorder
-    >
-      <Group
-        gap={6}
-        style={{
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-        }}
-      >
-        <div>
-          <Text
-            fw={600}
-          >
+    <Card withBorder radius="md" p="sm" mt="md">
+      <Group justify="space-between" wrap="nowrap" mb="xs">
+        <Group gap="xs">
+          <IconAdjustments size={16} color="var(--mantine-color-indigo-5)" />
+          <Text fw={700} size="sm">
             Scenario Active
           </Text>
-
-          <Text
-            size="sm"
-            c="dimmed"
-          >
-            {
-              events.length
-            }{" "}
-            modification
-            {events.length > 1
-              ? "s"
-              : ""}
-          </Text>
-        </div>
-
-        <Group gap={6}>
-          {counts.expense > 0 && (
-            <Badge
-              color="red"
-              variant="light"
-            >
-              Expense ×
-              {" "}
-              {counts.expense}
-            </Badge>
-          )}
-
-          {counts.credit_card_expense > 0 && (
-            <Badge
-              color="orange"
-              variant="light"
-            >
-              Credit Card ×
-              {" "}
-              {counts.credit_card_expense}
-            </Badge>
-          )}
-
-          {counts.bonus > 0 && (
-            <Badge
-              color="green"
-              variant="light"
-            >
-              Bonus ×
-              {" "}
-              {counts.bonus}
-            </Badge>
-          )}
-
-          {counts.salary > 0 && (
-            <Badge
-              color="blue"
-              variant="light"
-            >
-              Salary ×
-              {" "}
-              {counts.salary}
-            </Badge>
-          )}
-
-          {counts.fd > 0 && (
-            <Badge
-              color="cyan"
-              variant="light"
-            >
-              FD × {counts.fd}
-            </Badge>
-          )}
-
-          {counts.rd > 0 && (
-            <Badge
-              color="grape"
-              variant="light"
-            >
-              RD × {counts.rd}
-            </Badge>
-          )}
-
-          {counts.investment > 0 && (
-            <Badge
-              color="violet"
-              variant="light"
-            >
-              Investment ×{" "}
-              {counts.investment}
-            </Badge>
-          )}
         </Group>
+        <Text size="xs" c="dimmed">
+          {events.length} modification{events.length !== 1 ? "s" : ""}
+        </Text>
       </Group>
-    </Paper>
+
+      <Divider mb="xs" />
+
+      <Group gap={6} style={{ flexWrap: "wrap" }}>
+        {Object.entries(counts).map(([type, count]) => {
+          const cfg = BADGE_CONFIG[type];
+          if (!cfg) return null;
+          return (
+            <Badge key={type} color={cfg.color} variant="light" size="sm">
+              {cfg.label} ×{count}
+            </Badge>
+          );
+        })}
+      </Group>
+    </Card>
   );
 }

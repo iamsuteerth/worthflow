@@ -1,30 +1,22 @@
 import {
   Badge,
   Card,
+  Divider,
   Group,
   SimpleGrid,
   Stack,
   Text,
   ThemeIcon,
 } from "@mantine/core";
-
-import {
-  IconTrendingUp,
-} from "@tabler/icons-react";
+import { IconBuildingBank, IconRefresh } from "@tabler/icons-react";
 
 interface Props {
   title: string;
-
   principal: string;
-
   maturityValue: string;
-
   interest: string;
-
   maturityMonth: string;
-
   subtitle?: string;
-
   type?: "FD" | "RD";
 }
 
@@ -37,116 +29,78 @@ export default function InstrumentPreview({
   subtitle,
   type,
 }: Props) {
+  const isFD = type === "FD";
+  const color = isFD ? "teal" : "violet";
+  const accentColor = isFD
+    ? "var(--mantine-color-teal-5)"
+    : "var(--mantine-color-violet-5)";
+
   return (
     <Card
-      radius="xl"
+      radius="md"
       withBorder
-      bg="var(--mantine-color-body)"
+      p="md"
+      style={{ borderLeft: `3px solid ${accentColor}` }}
     >
-      <Stack gap="md">
-        <Group justify="space-between">
-          <Stack gap={4}>
-            <Text fw={700}>
+      <Group justify="space-between" mb="sm">
+        <Group gap="xs">
+          <ThemeIcon variant="light" color={color} size="md" radius="md">
+            {isFD ? <IconBuildingBank size={16} /> : <IconRefresh size={16} />}
+          </ThemeIcon>
+          <Stack gap={2}>
+            <Text fw={700} size="sm">
               {title}
             </Text>
-
             {subtitle && (
-              <Text
-                size="sm"
-                c="dimmed"
-              >
+              <Text size="xs" c="dimmed">
                 {subtitle}
               </Text>
             )}
-
-            {type && (
-              <Badge
-                variant="light"
-                color={
-                  type === "FD"
-                    ? "cyan"
-                    : "grape"
-                }
-                w="fit-content"
-              >
-                {type}
-              </Badge>
-            )}
           </Stack>
-
-          <ThemeIcon
-            size="lg"
-            radius="xl"
-            variant="light"
-            color={
-              type === "FD"
-                ? "cyan"
-                : "grape"
-            }
-          >
-            <IconTrendingUp
-              size={18}
-            />
-          </ThemeIcon>
         </Group>
+        {type && (
+          <Badge variant="light" color={color} size="sm">
+            {type}
+          </Badge>
+        )}
+      </Group>
 
-        <SimpleGrid cols={2}>
-          <div>
-            <Text
-              size="xs"
-              c="dimmed"
-            >
-              Invested
-            </Text>
+      <Divider mb="sm" />
 
-            <Text fw={700}>
-              {principal}
-            </Text>
-          </div>
-
-          <div>
-            <Text
-              size="xs"
-              c="dimmed"
-            >
-              Maturity Value
-            </Text>
-
-            <Text fw={700}>
-              {maturityValue}
-            </Text>
-          </div>
-
-          <div>
-            <Text
-              size="xs"
-              c="dimmed"
-            >
-              Profit
-            </Text>
-
-            <Text
-              fw={700}
-              c="green"
-            >
-              {interest}
-            </Text>
-          </div>
-
-          <div>
-            <Text
-              size="xs"
-              c="dimmed"
-            >
-              Maturity
-            </Text>
-
-            <Text fw={700}>
-              {maturityMonth}
-            </Text>
-          </div>
-        </SimpleGrid>
-      </Stack>
+      <SimpleGrid cols={2} spacing="xs">
+        <div>
+          <Text size="xs" c="dimmed">
+            Invested
+          </Text>
+          <Text fw={600} size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
+            {principal}
+          </Text>
+        </div>
+        <div>
+          <Text size="xs" c="dimmed">
+            Maturity Value
+          </Text>
+          <Text fw={700} size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
+            {maturityValue}
+          </Text>
+        </div>
+        <div>
+          <Text size="xs" c="dimmed">
+            Estimated Profit
+          </Text>
+          <Text fw={600} size="sm" c="green" style={{ fontVariantNumeric: "tabular-nums" }}>
+            {interest}
+          </Text>
+        </div>
+        <div>
+          <Text size="xs" c="dimmed">
+            Matures
+          </Text>
+          <Text fw={600} size="sm">
+            {maturityMonth}
+          </Text>
+        </div>
+      </SimpleGrid>
     </Card>
   );
 }

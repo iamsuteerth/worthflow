@@ -90,6 +90,28 @@ export function buildEffectiveConfig(
         "INVESTMENT_OVERRIDE"
     ) ?? [];
 
+  const returnOverrides =
+    overrides.runtimeEvents?.filter(
+      (event) =>
+        event.type ===
+        "INVESTMENT_RETURN_OVERRIDE"
+    ) ?? [];
+
+  config.investments.returnOverrides.push(
+    ...returnOverrides.map(
+      (event) => ({
+        startMonth:
+          event.startMonth,
+
+        endMonth:
+          event.endMonth,
+
+        annualReturn:
+          event.annualReturn,
+      })
+    )
+  );
+
   investmentOverrides.forEach(
     (event) => {
       let current =

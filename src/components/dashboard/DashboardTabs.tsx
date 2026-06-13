@@ -1,109 +1,62 @@
-import {
-  Card,
-  Tabs,
-} from "@mantine/core";
+import { Card, Tabs } from "@mantine/core";
 
-import ForecastTable
-  from "../tables/ForecastTable";
-
-import CashflowTable
-  from "../tables/CashflowTable";
-
-import EventTimeline
-  from "../timeline/EventTimeline";
-
-import NetWorthTable
-  from "../tables/NetworthTable";
-
-import InstrumentsTable
-  from "../tables/InstrumentsTable";
+import ForecastTable       from "../tables/ForecastTable";
+import CashflowTable       from "../tables/CashflowTable";
+import EventTimeline       from "../timeline/EventTimeline";
+import NetWorthTable       from "../tables/NetworthTable";
+import InstrumentsTable    from "../tables/InstrumentsTable";
 import OneOffExpensesTable from "../tables/OneOffExpenses";
+import InvestmentTimeline from "../timeline/InvestmentTimeline";
 
 import classes from "./DashboardTabs.module.css";
 
+// ─── Tab manifest ─────────────────────────────────────────────────────────────
+
+const TABS = [
+  { value: "forecast",    label: "Forecast"    },
+  { value: "cashflow",    label: "Cashflow"    },
+  { value: "networth",    label: "Net Worth"   },
+  { value: "instruments", label: "Instruments" },
+  { value: "expenses",    label: "One-Offs"    },
+  { value: "timeline",    label: "Timeline"    },
+  { value: "investments", label: "Investments" },
+] as const;
+
+type TabValue = typeof TABS[number]["value"];
+
+const PANELS: Record<TabValue, React.ReactNode> = {
+  forecast:    <ForecastTable />,
+  cashflow:    <CashflowTable />,
+  networth:    <NetWorthTable />,
+  instruments: <InstrumentsTable />,
+  expenses:    <OneOffExpensesTable />,
+  timeline:    <EventTimeline />,
+  investments: <InvestmentTimeline />
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export default function DashboardTabs() {
   return (
-    <Card
-      mt="lg"
-      radius="xl"
-      withBorder
-      p="lg"
-    >
-      <Tabs defaultValue="forecast">
-        <Tabs.List
-          className={classes.tabsList}
-        >
-          <Tabs.Tab
-            value="forecast"
-            style={{
-              flexShrink: 0,
-            }}
-          >
-            Forecast
-          </Tabs.Tab>
+    <Card mt="lg" radius="xl" withBorder p={0} style={{ overflow: "hidden" }}>
+      <Tabs defaultValue="forecast" variant="none">
 
-          <Tabs.Tab value="cashflow">
-            Cashflow
-          </Tabs.Tab>
+        {/* Scrollable tab strip */}
+        <div className={classes.strip}>
+          {TABS.map(({ value, label }) => (
+            <Tabs.Tab key={value} value={value} className={classes.tab}>
+              {label}
+            </Tabs.Tab>
+          ))}
+        </div>
 
-          <Tabs.Tab value="networth">
-            Net Worth
-          </Tabs.Tab>
+        {/* Panels */}
+        {(Object.entries(PANELS) as [TabValue, React.ReactNode][]).map(([value, content]) => (
+          <Tabs.Panel key={value} value={value} p="lg">
+            {content}
+          </Tabs.Panel>
+        ))}
 
-          <Tabs.Tab value="instruments">
-            Instruments
-          </Tabs.Tab>
-
-          <Tabs.Tab value="expenses">
-            One-Offs
-          </Tabs.Tab>
-
-          <Tabs.Tab value="timeline">
-            Timeline
-          </Tabs.Tab>
-        </Tabs.List>
-
-        <Tabs.Panel
-          value="forecast"
-          pt="lg"
-        >
-          <ForecastTable />
-        </Tabs.Panel>
-
-        <Tabs.Panel
-          value="cashflow"
-          pt="lg"
-        >
-          <CashflowTable />
-        </Tabs.Panel>
-
-        <Tabs.Panel
-          value="networth"
-          pt="lg"
-        >
-          <NetWorthTable />
-        </Tabs.Panel>
-
-        <Tabs.Panel
-          value="instruments"
-          pt="lg"
-        >
-          <InstrumentsTable />
-        </Tabs.Panel>
-
-        <Tabs.Panel
-          value="expenses"
-          pt="lg"
-        >
-          <OneOffExpensesTable />
-        </Tabs.Panel>
-
-        <Tabs.Panel
-          value="timeline"
-          pt="lg"
-        >
-          <EventTimeline />
-        </Tabs.Panel>
       </Tabs>
     </Card>
   );

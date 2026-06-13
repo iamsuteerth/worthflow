@@ -92,6 +92,38 @@ export interface RuntimeInvestmentOverride {
   amount: number;
 }
 
+export interface RuntimeInvestmentReturnOverride {
+  id: string;
+
+  type: "INVESTMENT_RETURN_OVERRIDE";
+
+  startMonth: MonthKey;
+
+  endMonth: MonthKey;
+
+  annualReturn: number;
+}
+
+export interface RuntimeInvestmentDeposit {
+  id: string;
+
+  type: "INVESTMENT_DEPOSIT";
+
+  month: MonthKey;
+
+  amount: number;
+}
+
+export interface RuntimeInvestmentWithdrawal {
+  id: string;
+
+  type: "INVESTMENT_WITHDRAWAL";
+
+  month: MonthKey;
+
+  amount: number;
+}
+
 export type RuntimeEvent =
   | RuntimeOneOffExpense
   | RuntimeFixedDeposit
@@ -99,4 +131,7 @@ export type RuntimeEvent =
   | RuntimeBonusIncome
   | RuntimeSalaryChange
   | RuntimeCreditCardExpense
-  | RuntimeInvestmentOverride;
+  | RuntimeInvestmentOverride
+  | RuntimeInvestmentReturnOverride
+  | RuntimeInvestmentDeposit
+  | RuntimeInvestmentWithdrawal;

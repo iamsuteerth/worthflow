@@ -1,240 +1,78 @@
 # 💰 Finance Planner
 
-A powerful personal finance forecasting and scenario-planning tool that helps you model cash flow, investments, deposits, and net worth over time.
+A personal finance forecasting and scenario-planning tool that helps you model cash flow, investments, deposits, and net worth over time.
 
-Build realistic financial plans, simulate life events, and understand how your wealth evolves month by month.
+Forecast your finances, simulate life events, compare scenarios, and see how your wealth evolves month by month.
 
-## ✨ Highlights
+## ✨ Features
 
-📈 Forecast your finances into the future
+* 📈 Long-term financial forecasting
+* 💵 Cash flow tracking
+* 📊 Investment performance and XIRR
+* 🏦 Fixed Deposit (FD) planning
+* 🔁 Recurring Deposit (RD) planning
+* 🎯 Scenario simulation
+* 📉 Return assumption overrides
+* 💰 Portfolio deposits and withdrawals
+* 📊 Interactive charts and timelines
+* 💾 Save, export, and restore plans
+* 🌙 Light & Dark mode
 
-💵 Track cash, investments, FDs, and RDs
+# 🚀 Financial Forecasting
 
-🎯 Model real-life financial events, including salary cuts, job loss, and investment changes
+Generate month-by-month projections of your finances.
 
-🔄 Compare alternate scenarios
-
-📊 Visualize wealth growth with charts
-
-💾 Save, export, and restore plans
-
-🌙 Light & Dark mode support
-
-## 🚀 Financial Forecasting
-
-Generate detailed month-by-month projections of your financial future.
-
-### Track Key Metrics
+### Key Metrics
 
 * 💵 Cash Balance
 * 📈 Investment Corpus
-* 🏦 Fixed Deposits (FD)
-* 🔁 Recurring Deposits (RD)
+* 🏦 Fixed Deposits
+* 🔁 Recurring Deposits
 * 💎 Net Worth
+* 📊 XIRR (Money-Weighted Return)
 
-## 🏦 Fixed Deposits (FD)
+# 📈 Investments
 
-Model fixed deposits directly within your financial forecast.
+Model investment growth using configurable return assumptions.
 
 ### Supported Features
 
-* ✅ Existing FDs
-* ✅ New FDs during forecast
-* ✅ Automatic maturity payouts
-* ✅ Interest growth calculations
-* ✅ Net worth integration
+* Opening Investment Corpus
+* Monthly Contributions
+* Contribution Overrides
+* Portfolio Deposits & Withdrawals
+* Annual Return Assumptions
+* Return Override Periods
+* XIRR Tracking
+* Net Worth Integration
 
-## 🔁 Recurring Deposits (RD)
+# 🏦 Fixed Deposits (FD)
+
+Track existing and future fixed deposits.
+
+### Supported Features
+
+* Existing FDs
+* New FDs
+* Interest Growth
+* Automatic Maturity Payouts
+* Net Worth Integration
+
+# 🔁 Recurring Deposits (RD)
 
 Track recurring deposits and their impact on future cash flow.
 
 ### Supported Features
 
-* ✅ Existing RDs
-* ✅ New RDs
-* ✅ Monthly contributions
-* ✅ Interest accrual
-* ✅ Automatic maturity payouts
-
-## 🛠️ Guided Plan Builder
-
-Create and edit plans through an intuitive UI.
-
-### Configure
-
-#### 💼 Income
-
-* Monthly Salary
-* Salary Changes (Increase or Reduction)
-* Bonus Income
-
-#### 💸 Expenses
-
-* Monthly Expenses
-* Credit Card Payments
-* One-Off Expenses
-
-#### 📈 Investments
-
-* Opening Investment Corpus
-* Investment Contributions
-* Investment Schedule
-
-#### 💰 Cash
-
-* Opening Cash Balance
-
-#### 🏦 Deposits
-
-* Fixed Deposits
-* Recurring Deposits
-
-## 🎭 Scenario Planning
-
-Create alternate futures without modifying your base forecast.
-
-### Simulate
-
-* 📈 Salary Increases
-* 📉 Salary Reductions
-* 🚫 Job Loss / Unemployment
-* 🎁 Bonus Income
-* 🏠 Major Purchases
-* 📈 Investment Contribution Changes
-* 🏦 New FDs
-* 🔁 New RDs
-* 🚨 Unexpected Expenses
-
-### Compare Against Base Plan
-
-* 💎 Net Worth Change
-* 💵 Cash Balance Change
-* ⚠️ Lowest Cash Position Change
-
-## 📊 Cashflow Analysis
-
-Understand where your money comes from and where it goes.
-
-### Inflows
-
-* 💼 Salary Income
-* 🎁 Bonus Income
-
-### Outflows
-
-* 🛒 Expenses
-* 💳 Credit Card Payments
-* 📉 Investments
-* 🏦 FD Activity
-* 🔁 RD Activity
-* 💸 One-Off Expenses
-
-## 📈 Wealth Projection
-
-Interactive charts help visualize long-term growth.
-
-### Available Charts
-
-* 💵 Cash Balance
-* 📈 Investments
-* 💎 Net Worth
-
-### Features
-
-* Event Markers
-* Monthly Tooltips
-* Historical Comparison
-* Scenario Comparison
-
-## 🖥️ Dashboard Views
-
-### 📅 Forecast Table
-
-Month-by-month financial projection.
-
-### 💸 Cashflow Table
-
-Detailed breakdown of inflows and outflows.
-
-### 💎 Net Worth Table
-
-Asset-level wealth tracking.
-
-### 🏦 Instruments Table
-
-View active FDs and RDs.
-
-## 🕒 Event Timeline
-
-Chronological view of:
-
-* Salary Changes
-* Bonuses
-* Expenses
-* Investment Changes
-* FD Events
-* RD Events
-
-### 🥧 Asset Breakdown
-
-Visual allocation across asset classes.
-
-## 💾 Saved Scenarios
-
-Store alternate plans for future comparison.
-
-### Features
-
-* Save multiple scenarios
-* Instant scenario loading
-* Impact comparison
-* Included in exports
-
-## 📦 Import & Export
-
-Export and restore complete financial plans.
-
-### Export Structure
-
-```json
-{
-  "version": 1,
-  "baseConfig": {},
-  "overrides": {},
-  "savedScenarios": []
-}
-```
-
-### Ideal For
-
-* 💾 Backups
-* 🤝 Sharing plans
-* 🔍 Comparing strategies
-* 🧪 Experimenting with scenarios
-
-## 🛡️ Import Validation
-
-Plans are validated before loading.
-
-### Validation Checks
-
-* Configuration Structure
-* Month Formats
-* Deposit Definitions
-* Income & Expense Rules
-* Runtime Events
-* Saved Scenarios
-
-## 🌗 Theme Support
-
-Choose your preferred experience.
-
-* ☀️ Light Mode
-* 🌙 Dark Mode
-
-Theme preference is automatically saved.
-
-## 📚 Supported Events
+* Existing RDs
+* New RDs
+* Monthly Contributions
+* Interest Accrual
+* Automatic Maturity Payouts
+
+# 🛠️ Guided Plan Builder
+
+Create plans through a simple step-by-step workflow.
 
 ### 💼 Income
 
@@ -250,15 +88,219 @@ Theme preference is automatically saved.
 
 ### 📈 Investments
 
+* Opening Corpus
+* Contribution Schedule
+* Return Assumptions
+
+### 💵 Cash
+
+* Opening Cash Balance
+
+### 🏦 Deposits
+
+* Fixed Deposits
+* Recurring Deposits
+
+# 🎭 Scenario Planning
+
+Test alternate futures without changing your base plan.
+
+### Income Events
+
+* Salary Increases
+* Salary Reductions
+* Job Loss
+* Bonuses
+
+### Expense Events
+
+* Major Purchases
+* Unexpected Expenses
+* Credit Card Events
+
+### Investment Events
+
+* Contribution Changes
+* Deposits
+* Withdrawals
+* Return Overrides
+
+### Deposit Events
+
+* New FDs
+* New RDs
+
+### Compare Against Base Plan
+
+* Net Worth Difference
+* Cash Balance Difference
+* Investment Difference
+* Lowest Cash Position Difference
+
+# 💸 Cash Flow Analysis
+
+See where your money comes from and where it goes.
+
+### Inflows
+
+* Salary
+* Bonuses
+* Investment Withdrawals
+* FD Maturities
+* RD Maturities
+
+### Outflows
+
+* Expenses
+* Credit Card Payments
 * Investment Contributions
-* Investment Contribution Overrides
+* Portfolio Deposits
+* FD Creation
+* RD Contributions
+* One-Off Expenses
+
+# 📊 Wealth Projection
+
+Visualize long-term growth with interactive charts.
+
+### Charts
+
+* Cash Balance
+* Investments
+* Net Worth
+
+### Features
+
+* Monthly Tooltips
+* Event Highlights
+* Portfolio Activity Tracking
+* Scenario Comparisons
+
+### Performance Metrics
+
+* XIRR
+* Final Net Worth
+* Final Investment Corpus
+* Final Cash Position
+
+# 🖥️ Dashboard Views
+
+### 📅 Forecast Table
+
+Month-by-month projections.
+
+### 💸 Cash Flow Table
+
+Detailed inflow and outflow breakdown.
+
+### 💎 Net Worth Table
+
+Asset-level wealth tracking.
+
+### 🏦 Instruments Table
+
+Active FDs and RDs.
+
+### 🕒 Event Timeline
+
+* Salary Changes
+* Bonuses
+* Expenses
+* Credit Card Events
+* FD Events
+* RD Events
+
+### 📈 Investment Timeline
+
+* Deposits
+* Withdrawals
+* Contribution Changes
+* Return Overrides
+
+# 💾 Saved Scenarios
+
+Save and revisit alternate plans.
+
+### Features
+
+* Multiple Saved Scenarios
+* Instant Loading
+* Scenario Comparison
+* Export Support
+
+# 📦 Import & Export
+
+Export and restore complete plans.
+
+### Export Format
+
+```json
+{
+  "version": 1,
+  "baseConfig": {},
+  "overrides": {},
+  "savedScenarios": []
+}
+```
+
+### Use Cases
+
+* Backups
+* Sharing Plans
+* Strategy Comparison
+* Scenario Testing
+
+# 🛡️ Import Validation
+
+Imported plans are validated before loading.
+
+### Checks
+
+* Configuration Structure
+* Dates & Month Formats
+* Income & Expense Rules
+* Investment Rules
+* Deposit Definitions
+* Return Overrides
+* Portfolio Transactions
+* Runtime Events
+* Saved Scenarios
+
+# 🌗 Theme Support
+
+* ☀️ Light Mode
+* 🌙 Dark Mode
+
+Theme preference is saved automatically.
+
+# 📚 Supported Events
+
+### 💼 Income
+
+* Salary
+* Salary Changes
+* Bonuses
+
+### 💸 Expenses
+
+* Monthly Expenses
+* Credit Card Payments
+* One-Off Expenses
+
+### 📈 Investments
+
+* Contributions
+* Contribution Overrides
+* Return Overrides
+* Deposits
+* Withdrawals
 
 ### 🏦 Deposits
 
 * Fixed Deposits (FD)
 * Recurring Deposits (RD)
 
-## 🏗️ Project Structure
+# 🏗️ Project Structure
 
 ```text
 src
@@ -273,7 +315,7 @@ src
 └── types
 ```
 
-## 🚀 Getting Started
+# 🚀 Getting Started
 
 ### Install Dependencies
 
@@ -287,45 +329,46 @@ npm install
 npm run dev
 ```
 
-### Build for Production
+### Build
 
 ```bash
 npm run build
 ```
 
-### Preview Production Build
+### Preview Build
 
 ```bash
 npm run preview
 ```
 
-### Run Linting
+### Run Lint
 
 ```bash
 npm run lint
 ```
 
-## 🧰 Built With
+# 🧰 Built With
 
-* ⚛️ React
-* 🔷 TypeScript
-* ⚡ Vite
-* 🎨 Mantine
-* 📊 Mantine Charts
-* 🐻 Zustand
-* ✅ Zod
-* 🎯 Tabler Icons
+* React
+* TypeScript
+* Vite
+* Mantine
+* Mantine Charts
+* Zustand
+* Zod
+* Tabler Icons
 
-## 🎯 Goal
-
-Finance Planner helps answer questions like:
+# 🎯 Questions It Can Help Answer
 
 * Can I afford this purchase next year?
-* What happens if my salary increases?
-* How much will my net worth grow?
-* Should I invest or create an FD?
+* How will a salary change affect my finances?
+* How much could my net worth grow?
+* What is my portfolio's XIRR?
+* Should I invest more or create an FD?
+* What happens if returns are lower than expected?
+* What if I need to withdraw from investments?
 * What is my lowest future cash position?
 * How do different scenarios compare?
-* How long can I sustain myself without income?
+* How long can I manage without income?
 
-Plan smarter. Forecast confidently. Build wealth intentionally. 💰📈
+**Plan smarter. Forecast confidently. Build wealth intentionally. 💰📈**
