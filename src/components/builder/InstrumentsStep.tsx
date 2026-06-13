@@ -12,399 +12,301 @@ import {
   TextInput,
   ThemeIcon,
 } from "@mantine/core";
-import {
-  IconBolt,
-  IconCash,
-  IconCreditCard,
-  IconPlus,
-  IconTrash,
-  IconTrendingUp,
-} from "@tabler/icons-react";
-import { useMemo, useState } from "react";
+import { IconBuildingBank, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { useState } from "react";
 import { formatMonth } from "../../engine/monthFormatting";
 import { useBuilderStore } from "../../store/builderStore";
 import type { MonthKey } from "../../types/simulation";
 import BuilderMonthSelect from "./BuilderMonthSelect";
 import BuilderStepContainer from "./BuilderStepContainer";
 
-const TYPE_CONFIG: Record<
-  string,
-  { color: string; accentColor: string; icon: React.ReactNode }
-> = {
-  Expense: {
-    color: "red",
-    accentColor: "var(--mantine-color-red-5)",
-    icon: <IconBolt size={16} />,
-  },
-  "Credit Card": {
-    color: "orange",
-    accentColor: "var(--mantine-color-orange-5)",
-    icon: <IconCreditCard size={16} />,
-  },
-  Bonus: {
-    color: "green",
-    accentColor: "var(--mantine-color-green-5)",
-    icon: <IconCash size={16} />,
-  },
-  "Salary Change": {
-    color: "blue",
-    accentColor: "var(--mantine-color-blue-5)",
-    icon: <IconTrendingUp size={16} />,
-  },
-};
-
-function SectionCard({
-  title,
-  type,
-  children,
-}: {
-  title: string;
-  type: string;
-  children: React.ReactNode;
-}) {
-  const cfg = TYPE_CONFIG[type] ?? TYPE_CONFIG["Expense"];
-  return (
-    <Card
-      withBorder
-      radius="md"
-      p="lg"
-      style={{ borderLeft: `3px solid ${cfg.accentColor}` }}
-    >
-      <Group gap="xs" mb="md">
-        <ThemeIcon variant="light" color={cfg.color} size="md" radius="md">
-          {cfg.icon}
-        </ThemeIcon>
-        <Text fw={600} size="sm">
-          {title}
-        </Text>
-      </Group>
-      <Divider mb="md" />
-      {children}
-    </Card>
-  );
-}
-
-export default function EventsStep() {
+export default function InstrumentsStep() {
   const state = useBuilderStore((store) => store.state);
-  const addOneOffExpense = useBuilderStore((store) => store.addOneOffExpense);
-  const removeOneOffExpense = useBuilderStore((store) => store.removeOneOffExpense);
-  const addCreditCardBill = useBuilderStore((store) => store.addCreditCardBill);
-  const removeCreditCardBill = useBuilderStore((store) => store.removeCreditCardBill);
-  const addBonusIncome = useBuilderStore((store) => store.addBonusIncome);
-  const removeBonusIncome = useBuilderStore((store) => store.removeBonusIncome);
-  const addSalaryChange = useBuilderStore((store) => store.addSalaryChange);
-  const removeSalaryChange = useBuilderStore((store) => store.removeSalaryChange);
-  const startMonth = useBuilderStore((s) => s.state.startMonth);
+  const addInstrument = useBuilderStore((store) => store.addInstrument);
+  const removeInstrument = useBuilderStore((store) => store.removeInstrument);
 
-  const [expenseMonth, setExpenseMonth] = useState<MonthKey>(state.startMonth);
-  const [expenseLabel, setExpenseLabel] = useState("");
-  const [expenseAmount, setExpenseAmount] = useState(0);
+  const [fdName, setFdName] = useState("");
+  const [fdPrincipal, setFdPrincipal] = useState(0);
+  const [fdRate, setFdRate] = useState(0);
+  const [fdDurationMonths, setFdDurationMonths] = useState(12);
+  const [fdStartMonth, setFdStartMonth] = useState<MonthKey>(state.startMonth);
 
-  const [creditCardMonth, setCreditCardMonth] = useState<MonthKey>(state.startMonth);
-  const [creditCardLabel, setCreditCardLabel] = useState("");
-  const [creditCardAmount, setCreditCardAmount] = useState(0);
+  const [rdName, setRdName] = useState("");
+  const [rdContribution, setRdContribution] = useState(0);
+  const [rdRate, setRdRate] = useState(0);
+  const [rdDurationMonths, setRdDurationMonths] = useState(12);
+  const [rdStartMonth, setRdStartMonth] = useState<MonthKey>(state.startMonth);
 
-  const [bonusMonth, setBonusMonth] = useState<MonthKey>(state.startMonth);
-  const [bonusDescription, setBonusDescription] = useState("");
-  const [bonusAmount, setBonusAmount] = useState(0);
-
-  const [salaryMonth, setSalaryMonth] = useState<MonthKey>(state.startMonth);
-  const [salaryDescription, setSalaryDescription] = useState("");
-  const [salaryIncome, setSalaryIncome] = useState(state.monthlyIncome);
-
-  const timeline = useMemo(() => {
-    const events = [
-      ...state.oneOffExpenses.map((e) => ({
-        id: e.id,
-        month: e.month,
-        type: "Expense",
-        description: e.label,
-        value: `₹${e.amount.toLocaleString()}`,
-      })),
-      ...state.creditCardBills.map((e) => ({
-        id: e.id,
-        month: e.month,
-        type: "Credit Card",
-        description: e.label,
-        value: `₹${e.amount.toLocaleString()}`,
-      })),
-      ...state.bonusIncome.map((e) => ({
-        id: e.id,
-        month: e.month,
-        type: "Bonus",
-        description: e.description,
-        value: `₹${e.amount.toLocaleString()}`,
-      })),
-      ...state.salaryChanges.map((e) => ({
-        id: e.id,
-        month: e.effectiveMonth,
-        type: "Salary Change",
-        description: e.description,
-        value: `₹${e.newMonthlyIncome.toLocaleString()}/month`,
-      })),
-    ];
-    return events.sort((a, b) => a.month.localeCompare(b.month));
-  }, [state.oneOffExpenses, state.bonusIncome, state.salaryChanges, state.creditCardBills]);
-
-  const removeHandlers: Record<string, (id: string) => void> = {
-    Expense: removeOneOffExpense,
-    "Credit Card": removeCreditCardBill,
-    Bonus: removeBonusIncome,
-    "Salary Change": removeSalaryChange,
-  };
+  const fds = state.instruments.filter((i) => i.type === "FD");
+  const rds = state.instruments.filter((i) => i.type === "RD");
 
   return (
     <BuilderStepContainer>
       <Stack gap={4} mb="xs">
         <Text fw={700} size="xl">
-          Events
+          Instruments
         </Text>
         <Text size="sm" c="dimmed">
-          Add one-off expenses, bonuses, credit card bills, and salary changes over your forecast period.
+          Add Fixed Deposits and Recurring Deposits to model guaranteed-return savings.
         </Text>
       </Stack>
 
       <Grid gap="md">
         <Grid.Col span={{ base: 12, md: 6 }}>
-          <SectionCard title="One-Off Expense" type="Expense">
+          <Card
+            withBorder
+            radius="md"
+            p="lg"
+            h="100%"
+            style={{ borderLeft: "3px solid var(--mantine-color-teal-5)" }}
+          >
+            <Group gap="xs" mb="md">
+              <ThemeIcon variant="light" color="teal" size="md" radius="md">
+                <IconBuildingBank size={16} />
+              </ThemeIcon>
+              <Text fw={600} size="sm">
+                Fixed Deposit
+              </Text>
+            </Group>
+            <Divider mb="md" />
             <Stack gap="sm">
-              <BuilderMonthSelect
-                value={expenseMonth}
-                minMonth={startMonth}
-                label="Month"
-                onChange={(value) => value && setExpenseMonth(value as MonthKey)}
-              />
               <TextInput
-                maxLength={50}
-                label="Label"
-                placeholder="e.g. Laptop purchase"
-                value={expenseLabel}
-                onChange={(e) => setExpenseLabel(e.currentTarget.value)}
+                label="Name"
+                placeholder="e.g. SBI FD"
+                value={fdName}
+                onChange={(e) => setFdName(e.currentTarget.value)}
               />
               <NumberInput
-                label="Amount"
-                value={expenseAmount}
+                label="Principal"
+                value={fdPrincipal}
                 min={1}
                 thousandSeparator=","
                 prefix="₹"
-                onChange={(value) => setExpenseAmount(Number(value))}
+                onChange={(v) => setFdPrincipal(Number(v))}
+              />
+              <Grid gap="sm">
+                <Grid.Col span={6}>
+                  <NumberInput
+                    label="Interest Rate"
+                    value={fdRate}
+                    min={0}
+                    max={15}
+                    decimalScale={2}
+                    suffix="%"
+                    clampBehavior="strict"
+                    onChange={(v) => setFdRate(Number(v))}
+                  />
+                </Grid.Col>
+                <Grid.Col span={6}>
+                  <NumberInput
+                    label="Duration"
+                    value={fdDurationMonths}
+                    min={1}
+                    max={120}
+                    suffix=" mo"
+                    clampBehavior="strict"
+                    onChange={(v) => setFdDurationMonths(Number(v))}
+                  />
+                </Grid.Col>
+              </Grid>
+              <BuilderMonthSelect
+                label="Start Month"
+                value={fdStartMonth}
+                onChange={(value) => value && setFdStartMonth(value as MonthKey)}
               />
               <Button
                 leftSection={<IconPlus size={16} />}
-                disabled={!expenseLabel.trim() || expenseAmount <= 0}
+                color="teal"
+                disabled={!fdName.trim() || fdPrincipal <= 0 || fdRate <= 0 || fdDurationMonths <= 0}
                 onClick={() => {
-                  addOneOffExpense({
+                  addInstrument({
                     id: crypto.randomUUID(),
-                    month: expenseMonth,
-                    label: expenseLabel,
-                    amount: expenseAmount,
+                    type: "FD",
+                    name: fdName,
+                    principal: fdPrincipal,
+                    rate: fdRate,
+                    startMonth: fdStartMonth,
+                    durationMonths: fdDurationMonths,
                   });
-                  setExpenseLabel("");
-                  setExpenseAmount(0);
+                  setFdName("");
+                  setFdPrincipal(0);
+                  setFdRate(0);
                 }}
               >
-                Add Expense
+                Add FD
               </Button>
             </Stack>
-          </SectionCard>
+          </Card>
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 6 }}>
-          <SectionCard title="Credit Card Bill" type="Credit Card">
+          <Card
+            withBorder
+            radius="md"
+            p="lg"
+            h="100%"
+            style={{ borderLeft: "3px solid var(--mantine-color-violet-5)" }}
+          >
+            <Group gap="xs" mb="md">
+              <ThemeIcon variant="light" color="violet" size="md" radius="md">
+                <IconRefresh size={16} />
+              </ThemeIcon>
+              <Text fw={600} size="sm">
+                Recurring Deposit
+              </Text>
+            </Group>
+            <Divider mb="md" />
             <Stack gap="sm">
-              <BuilderMonthSelect
-                value={creditCardMonth}
-                minMonth={startMonth}
-                label="Month"
-                onChange={(value) => value && setCreditCardMonth(value as MonthKey)}
-              />
               <TextInput
-                maxLength={50}
-                label="Label"
-                placeholder="e.g. December bill"
-                value={creditCardLabel}
-                onChange={(e) => setCreditCardLabel(e.currentTarget.value)}
+                label="Name"
+                placeholder="e.g. Post Office RD"
+                value={rdName}
+                onChange={(e) => setRdName(e.currentTarget.value)}
               />
               <NumberInput
-                label="Amount"
-                value={creditCardAmount}
+                label="Monthly Contribution"
+                value={rdContribution}
                 min={1}
                 thousandSeparator=","
                 prefix="₹"
-                onChange={(value) => setCreditCardAmount(Number(value))}
+                onChange={(v) => setRdContribution(Number(v))}
               />
-              <Button
-                leftSection={<IconPlus size={16} />}
-                disabled={!creditCardLabel.trim() || creditCardAmount <= 0}
-                onClick={() => {
-                  addCreditCardBill({
-                    id: crypto.randomUUID(),
-                    month: creditCardMonth,
-                    amount: creditCardAmount,
-                    label: creditCardLabel,
-                  });
-                  setCreditCardLabel("");
-                  setCreditCardAmount(0);
-                }}
-              >
-                Add Bill
-              </Button>
-            </Stack>
-          </SectionCard>
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, md: 6 }}>
-          <SectionCard title="Bonus Income" type="Bonus">
-            <Stack gap="sm">
+              <Grid gap="sm">
+                <Grid.Col span={6}>
+                  <NumberInput
+                    label="Interest Rate"
+                    value={rdRate}
+                    min={0}
+                    max={15}
+                    decimalScale={2}
+                    suffix="%"
+                    clampBehavior="strict"
+                    onChange={(v) => setRdRate(Number(v))}
+                  />
+                </Grid.Col>
+                <Grid.Col span={6}>
+                  <NumberInput
+                    label="Duration"
+                    value={rdDurationMonths}
+                    min={1}
+                    max={120}
+                    suffix=" mo"
+                    clampBehavior="strict"
+                    onChange={(v) => setRdDurationMonths(Number(v))}
+                  />
+                </Grid.Col>
+              </Grid>
               <BuilderMonthSelect
-                value={bonusMonth}
-                minMonth={startMonth}
-                label="Month"
-                onChange={(value) => value && setBonusMonth(value as MonthKey)}
-              />
-              <TextInput
-                maxLength={50}
-                label="Description"
-                placeholder="e.g. Annual performance bonus"
-                value={bonusDescription}
-                onChange={(e) => setBonusDescription(e.currentTarget.value)}
-              />
-              <NumberInput
-                label="Amount"
-                value={bonusAmount}
-                min={1}
-                thousandSeparator=","
-                prefix="₹"
-                onChange={(value) => setBonusAmount(Number(value))}
+                label="Start Month"
+                value={rdStartMonth}
+                onChange={(value) => value && setRdStartMonth(value as MonthKey)}
               />
               <Button
                 leftSection={<IconPlus size={16} />}
-                disabled={!bonusDescription.trim() || bonusAmount <= 0}
+                color="violet"
+                disabled={!rdName.trim() || rdContribution <= 0 || rdRate <= 0 || rdDurationMonths <= 0}
                 onClick={() => {
-                  addBonusIncome({
+                  addInstrument({
                     id: crypto.randomUUID(),
-                    month: bonusMonth,
-                    amount: bonusAmount,
-                    description: bonusDescription,
+                    type: "RD",
+                    name: rdName,
+                    monthlyContribution: rdContribution,
+                    rate: rdRate,
+                    startMonth: rdStartMonth,
+                    durationMonths: rdDurationMonths,
                   });
-                  setBonusDescription("");
-                  setBonusAmount(0);
+                  setRdName("");
+                  setRdContribution(0);
+                  setRdRate(0);
                 }}
               >
-                Add Bonus
+                Add RD
               </Button>
             </Stack>
-          </SectionCard>
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, md: 6 }}>
-          <SectionCard title="Salary Change" type="Salary Change">
-            <Stack gap="sm">
-              <BuilderMonthSelect
-                value={salaryMonth}
-                minMonth={startMonth}
-                label="Effective Month"
-                onChange={(value) => value && setSalaryMonth(value as MonthKey)}
-              />
-              <TextInput
-                maxLength={50}
-                label="Description"
-                placeholder="e.g. Promotion / role change"
-                value={salaryDescription}
-                onChange={(e) => setSalaryDescription(e.currentTarget.value)}
-              />
-              <NumberInput
-                label="New Monthly Income"
-                value={salaryIncome}
-                min={0}
-                thousandSeparator=","
-                prefix="₹"
-                onChange={(value) => setSalaryIncome(Number(value))}
-              />
-              <Button
-                leftSection={<IconPlus size={16} />}
-                disabled={!salaryDescription.trim() || salaryIncome < 0}
-                onClick={() => {
-                  addSalaryChange({
-                    id: crypto.randomUUID(),
-                    effectiveMonth: salaryMonth,
-                    newMonthlyIncome: salaryIncome,
-                    description: salaryDescription,
-                  });
-                  setSalaryDescription("");
-                }}
-              >
-                Add Salary Change
-              </Button>
-            </Stack>
-          </SectionCard>
+          </Card>
         </Grid.Col>
       </Grid>
 
       <Card withBorder radius="md" p="lg">
         <Group justify="space-between" mb="md">
           <Text fw={600} size="sm">
-            Event Timeline
+            Added Instruments
           </Text>
-          {timeline.length > 0 && (
-            <Badge variant="light" color="gray" size="sm">
-              {timeline.length} event{timeline.length !== 1 ? "s" : ""}
-            </Badge>
+          {state.instruments.length > 0 && (
+            <Group gap="xs">
+              <Badge variant="light" color="teal" size="sm">
+                {fds.length} FD{fds.length !== 1 ? "s" : ""}
+              </Badge>
+              <Badge variant="light" color="violet" size="sm">
+                {rds.length} RD{rds.length !== 1 ? "s" : ""}
+              </Badge>
+            </Group>
           )}
         </Group>
 
-        {timeline.length === 0 ? (
+        {state.instruments.length === 0 ? (
           <Text size="sm" c="dimmed" ta="center" py="md">
-            No events added yet.
+            No instruments added yet.
           </Text>
         ) : (
           <Table striped highlightOnHover withColumnBorders={false}>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Month</Table.Th>
                 <Table.Th>Type</Table.Th>
-                <Table.Th>Description</Table.Th>
-                <Table.Th style={{ textAlign: "right" }}>Value</Table.Th>
+                <Table.Th>Name</Table.Th>
+                <Table.Th style={{ textAlign: "right" }}>Amount</Table.Th>
+                <Table.Th style={{ textAlign: "right" }}>Rate</Table.Th>
+                <Table.Th style={{ textAlign: "right" }}>Duration</Table.Th>
+                <Table.Th>Start</Table.Th>
                 <Table.Th />
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {timeline.map((event) => {
-                const cfg = TYPE_CONFIG[event.type] ?? TYPE_CONFIG["Expense"];
-                return (
-                  <Table.Tr key={event.id}>
-                    <Table.Td>
-                      <Text size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
-                        {formatMonth(event.month)}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Badge variant="light" color={cfg.color} size="sm">
-                        {event.type}
-                      </Badge>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm">{event.description}</Text>
-                    </Table.Td>
-                    <Table.Td style={{ textAlign: "right" }}>
-                      <Text size="sm" fw={600} style={{ fontVariantNumeric: "tabular-nums" }}>
-                        {event.value}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Button
-                        size="xs"
-                        color="red"
-                        variant="subtle"
-                        leftSection={<IconTrash size={14} />}
-                        onClick={() => removeHandlers[event.type]?.(event.id)}
-                      >
-                        Remove
-                      </Button>
-                    </Table.Td>
-                  </Table.Tr>
-                );
-              })}
+              {state.instruments.map((instrument) => (
+                <Table.Tr key={instrument.id}>
+                  <Table.Td>
+                    <Badge
+                      variant="light"
+                      color={instrument.type === "FD" ? "teal" : "violet"}
+                      size="sm"
+                    >
+                      {instrument.type}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm" fw={500}>{instrument.name}</Text>
+                  </Table.Td>
+                  <Table.Td style={{ textAlign: "right" }}>
+                    <Text size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
+                      {instrument.type === "FD"
+                        ? `₹${instrument.principal.toLocaleString()}`
+                        : `₹${instrument.monthlyContribution.toLocaleString()}/mo`}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td style={{ textAlign: "right" }}>
+                    <Text size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
+                      {instrument.rate}%
+                    </Text>
+                  </Table.Td>
+                  <Table.Td style={{ textAlign: "right" }}>
+                    <Text size="sm">{instrument.durationMonths} mo</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm">{formatMonth(instrument.startMonth)}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Button
+                      size="xs"
+                      color="red"
+                      variant="subtle"
+                      leftSection={<IconTrash size={14} />}
+                      onClick={() => removeInstrument(instrument.id)}
+                    >
+                      Remove
+                    </Button>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
             </Table.Tbody>
           </Table>
         )}
