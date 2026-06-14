@@ -1,3 +1,4 @@
+// src/app/AppProvider.tsx
 import {
   type ReactNode,
 } from "react";

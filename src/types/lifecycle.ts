@@ -1,3 +1,4 @@
+// src/types/lifecycle.ts
 import type {
   FinancialEvent,
 } from "@/types/events";

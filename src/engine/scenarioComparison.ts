@@ -1,3 +1,4 @@
+// src/engine/scenarioComparison.ts
 import { simulate } from "@/engine/simulate";
 import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 

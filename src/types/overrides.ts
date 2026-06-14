@@ -1,3 +1,4 @@
+// src/types/overrides.ts
 import type { MonthKey } from "@/types/simulation";
 import type { RuntimeEvent } from "@/types/runtimeEvent";
 

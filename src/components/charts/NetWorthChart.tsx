@@ -1,3 +1,4 @@
+// src/components/charts/NetWorthChart.tsx
 import { Card, Stack, Text, Badge, Group, Divider } from "@mantine/core";
 import { LineChart } from "@mantine/charts";
 import { useSimulation } from "@/hooks/useSimulation";

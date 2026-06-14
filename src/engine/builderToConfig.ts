@@ -1,3 +1,4 @@
+// src/engine/builderToConfig.ts
 import type {
   PlannerConfig,
 } from "@/types/config";

@@ -1,3 +1,4 @@
+// src/components/scenario/ActiveInstruments.tsx
 import {
   Badge,
   Card,

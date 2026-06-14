@@ -1,3 +1,4 @@
+// src/types/builder.ts
 import type {
   MonthKey,
 } from "@/types/simulation";

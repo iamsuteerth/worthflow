@@ -1,3 +1,4 @@
+// src/components/builder/InstrumentsStep.tsx
 import {
   Badge,
   Button,

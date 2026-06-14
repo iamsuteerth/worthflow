@@ -1,3 +1,4 @@
+// src/store/authStore.ts
 import { create } from "zustand";
 
 const SESSION_KEY =

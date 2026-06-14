@@ -1,3 +1,4 @@
+// src/engine/checksum.ts
 export async function calculateChecksum(
   payload: string
 ): Promise<string> {

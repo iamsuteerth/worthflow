@@ -1,3 +1,4 @@
+// src/engine/stateFactory.ts
 import type {
   PlannerConfig,
 } from "@/types/config";

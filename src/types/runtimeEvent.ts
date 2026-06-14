@@ -1,3 +1,4 @@
+// src/types/runtimeEvent.ts
 import type { MonthKey } from "@/types/simulation";
 
 export interface RuntimeOneOffExpense {

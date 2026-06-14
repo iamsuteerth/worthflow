@@ -1,3 +1,4 @@
+// src/types/assets.ts
 export interface AssetSnapshot {
   cash: number;
 

@@ -1,3 +1,4 @@
+// src/components/builder/ForecastStep.tsx
 import { Card, Grid, NumberInput, Stack, Text, ThemeIcon } from "@mantine/core";
 import { IconCalendarMonth, IconChartLine } from "@tabler/icons-react";
 import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";

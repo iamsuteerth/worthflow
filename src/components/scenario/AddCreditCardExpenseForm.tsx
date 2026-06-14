@@ -1,3 +1,4 @@
+// src/components/scenario/AddCreditCardExpenseForm.tsx
 import { Button, NumberInput, Stack, TextInput } from "@mantine/core";
 import { IconCreditCard } from "@tabler/icons-react";
 import { useState } from "react";

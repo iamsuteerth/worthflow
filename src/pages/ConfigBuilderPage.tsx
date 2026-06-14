@@ -1,3 +1,4 @@
+// src/pages/ConfigBuilderPage.tsx
 import BuilderWizard from "@/components/builder/BuilderWizard";
 
 export default function ConfigBuilderPage() {

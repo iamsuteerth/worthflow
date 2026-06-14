@@ -1,3 +1,4 @@
+// src/types/simulationState.ts
 import type { FdPosition } from "@/engine/fd";
 import type { RdPosition } from "@/engine/rd";
 

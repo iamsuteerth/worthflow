@@ -1,4 +1,4 @@
-
+// src/pages/ForecastPage.tsx
 import SummaryCards
   from "@/components/SummaryCards";
 

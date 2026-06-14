@@ -1,3 +1,4 @@
+// src/components/scenario/AddBonusForm.tsx
 import { Button, NumberInput, Stack, TextInput } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { useState } from "react";

@@ -1,3 +1,4 @@
+// src/components/scenario/ScenarioBanner.tsx
 import { Badge, Card, Divider, Group, Text } from "@mantine/core";
 import { IconAdjustments } from "@tabler/icons-react";
 import { usePlannerStore } from "@/store/plannerStore";

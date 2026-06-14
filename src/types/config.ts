@@ -1,3 +1,4 @@
+// src/types/config.ts
 import type { Instrument } from "@/types/instrument";
 import type { MonthKey } from "@/types/simulation";
 import type {

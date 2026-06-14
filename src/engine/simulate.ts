@@ -1,3 +1,4 @@
+// src/engine/simulate.ts
 import { generateMonths } from "@/engine/dateUtils";
 
 import type { AssetSnapshot } from "@/types/assets";

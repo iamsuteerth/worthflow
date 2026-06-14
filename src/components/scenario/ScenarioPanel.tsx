@@ -1,3 +1,4 @@
+// src/components/scenario/ScenarioPanel.tsx
 import {
   Box,
   Button,

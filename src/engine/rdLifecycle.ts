@@ -1,3 +1,4 @@
+// src/engine/rdLifecycle.ts
 import type {
   PlannerConfig,
 } from "@/types/config";

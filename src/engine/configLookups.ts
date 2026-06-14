@@ -1,3 +1,4 @@
+// src/engine/configLookups.ts
 import type { PlannerConfig } from "@/types/config";
 import type { MonthKey } from "@/types/simulation";
 

@@ -1,3 +1,4 @@
+// src/components/dashboard/DashboardTabs.tsx
 import { Card, Tabs } from "@mantine/core";
 
 import ForecastTable       from "@/components/tables/ForecastTable";

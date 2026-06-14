@@ -1,3 +1,4 @@
+// src/engine/calculateXirr.ts
 export function calculateXirr(
   cashflows: {
     amount: number;

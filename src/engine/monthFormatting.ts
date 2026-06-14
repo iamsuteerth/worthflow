@@ -1,3 +1,4 @@
+// src/engine/monthFormatting.ts
 export function formatMonth(
   month: string
 ) {

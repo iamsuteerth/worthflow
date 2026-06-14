@@ -1,3 +1,4 @@
+// src/components/builder/EventsStep.tsx
 import {
   Badge,
   Button,

@@ -1,3 +1,4 @@
+// src/engine/buildCashflowEvents.ts
 import type {
   PlannerConfig,
 } from "@/types/config";
