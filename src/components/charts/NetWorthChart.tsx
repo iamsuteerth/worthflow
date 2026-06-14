@@ -85,9 +85,9 @@ function getEventSummary(events: FinancialEvent[]): EventSummary[] {
   if (totals.rdMatured > 0)
     results.push({ label: "RD Matured", amount: totals.rdMatured, sign: "+", color: "green" });
   if (totals.investmentDeposit > 0)
-    results.push({ label: "Portfolio Deposit", amount: totals.investmentDeposit, sign: "+", color: "blue" });
+    results.push({ label: "Portfolio Deposit", amount: totals.investmentDeposit, sign: "-", color: "orange" });
   if (totals.investmentWithdrawal > 0)
-    results.push({ label: "Portfolio Withdrawal", amount: totals.investmentWithdrawal, sign: "-", color: "orange" });
+    results.push({ label: "Portfolio Withdrawal", amount: totals.investmentWithdrawal, sign: "+", color: "green" });
   if (totals.investmentOverride > 0)
     results.push({ label: "Investment Override", amount: 0, sign: null, color: "gray" });
   if (totals.returnOverride > 0)

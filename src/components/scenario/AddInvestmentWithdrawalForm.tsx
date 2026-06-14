@@ -1,98 +1,59 @@
-import { Alert, Button, Grid, NumberInput, Stack, Text } from "@mantine/core";
-import { IconAlertCircle, IconChartLine } from "@tabler/icons-react";
+import { Button, NumberInput, Stack, Text } from "@mantine/core";
+import { IconArrowUp } from "@tabler/icons-react";
 import { useState } from "react";
-import { generateMonths } from "../../engine/dateUtils";
+import { useSimulation } from "../../hooks/useSimulation";
 import { usePlannerStore } from "../../store/plannerStore";
 import type { MonthKey } from "../../types/simulation";
 import MonthSelect from "../common/MonthSelect";
 
-export default function AddInvestmentOverrideForm() {
-  const config = usePlannerStore((state) => state.config);
-  const addInvestmentOverride = usePlannerStore(
-    (state) => state.addTransientInvestmentOverride
-  );
-  const runtimeEvents = usePlannerStore((state) => state.overrides.runtimeEvents);
+export default function AddInvestmentWithdrawalForm() {
+  const result = useSimulation();
+  const addWithdrawal = usePlannerStore((state) => state.addTransientInvestmentWithdrawal);
+  const startMonth = usePlannerStore((state) => state.config.forecast.startMonth);
 
-  const months = generateMonths(config.forecast.startMonth, config.forecast.totalMonths);
-  const forecastStart = months[0];
-  const forecastEnd = months[months.length - 1];
-
-  const [startMonth, setStartMonth] = useState<MonthKey | null>(forecastStart);
-  const [endMonth, setEndMonth] = useState<MonthKey | null>(forecastStart);
+  const [month, setMonth] = useState<MonthKey | null>(startMonth);
   const [amount, setAmount] = useState(0);
 
-  const validRange = !!startMonth && !!endMonth && startMonth <= endMonth;
-
-  const investmentOverrides = (runtimeEvents ?? []).filter(
-    (event) => event.type === "INVESTMENT_OVERRIDE"
-  );
-
-  const overlap =
-    !!startMonth &&
-    !!endMonth &&
-    investmentOverrides.some(
-      (event) => !(endMonth < event.startMonth || startMonth > event.endMonth)
-    );
+  const maxWithdrawal = month
+    ? (result.rows.find((row) => row.month === month)?.assets.investmentCorpus ?? 0)
+    : 0;
 
   return (
     <Stack gap="sm">
-      <Text size="sm" c="dimmed">
-        Override the monthly investment amount for a date range. Use ₹0 to temporarily pause investing.
-      </Text>
-
-      <Grid gap="sm">
-        <Grid.Col span={6}>
-          <MonthSelect
-            label="Start Month"
-            value={startMonth}
-            minMonth={forecastStart}
-            maxMonth={forecastEnd}
-            onChange={(value) => setStartMonth(value as MonthKey | null)}
-          />
-        </Grid.Col>
-        <Grid.Col span={6}>
-          <MonthSelect
-            label="End Month"
-            value={endMonth}
-            minMonth={forecastStart}
-            maxMonth={forecastEnd}
-            onChange={(value) => setEndMonth(value as MonthKey | null)}
-          />
-        </Grid.Col>
-      </Grid>
+      <MonthSelect
+        label="Month"
+        value={month}
+        onChange={(value) => setMonth(value as MonthKey | null)}
+      />
 
       <NumberInput
-        label="Monthly Investment"
+        label="Withdrawal Amount"
         value={amount}
         min={0}
+        max={maxWithdrawal}
         thousandSeparator=","
         prefix="₹"
         onChange={(value) => setAmount(Number(value))}
       />
 
-      {!validRange && startMonth && endMonth && (
-        <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light" p="xs">
-          End month must be on or after start month.
-        </Alert>
-      )}
-
-      {overlap && (
-        <Alert icon={<IconAlertCircle size={16} />} color="orange" variant="light" p="xs">
-          This range overlaps an existing investment override.
-        </Alert>
-      )}
+      <Text size="xs" c="dimmed">
+        Available portfolio:{" "}
+        <Text span fw={600} c="violet" style={{ fontVariantNumeric: "tabular-nums" }}>
+          ₹{maxWithdrawal.toLocaleString()}
+        </Text>
+      </Text>
 
       <Button
-        leftSection={<IconChartLine size={16} />}
-        color="violet"
-        disabled={!validRange || overlap || amount < 0}
+        leftSection={<IconArrowUp size={16} />}
+        color="orange"
+        disabled={!month || amount <= 0 || amount > maxWithdrawal}
         onClick={() => {
-          if (!startMonth || !endMonth) return;
-          addInvestmentOverride(startMonth, endMonth, amount);
+          if (!month) return;
+          addWithdrawal(month, amount);
           setAmount(0);
         }}
       >
-        Add Investment Override
+        Add Withdrawal
       </Button>
     </Stack>
   );
