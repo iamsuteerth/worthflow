@@ -1,23 +1,23 @@
 import type {
   PlannerConfig,
-} from "../types/config";
+} from "@/types/config";
 
 import type {
   LifecycleResult,
-} from "../types/lifecycle";
+} from "@/types/lifecycle";
 
 import type {
   SimulationState,
-} from "../types/simulationState";
+} from "@/types/simulationState";
 
 import type {
   MonthKey,
-} from "../types/simulation";
+} from "@/types/simulation";
 
 import {
   createFdPosition,
   updateFdPosition,
-} from "./fd";
+} from "@/engine/fd";
 
 export function processFdLifecycle(
   state: SimulationState,

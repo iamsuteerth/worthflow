@@ -1,27 +1,27 @@
 import type {
   PlannerConfig,
-} from "../types/config";
+} from "@/types/config";
 
 import type {
   SimulationState,
-} from "../types/simulationState";
+} from "@/types/simulationState";
 
 import {
   addMonths,
-} from "./dateUtils";
+} from "@/engine/dateUtils";
 
 import {
   createHistoricalFdPosition,
-} from "./fd";
+} from "@/engine/fd";
 
 import {
   createHistoricalRdPosition,
-} from "./rd";
+} from "@/engine/rd";
 
 import type {
   FixedDeposit,
   RecurringDeposit,
-} from "../types/instrument";
+} from "@/types/instrument";
 
 export function createInitialState(
   config: PlannerConfig

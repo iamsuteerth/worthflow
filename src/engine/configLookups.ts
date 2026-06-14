@@ -1,5 +1,5 @@
-import type { PlannerConfig } from "../types/config";
-import type { MonthKey } from "../types/simulation";
+import type { PlannerConfig } from "@/types/config";
+import type { MonthKey } from "@/types/simulation";
 
 export function getMonthlyExpense(
   config: PlannerConfig,

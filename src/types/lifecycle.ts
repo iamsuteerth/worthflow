@@ -1,10 +1,10 @@
 import type {
   FinancialEvent,
-} from "./events";
+} from "@/types/events";
 
 import type {
   SimulationState,
-} from "./simulationState";
+} from "@/types/simulationState";
 
 export interface LifecycleResult {
   state: SimulationState;

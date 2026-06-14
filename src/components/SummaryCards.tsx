@@ -15,7 +15,7 @@ import {
 
 import {
   useSimulation,
-} from "../hooks/useSimulation";
+} from "@/hooks/useSimulation";
 
 import type {
   ReactNode,

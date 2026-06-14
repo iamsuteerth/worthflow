@@ -7,16 +7,16 @@ import type {
   BuilderOneOffExpense,
   BuilderSalaryChange,
   BuilderCreditCardBill,
-} from "../types/builder";
+} from "@/types/builder";
 
 import type {
   MonthKey,
-} from "../types/simulation";
+} from "@/types/simulation";
 
 import type {
   FixedDeposit,
   RecurringDeposit,
-} from "../types/instrument";
+} from "@/types/instrument";
 
 const initialState: BuilderState = {
   startMonth:

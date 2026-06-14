@@ -18,19 +18,19 @@ import type {
 } from "react";
 
 import ThemeToggle
-  from "./ThemeToggle";
+  from "@/components/layout/ThemeToggle";
 
 import ScenarioPanel
-  from "../scenario/ScenarioPanel";
+  from "@/components/scenario/ScenarioPanel";
 
 import {
   usePlannerStore,
-} from "../../store/plannerStore";
+} from "@/store/plannerStore";
 
 import {
   IconLogout,
 } from "@tabler/icons-react";
-import { useAuthStore } from "../../store/authStore";
+import { useAuthStore } from "@/store/authStore";
 
 interface Props {
   children: ReactNode;

@@ -1,9 +1,9 @@
 import { Badge, ScrollArea, Table, Text } from "@mantine/core";
-import { useSimulation } from "../../hooks/useSimulation";
-import { formatMonth } from "../../engine/monthFormatting";
+import { useSimulation } from "@/hooks/useSimulation";
+import { formatMonth } from "@/engine/monthFormatting";
 
-import { money, sumEvents, netInstrumentFlow } from "./tableUtils";
-import { Emptystate } from "./Emptystate";
+import { money, sumEvents, netInstrumentFlow } from "@/components/tables/tableUtils";
+import { Emptystate } from "@/components/tables/Emptystate";
 
 export default function CashflowTable() {
   const result = useSimulation();

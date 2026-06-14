@@ -1,12 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import configJson from "../data/config.json";
+import configJson from "@/data/config.json";
 
-import type { PlannerConfig } from "../types/config";
-import type { PlannerOverrides } from "../types/overrides";
-import { buildEffectiveConfig } from "../engine/buildEffectiveConfig";
-import type { MonthKey } from "../types/simulation";
+import type { PlannerConfig } from "@/types/config";
+import type { PlannerOverrides } from "@/types/overrides";
+import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
+import type { MonthKey } from "@/types/simulation";
 
 export type AppView =
   | "builder"
@@ -14,7 +14,7 @@ export type AppView =
 
 import type {
   SavedScenario,
-} from "../types/scenario";
+} from "@/types/scenario";
 
 interface PlannerStore {
   baseConfig: PlannerConfig;

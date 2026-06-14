@@ -1,4 +1,4 @@
-import type { MonthKey } from "../types/simulation";
+import type { MonthKey } from "@/types/simulation";
 
 const MONTH_NAMES = [
   "Jan",

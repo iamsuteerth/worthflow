@@ -13,7 +13,7 @@ import {
 import {
   ThemeContext,
   type ColorScheme,
-} from "./theme-context";
+} from "@/app/theme-context";
 import { Notifications } from "@mantine/notifications";
 
 export function AppProvider({

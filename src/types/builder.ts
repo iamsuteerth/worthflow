@@ -1,11 +1,11 @@
 import type {
   MonthKey,
-} from "./simulation";
+} from "@/types/simulation";
 
 import type {
   FixedDeposit,
   RecurringDeposit,
-} from "./instrument";
+} from "@/types/instrument";
 
 export interface InvestmentRange {
   startMonth: MonthKey;

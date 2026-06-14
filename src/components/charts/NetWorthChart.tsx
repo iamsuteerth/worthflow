@@ -1,8 +1,8 @@
 import { Card, Stack, Text, Badge, Group, Divider } from "@mantine/core";
 import { LineChart } from "@mantine/charts";
-import { useSimulation } from "../../hooks/useSimulation";
-import { formatMonth } from "../../engine/monthFormatting";
-import type { FinancialEvent } from "../../types/events";
+import { useSimulation } from "@/hooks/useSimulation";
+import { formatMonth } from "@/engine/monthFormatting";
+import type { FinancialEvent } from "@/types/events";
 
 // ─── Formatting helpers ───────────────────────────────────────────────────────
 

@@ -1,14 +1,14 @@
 import type {
   PlannerConfig,
-} from "../types/config";
+} from "@/types/config";
 
 import type {
   FinancialEvent,
-} from "../types/events";
+} from "@/types/events";
 
 import type {
   MonthKey,
-} from "../types/simulation";
+} from "@/types/simulation";
 
 export function buildCashflowEvents(
   config: PlannerConfig,

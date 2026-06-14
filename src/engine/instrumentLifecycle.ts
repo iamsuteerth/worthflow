@@ -1,26 +1,26 @@
 import type {
   PlannerConfig,
-} from "../types/config";
+} from "@/types/config";
 
 import type {
   MonthKey,
-} from "../types/simulation";
+} from "@/types/simulation";
 
 import type {
   LifecycleResult,
-} from "../types/lifecycle";
+} from "@/types/lifecycle";
 
 import type {
   SimulationState,
-} from "../types/simulationState";
+} from "@/types/simulationState";
 
 import {
   processFdLifecycle,
-} from "./fdLifecycle";
+} from "@/engine/fdLifecycle";
 
 import {
   processRdLifecycle,
-} from "./rdLifecycle";
+} from "@/engine/rdLifecycle";
 
 export function processInstrumentLifecycle(
   state: SimulationState,

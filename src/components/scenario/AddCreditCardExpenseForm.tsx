@@ -1,9 +1,9 @@
 import { Button, NumberInput, Stack, TextInput } from "@mantine/core";
 import { IconCreditCard } from "@tabler/icons-react";
 import { useState } from "react";
-import { usePlannerStore } from "../../store/plannerStore";
-import MonthSelect from "../common/MonthSelect";
-import type { MonthKey } from "../../types/simulation";
+import { usePlannerStore } from "@/store/plannerStore";
+import MonthSelect from "@/components/common/MonthSelect";
+import type { MonthKey } from "@/types/simulation";
 
 export default function AddCreditCardExpenseForm() {
   const addCreditCardExpense = usePlannerStore(

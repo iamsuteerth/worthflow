@@ -1,5 +1,5 @@
 import { Select } from "@mantine/core";
-import { formatMonth } from "../../engine/monthFormatting";
+import { formatMonth } from "@/engine/monthFormatting";
 
 interface Props {
   value: string | null;

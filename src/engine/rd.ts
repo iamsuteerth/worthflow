@@ -1,18 +1,18 @@
 import type {
   RecurringDeposit,
-} from "../types/instrument";
+} from "@/types/instrument";
 
 import type {
   MonthKey,
-} from "../types/simulation";
+} from "@/types/simulation";
 
 import {
   addMonths,
-} from "./dateUtils";
+} from "@/engine/dateUtils";
 
 import {
   calculateRdValue,
-} from "./rdMath";
+} from "@/engine/rdMath";
 
 export interface RdPosition {
   id: string;

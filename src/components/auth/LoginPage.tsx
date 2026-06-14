@@ -19,7 +19,7 @@ import {
 
 import {
   useAuthStore,
-} from "../../store/authStore";
+} from "@/store/authStore";
 
 export default function LoginPage() {
   const login =

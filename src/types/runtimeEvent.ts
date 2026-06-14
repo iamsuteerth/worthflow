@@ -1,4 +1,4 @@
-import type { MonthKey } from "./simulation";
+import type { MonthKey } from "@/types/simulation";
 
 export interface RuntimeOneOffExpense {
   id: string;

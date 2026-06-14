@@ -15,9 +15,9 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconDeviceFloppy, IconFolderOpen, IconTrash } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
-import { buildEffectiveConfig } from "../../engine/buildEffectiveConfig";
-import { simulate } from "../../engine/simulate";
-import { usePlannerStore } from "../../store/plannerStore";
+import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
+import { simulate } from "@/engine/simulate";
+import { usePlannerStore } from "@/store/plannerStore";
 
 function DeltaStat({ label, value }: { label: string; value: number }) {
   const color = value > 0 ? "green" : value < 0 ? "red" : "gray";

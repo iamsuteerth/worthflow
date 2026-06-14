@@ -1,14 +1,14 @@
 import type {
   PlannerConfig,
-} from "../types/config";
+} from "@/types/config";
 
 import type {
   PlannerOverrides,
-} from "../types/overrides";
+} from "@/types/overrides";
 
 import type {
   MonthKey,
-} from "../types/simulation";
+} from "@/types/simulation";
 
 export function buildEffectiveConfig(
   baseConfig: PlannerConfig,

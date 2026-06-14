@@ -1,9 +1,9 @@
-import type { Instrument } from "./instrument";
-import type { MonthKey } from "./simulation";
+import type { Instrument } from "@/types/instrument";
+import type { MonthKey } from "@/types/simulation";
 import type {
   SalaryChange,
   BonusIncome,
-} from "./incomeEvents";
+} from "@/types/incomeEvents";
 
 export interface ForecastConfig {
   startMonth: MonthKey;

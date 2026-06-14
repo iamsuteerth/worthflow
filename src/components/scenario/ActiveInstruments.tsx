@@ -11,11 +11,11 @@ import {
 } from "@mantine/core";
 import { useMemo } from "react";
 import { IconBuildingBank, IconRefresh } from "@tabler/icons-react";
-import { addMonths } from "../../engine/dateUtils";
-import { formatMonth } from "../../engine/monthFormatting";
-import { usePlannerStore } from "../../store/plannerStore";
-import { money } from "../tables/tableUtils";
-import type { Instrument } from "../../types/instrument";
+import { addMonths } from "@/engine/dateUtils";
+import { formatMonth } from "@/engine/monthFormatting";
+import { usePlannerStore } from "@/store/plannerStore";
+import { money } from "@/components/tables/tableUtils";
+import type { Instrument } from "@/types/instrument";
 
 function calcMaturityValue(instrument: Instrument): {
   principal: number;

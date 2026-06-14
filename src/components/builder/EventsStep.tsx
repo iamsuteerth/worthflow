@@ -21,11 +21,11 @@ import {
   IconTrendingUp,
 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
-import { formatMonth } from "../../engine/monthFormatting";
-import { useBuilderStore } from "../../store/builderStore";
-import type { MonthKey } from "../../types/simulation";
-import BuilderMonthSelect from "./BuilderMonthSelect";
-import BuilderStepContainer from "./BuilderStepContainer";
+import { formatMonth } from "@/engine/monthFormatting";
+import { useBuilderStore } from "@/store/builderStore";
+import type { MonthKey } from "@/types/simulation";
+import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
+import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
 
 const TYPE_CONFIG: Record<
   string,

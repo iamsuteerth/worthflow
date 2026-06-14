@@ -1,8 +1,8 @@
 import { Badge, ScrollArea, Table, Text } from "@mantine/core";
-import { useSimulation } from "../../hooks/useSimulation";
-import { formatMonth } from "../../engine/monthFormatting";
-import { Emptystate } from "./Emptystate";
-import { money } from "./tableUtils";
+import { useSimulation } from "@/hooks/useSimulation";
+import { formatMonth } from "@/engine/monthFormatting";
+import { Emptystate } from "@/components/tables/Emptystate";
+import { money } from "@/components/tables/tableUtils";
 
 export default function NetWorthTable() {
   const result = useSimulation();

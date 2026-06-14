@@ -4,7 +4,7 @@ import {
 
 import {
   ThemeContext,
-} from "../app/theme-context";
+} from "@/app/theme-context";
 
 export function useTheme() {
   const context =

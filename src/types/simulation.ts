@@ -1,5 +1,5 @@
-import type { AssetSnapshot } from "./assets";
-import type { FinancialEvent } from "./events";
+import type { AssetSnapshot } from "@/types/assets";
+import type { FinancialEvent } from "@/types/events";
 
 export type MonthKey = `${number}-${string}`;
 

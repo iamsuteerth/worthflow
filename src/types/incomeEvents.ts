@@ -1,5 +1,5 @@
 import type { MonthKey }
-  from "./simulation"
+  from "@/types/simulation"
 
 export interface SalaryChange {
   id: string;

@@ -1,13 +1,13 @@
 import { Button, Grid, NumberInput, Stack, TextInput } from "@mantine/core";
 import { IconBuildingBank } from "@tabler/icons-react";
 import { useState } from "react";
-import { addMonths } from "../../engine/dateUtils";
-import { formatMonth } from "../../engine/monthFormatting";
-import { usePlannerStore } from "../../store/plannerStore";
-import type { MonthKey } from "../../types/simulation";
-import MonthSelect from "../common/MonthSelect";
-import InstrumentPreview from "./InstrumentPreview";
-import { money } from "./moneyFormat";
+import { addMonths } from "@/engine/dateUtils";
+import { formatMonth } from "@/engine/monthFormatting";
+import { usePlannerStore } from "@/store/plannerStore";
+import type { MonthKey } from "@/types/simulation";
+import MonthSelect from "@/components/common/MonthSelect";
+import InstrumentPreview from "@/components/scenario/InstrumentPreview";
+import { money } from "@/components/scenario/moneyFormat";
 
 export default function AddFdForm() {
   const addFd = usePlannerStore((state) => state.addTransientFd);

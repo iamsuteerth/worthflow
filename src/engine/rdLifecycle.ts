@@ -1,26 +1,26 @@
 import type {
   PlannerConfig,
-} from "../types/config";
+} from "@/types/config";
 
 import type {
   LifecycleResult,
-} from "../types/lifecycle";
+} from "@/types/lifecycle";
 
 import type {
   SimulationState,
-} from "../types/simulationState";
+} from "@/types/simulationState";
 
 import type {
   MonthKey,
-} from "../types/simulation";
+} from "@/types/simulation";
 
 import {
   createRdPosition,
-} from "./rd";
+} from "@/engine/rd";
 
 import {
   calculateRdValue,
-} from "./rdMath";
+} from "@/engine/rdMath";
 
 export function processRdLifecycle(
   state: SimulationState,

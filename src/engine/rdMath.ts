@@ -1,10 +1,10 @@
 import type {
   RdPosition,
-} from "./rd";
+} from "@/engine/rd";
 
 import type {
   MonthKey,
-} from "../types/simulation";
+} from "@/types/simulation";
 
 export function calculateRdValue(
   position: RdPosition,

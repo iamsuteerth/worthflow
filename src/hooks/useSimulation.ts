@@ -1,8 +1,8 @@
 import { simulate }
-  from "../engine/simulate";
+  from "@/engine/simulate";
 
 import { usePlannerStore }
-  from "../store/plannerStore";
+  from "@/store/plannerStore";
 
 export function useSimulation() {
   const config =

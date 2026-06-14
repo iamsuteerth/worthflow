@@ -18,5 +18,19 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            "../*",
+            "../../*",
+            "../../../*",
+            "../../../../*"
+          ],
+          message: "Use @/ imports instead of relative paths"
+        }
+      ]
+    }
   },
 ])

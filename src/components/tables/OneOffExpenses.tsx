@@ -1,8 +1,8 @@
 import { Badge, ScrollArea, Table } from "@mantine/core";
-import { usePlannerStore } from "../../store/plannerStore";
-import { formatMonth } from "../../engine/monthFormatting";
-import { Emptystate } from "./Emptystate";
-import { money } from "./tableUtils";
+import { usePlannerStore } from "@/store/plannerStore";
+import { formatMonth } from "@/engine/monthFormatting";
+import { Emptystate } from "@/components/tables/Emptystate";
+import { money } from "@/components/tables/tableUtils";
 
 export default function OneOffExpensesTable() {
   const config = usePlannerStore((state) => state.config);

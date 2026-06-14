@@ -12,25 +12,25 @@ import {
 } from "@tabler/icons-react";
 
 import PlannerShell
-  from "../components/layout/AppShell";
+  from "@/components/layout/AppShell";
 
 import LoginPage
-  from "../components/auth/LoginPage";
+  from "@/components/auth/LoginPage";
 
 import ForecastPage
-  from "../pages/ForecastPage";
+  from "@/pages/ForecastPage";
 
 import ConfigBuilderPage
-  from "../pages/ConfigBuilderPage";
+  from "@/pages/ConfigBuilderPage";
 
 import {
   usePlannerStore,
   type AppView,
-} from "../store/plannerStore";
+} from "@/store/plannerStore";
 
 import {
   useAuthStore,
-} from "../store/authStore";
+} from "@/store/authStore";
 
 export default function App() {
   const activeView =

@@ -18,22 +18,22 @@ import {
 import { useRef, useState } from "react";
 
 import { notifications } from "@mantine/notifications";
-import { exportPlan } from "../../engine/exportPlan";
-import { importPlan } from "../../engine/importPlan";
-import { usePlannerStore } from "../../store/plannerStore";
+import { exportPlan } from "@/engine/exportPlan";
+import { importPlan } from "@/engine/importPlan";
+import { usePlannerStore } from "@/store/plannerStore";
 
-import ActiveInstruments from "./ActiveInstruments";
-import AddBonusForm from "./AddBonusForm";
-import AddCreditCardExpenseForm from "./AddCreditCardExpenseForm";
-import AddExpenseForm from "./AddExpenseForm";
-import AddFdForm from "./AddFdForm";
-import AddInvestmentDepositForm from "./AddInvestmentDepositForm";
-import AddInvestmentOverrideForm from "./AddInvestmentOverrideForm";
-import AddInvestmentReturnOverrideForm from "./AddInvestmentReturnOverrideForm";
-import AddInvestmentWithdrawalForm from "./AddInvestmentWithdrawalForm";
-import AddRdForm from "./AddRdForm";
-import AddSalaryChangeForm from "./AddSalaryChangeForm";
-import SavedScenarios from "./SavedScenarios";
+import ActiveInstruments from "@/components/scenario/ActiveInstruments";
+import AddBonusForm from "@/components/scenario/AddBonusForm";
+import AddCreditCardExpenseForm from "@/components/scenario/AddCreditCardExpenseForm";
+import AddExpenseForm from "@/components/scenario/AddExpenseForm";
+import AddFdForm from "@/components/scenario/AddFdForm";
+import AddInvestmentDepositForm from "@/components/scenario/AddInvestmentDepositForm";
+import AddInvestmentOverrideForm from "@/components/scenario/AddInvestmentOverrideForm";
+import AddInvestmentReturnOverrideForm from "@/components/scenario/AddInvestmentReturnOverrideForm";
+import AddInvestmentWithdrawalForm from "@/components/scenario/AddInvestmentWithdrawalForm";
+import AddRdForm from "@/components/scenario/AddRdForm";
+import AddSalaryChangeForm from "@/components/scenario/AddSalaryChangeForm";
+import SavedScenarios from "@/components/scenario/SavedScenarios";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

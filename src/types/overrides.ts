@@ -1,5 +1,5 @@
-import type { MonthKey } from "./simulation";
-import type { RuntimeEvent } from "./runtimeEvent";
+import type { MonthKey } from "@/types/simulation";
+import type { RuntimeEvent } from "@/types/runtimeEvent";
 
 export interface PlannerOverrides {
   incomeMonthly?: number;

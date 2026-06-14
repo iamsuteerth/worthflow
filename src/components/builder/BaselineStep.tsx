@@ -5,8 +5,8 @@ import {
   IconCoins,
   IconWallet,
 } from "@tabler/icons-react";
-import { useBuilderStore } from "../../store/builderStore";
-import BuilderStepContainer from "./BuilderStepContainer";
+import { useBuilderStore } from "@/store/builderStore";
+import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
 
 function FieldCard({
   icon,

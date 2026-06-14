@@ -1,11 +1,11 @@
 import { Badge, ScrollArea, Table, Text } from "@mantine/core";
 import { useMemo } from "react";
-import { usePlannerStore } from "../../store/plannerStore";
-import { addMonths } from "../../engine/dateUtils";
-import { formatMonth } from "../../engine/monthFormatting";
-import { Emptystate } from "./Emptystate";
-import { money } from "./tableUtils";
-import type { Instrument } from "../../types/instrument";
+import { usePlannerStore } from "@/store/plannerStore";
+import { addMonths } from "@/engine/dateUtils";
+import { formatMonth } from "@/engine/monthFormatting";
+import { Emptystate } from "@/components/tables/Emptystate";
+import { money } from "@/components/tables/tableUtils";
+import type { Instrument } from "@/types/instrument";
 
 function calcMaturityValue(instrument: Instrument): {
   principal: number;

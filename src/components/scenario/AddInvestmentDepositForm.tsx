@@ -1,10 +1,10 @@
 import { Button, NumberInput, Stack, Text } from "@mantine/core";
 import { IconArrowDown } from "@tabler/icons-react";
 import { useState } from "react";
-import { useSimulation } from "../../hooks/useSimulation";
-import { usePlannerStore } from "../../store/plannerStore";
-import type { MonthKey } from "../../types/simulation";
-import MonthSelect from "../common/MonthSelect";
+import { useSimulation } from "@/hooks/useSimulation";
+import { usePlannerStore } from "@/store/plannerStore";
+import type { MonthKey } from "@/types/simulation";
+import MonthSelect from "@/components/common/MonthSelect";
 
 export default function AddInvestmentDepositForm() {
   const result = useSimulation();

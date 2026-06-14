@@ -22,11 +22,11 @@ import {
   IconWallet,
 } from "@tabler/icons-react";
 import { useMemo } from "react";
-import { builderToConfig } from "../../engine/builderToConfig";
-import { exportPlan } from "../../engine/exportPlan";
-import { formatMonth } from "../../engine/monthFormatting";
-import { useBuilderStore } from "../../store/builderStore";
-import { usePlannerStore } from "../../store/plannerStore";
+import { builderToConfig } from "@/engine/builderToConfig";
+import { exportPlan } from "@/engine/exportPlan";
+import { formatMonth } from "@/engine/monthFormatting";
+import { useBuilderStore } from "@/store/builderStore";
+import { usePlannerStore } from "@/store/plannerStore";
 
 function MetricCard({
   label,

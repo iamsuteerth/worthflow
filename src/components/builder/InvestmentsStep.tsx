@@ -12,12 +12,12 @@ import {
 } from "@mantine/core";
 import { IconChartLine, IconPlus, IconTrash, IconTrendingUp } from "@tabler/icons-react";
 import { useState } from "react";
-import { nextMonth } from "../../engine/dateUtils";
-import { formatMonth } from "../../engine/monthFormatting";
-import { useBuilderStore } from "../../store/builderStore";
-import type { MonthKey } from "../../types/simulation";
-import BuilderMonthSelect from "./BuilderMonthSelect";
-import BuilderStepContainer from "./BuilderStepContainer";
+import { nextMonth } from "@/engine/dateUtils";
+import { formatMonth } from "@/engine/monthFormatting";
+import { useBuilderStore } from "@/store/builderStore";
+import type { MonthKey } from "@/types/simulation";
+import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
+import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
 
 export default function InvestmentsStep() {
   const state = useBuilderStore((store) => store.state);

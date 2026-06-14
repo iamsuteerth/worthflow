@@ -17,11 +17,11 @@ import {
 
 import {
   useSimulation,
-} from "../../hooks/useSimulation";
+} from "@/hooks/useSimulation";
 
 import {
   formatMonth,
-} from "../../engine/monthFormatting";
+} from "@/engine/monthFormatting";
 
 function getEventIcon(
   type: string

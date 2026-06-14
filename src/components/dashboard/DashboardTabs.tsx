@@ -1,14 +1,14 @@
 import { Card, Tabs } from "@mantine/core";
 
-import ForecastTable       from "../tables/ForecastTable";
-import CashflowTable       from "../tables/CashflowTable";
-import EventTimeline       from "../timeline/EventTimeline";
-import NetWorthTable       from "../tables/NetworthTable";
-import InstrumentsTable    from "../tables/InstrumentsTable";
-import OneOffExpensesTable from "../tables/OneOffExpenses";
-import InvestmentTimeline from "../timeline/InvestmentTimeline";
+import ForecastTable       from "@/components/tables/ForecastTable";
+import CashflowTable       from "@/components/tables/CashflowTable";
+import EventTimeline       from "@/components/timeline/EventTimeline";
+import NetWorthTable       from "@/components/tables/NetworthTable";
+import InstrumentsTable    from "@/components/tables/InstrumentsTable";
+import OneOffExpensesTable from "@/components/tables/OneOffExpenses";
+import InvestmentTimeline from "@/components/timeline/InvestmentTimeline";
 
-import classes from "./DashboardTabs.module.css";
+import classes from "@/components/dashboard/DashboardTabs.module.css";
 
 // ─── Tab manifest ─────────────────────────────────────────────────────────────
 
