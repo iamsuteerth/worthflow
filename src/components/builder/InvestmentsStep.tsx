@@ -9,11 +9,11 @@ import {
   NumberInput,
   Stack,
   Text,
+  TextInput,
   ThemeIcon,
 } from "@mantine/core";
-import { IconChartLine, IconPlus, IconTrash, IconTrendingUp } from "@tabler/icons-react";
+import { IconChartLine, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
-import { nextMonth } from "@/engine/dateUtils";
 import { formatMonth } from "@/engine/monthFormatting";
 import { useBuilderStore } from "@/store/builderStore";
 import type { MonthKey } from "@/types/simulation";
@@ -22,113 +22,119 @@ import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
 
 export default function InvestmentsStep() {
   const state = useBuilderStore((store) => store.state);
-  const addInvestmentRange = useBuilderStore((store) => store.addInvestmentRange);
-  const removeInvestmentRange = useBuilderStore((store) => store.removeInvestmentRange);
-  const setState = useBuilderStore((store) => store.setState);
+  const addInvestmentAccount = useBuilderStore((store) => store.addInvestmentAccount);
+  const removeInvestmentAccount = useBuilderStore((store) => store.removeInvestmentAccount);
 
-  const startMonth =
-    state.investmentRanges.length === 0
-      ? state.startMonth
-      : (nextMonth(
-          state.investmentRanges[state.investmentRanges.length - 1].endMonth
-        ) as MonthKey);
+  const [name, setName] = useState("");
+  const [startMonth, setStartMonth] = useState<MonthKey>(state.startMonth);
+  const [openingBalance, setOpeningBalance] = useState(0);
+  const [defaultMonthlyContribution, setDefaultMonthlyContribution] = useState(0);
+  const [defaultAnnualReturn, setDefaultAnnualReturn] = useState(0);
 
-  const [endMonth, setEndMonth] = useState<MonthKey>(state.startMonth);
-  const [amount, setAmount] = useState(0);
+  const canAdd =
+    name.trim().length > 0 && (openingBalance > 0 || defaultMonthlyContribution > 0);
 
   return (
     <BuilderStepContainer>
       <Stack gap={4} mb="xs">
         <Text fw={700} size="xl">
-          Monthly Investments
+          Investment Accounts
         </Text>
         <Text size="sm" c="dimmed">
-          Define how much you invest each month. Add continuous ranges — use ₹0 for pause periods.
+          Every investment • Existing Portfolios, SIPs, or future lump sums are an account. 
         </Text>
       </Stack>
 
-      <Card withBorder radius="md" p="lg" style={{ borderLeft: "3px solid var(--mantine-color-indigo-5)" }}>
-        <Stack gap="xs" mb="md">
-          <ThemeIcon variant="light" color="indigo" size="md" radius="md">
-            <IconTrendingUp size={16} />
-          </ThemeIcon>
-          <Text fw={600} size="sm">
-            Default Annual Return
-          </Text>
-          <Text size="xs" c="dimmed">
-            Applied to all months without a specific return override.
-          </Text>
-        </Stack>
-        <NumberInput
-          label="Return rate (%)"
-          value={state.defaultAnnualReturn}
-          min={-99.99}
-          max={100}
-          decimalScale={2}
-          suffix="%"
-          onChange={(value) =>
-            setState({ defaultAnnualReturn: Number(value) })
-          }
-        />
-      </Card>
-
       <Card withBorder radius="md" p="lg">
         <Stack gap="md">
-          <Group justify="space-between" align="center">
-            <Group gap="xs">
-              <ThemeIcon variant="light" color="violet" size="md" radius="md">
-                <IconChartLine size={16} />
-              </ThemeIcon>
-              <Text fw={600} size="sm">
-                Add Investment Range
-              </Text>
-            </Group>
-            <Badge variant="light" color="gray" size="sm">
-              Starts: {formatMonth(startMonth)}
-            </Badge>
+          <Group gap="xs">
+            <ThemeIcon variant="light" color="indigo" size="md" radius="md">
+              <IconChartLine size={16} />
+            </ThemeIcon>
+            <Text fw={600} size="sm">
+              Add Account
+            </Text>
           </Group>
 
           <Divider />
 
           <Grid gap="md">
             <Grid.Col span={{ base: 12, sm: 6 }}>
+              <TextInput
+                label="Account Name"
+                placeholder="e.g. Nifty 50, Emergency Fund"
+                value={name}
+                onChange={(event) => setName(event.currentTarget.value)}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 6 }}>
               <BuilderMonthSelect
-                value={endMonth}
-                label="End Month"
-                onChange={(value: string | null) => {
+                value={startMonth}
+                label="Start Month"
+                minMonth={state.startMonth}
+                onChange={(value) => {
                   if (!value) return;
-                  setEndMonth(value as MonthKey);
+                  setStartMonth(value as MonthKey);
                 }}
               />
             </Grid.Col>
             <Grid.Col span={{ base: 12, sm: 6 }}>
               <NumberInput
-                label="Monthly Investment"
-                value={amount}
+                label="Opening Balance"
+                value={openingBalance}
                 min={0}
                 thousandSeparator=","
                 prefix="₹"
-                onChange={(value) => setAmount(Number(value))}
+                onChange={(value) => setOpeningBalance(Number(value))}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <NumberInput
+                label="Default Monthly Contribution"
+                value={defaultMonthlyContribution}
+                min={0}
+                thousandSeparator=","
+                prefix="₹"
+                onChange={(value) => setDefaultMonthlyContribution(Number(value))}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, sm: 6 }}>
+              <NumberInput
+                label="Default Annual Return"
+                value={defaultAnnualReturn}
+                min={-99.99}
+                max={1000}
+                decimalScale={2}
+                suffix="%"
+                onChange={(value) => setDefaultAnnualReturn(Number(value))}
               />
             </Grid.Col>
           </Grid>
 
           <Button
             leftSection={<IconPlus size={16} />}
-            disabled={amount < 0 || startMonth > endMonth}
+            disabled={!canAdd}
             onClick={() => {
-              addInvestmentRange({ startMonth, endMonth, amount });
-              const nextStart = nextMonth(endMonth) as MonthKey;
-              setEndMonth(nextStart);
-              setAmount(0);
+              addInvestmentAccount({
+                name: name.trim(),
+                startMonth,
+                openingBalance,
+                defaultAnnualReturn,
+                defaultMonthlyContribution,
+              });
+              setName("");
+              setStartMonth(state.startMonth);
+              setOpeningBalance(0);
+              setDefaultMonthlyContribution(0);
+              setDefaultAnnualReturn(0);
             }}
           >
-            Add Range
+            Add Account
           </Button>
         </Stack>
       </Card>
 
-      {state.investmentRanges.length > 0 && (
+      {state.investmentAccounts.length > 0 && (
         <Card withBorder radius="md" p="lg">
           <Stack gap="md">
             <Group gap="xs">
@@ -136,25 +142,29 @@ export default function InvestmentsStep() {
                 <IconChartLine size={16} />
               </ThemeIcon>
               <Text fw={600} size="sm">
-                Investment Ranges
+                Investment Accounts
               </Text>
               <Badge variant="light" color="green" size="sm">
-                {state.investmentRanges.length} range{state.investmentRanges.length !== 1 ? "s" : ""}
+                {state.investmentAccounts.length} account
+                {state.investmentAccounts.length !== 1 ? "s" : ""}
               </Badge>
             </Group>
 
             <Divider />
 
             <Stack gap="xs">
-              {state.investmentRanges.map((range, index) => (
-                <Card key={index} withBorder radius="sm" p="sm" bg="gray.0">
+              {state.investmentAccounts.map((account) => (
+                <Card key={account.id} withBorder radius="sm" p="sm" bg="gray.0">
                   <Group justify="space-between" align="center">
                     <Stack gap={2}>
                       <Text size="sm" fw={600}>
-                        {formatMonth(range.startMonth)} → {formatMonth(range.endMonth)}
+                        {account.name}
                       </Text>
                       <Text size="xs" c="dimmed">
-                        ₹{range.amount.toLocaleString()} / month
+                        Starts {formatMonth(account.startMonth)} · Opening ₹
+                        {account.openingBalance.toLocaleString()} · Contribution ₹
+                        {account.defaultMonthlyContribution.toLocaleString()}/mo · Return{" "}
+                        {account.defaultAnnualReturn}%
                       </Text>
                     </Stack>
                     <Button
@@ -162,7 +172,7 @@ export default function InvestmentsStep() {
                       color="red"
                       variant="subtle"
                       leftSection={<IconTrash size={14} />}
-                      onClick={() => removeInvestmentRange(index)}
+                      onClick={() => removeInvestmentAccount(account.id)}
                     >
                       Remove
                     </Button>
@@ -174,14 +184,14 @@ export default function InvestmentsStep() {
         </Card>
       )}
 
-      {state.investmentRanges.length === 0 && (
+      {state.investmentAccounts.length === 0 && (
         <Card withBorder radius="md" p="xl" style={{ borderStyle: "dashed" }}>
           <Stack align="center" gap="xs">
             <ThemeIcon variant="light" color="gray" size="xl" radius="md">
               <IconChartLine size={24} />
             </ThemeIcon>
             <Text size="sm" c="dimmed" ta="center">
-              No investment ranges added yet. Add your first range above.
+              No investment accounts added yet. Add your first account above.
             </Text>
           </Stack>
         </Card>

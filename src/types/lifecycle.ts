@@ -11,4 +11,6 @@ export interface LifecycleResult {
   state: SimulationState;
 
   events: FinancialEvent[];
+
+  minCash: number;
 }

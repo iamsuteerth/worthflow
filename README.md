@@ -1,147 +1,100 @@
 # 💰 Finance Planner
 
-A personal finance forecasting and scenario-planning tool that helps you model cash flow, investments, deposits, and net worth over time.
+A personal finance forecasting tool that helps you understand how your money, investments, and net worth may evolve over time.
 
-Forecast your finances, simulate life events, compare scenarios, and see how your wealth evolves month by month.
+Build a plan, test "what if" scenarios on top of it, and compare outcomes — all running locally in your browser, with your data never leaving your device.
 
-## ✨ Features
+## ✨ What You Can Do
 
-* 📈 Long-term financial forecasting
-* 💵 Cash flow tracking
-* 📊 Investment performance and XIRR
-* 🏦 Fixed Deposit (FD) planning
-* 🔁 Recurring Deposit (RD) planning
-* 🎯 Scenario simulation
-* 📉 Return assumption overrides
-* 💰 Portfolio deposits and withdrawals
-* 📊 Interactive charts and timelines
-* 💾 Save, export, and restore plans
-* 🌙 Light & Dark mode
+### 🧭 Build Your Plan
 
-# 🚀 Financial Forecasting
+A guided **Plan Builder** wizard walks you through setting up your starting point:
 
-Generate month-by-month projections of your finances.
+1. **Forecast Timeline** — choose a start month and horizon (12–48 months)
+2. **Financial Baseline** — monthly income, monthly expenses, opening cash balance
+3. **Investment Accounts** — add one or more existing portfolios
+4. **Events** — one-off expenses, recurring expenses, credit card bills, bonuses, salary changes
+5. **Instruments** — existing Fixed Deposits and Recurring Deposits
+6. **Review & Generate** — inspect a summary, export the config, and generate your forecast
 
-### Key Metrics
+You can re-run the builder at any time to start a new plan from scratch.
 
-* 💵 Cash Balance
-* 📈 Investment Corpus
-* 🏦 Fixed Deposits
-* 🔁 Recurring Deposits
-* 💎 Net Worth
-* 📊 XIRR (Money-Weighted Return)
+### 📈 Forecast Your Finances
 
-# 📈 Investments
+Generate month-by-month projections for:
 
-Model investment growth using configurable return assumptions.
+* Cash Balance
+* Investments
+* Fixed Deposits (FD)
+* Recurring Deposits (RD)
+* Net Worth
+* XIRR (Money-Weighted Return)
 
-### Supported Features
+### 🎭 Test Different Scenarios
 
-* Opening Investment Corpus
-* Monthly Contributions
-* Contribution Overrides
-* Portfolio Deposits & Withdrawals
-* Annual Return Assumptions
-* Return Override Periods
-* XIRR Tracking
-* Net Worth Integration
+Explore alternate futures without modifying your base plan, using the **Scenario Lab** sidebar.
 
-# 🏦 Fixed Deposits (FD)
+Examples:
 
-Track existing and future fixed deposits.
-
-### Supported Features
-
-* Existing FDs
-* New FDs
-* Interest Growth
-* Automatic Maturity Payouts
-* Net Worth Integration
-
-# 🔁 Recurring Deposits (RD)
-
-Track recurring deposits and their impact on future cash flow.
-
-### Supported Features
-
-* Existing RDs
-* New RDs
-* Monthly Contributions
-* Interest Accrual
-* Automatic Maturity Payouts
-
-# 🛠️ Guided Plan Builder
-
-Create plans through a simple step-by-step workflow.
-
-### 💼 Income
-
-* Monthly Salary
-* Salary Changes
-* Bonus Income
-
-### 💸 Expenses
-
-* Monthly Expenses
-* Credit Card Payments
-* One-Off Expenses
-
-### 📈 Investments
-
-* Opening Corpus
-* Contribution Schedule
-* Return Assumptions
-
-### 💵 Cash
-
-* Opening Cash Balance
-
-### 🏦 Deposits
-
-* Fixed Deposits
-* Recurring Deposits
-
-# 🎭 Scenario Planning
-
-Test alternate futures without changing your base plan.
-
-### Income Events
-
-* Salary Increases
-* Salary Reductions
-* Job Loss
+* Salary changes
 * Bonuses
+* Major expenses (one-off, recurring, credit card)
+* New investment accounts
+* Investment deposits & withdrawals
+* Contribution and return overrides
+* FD and RD creation
 
-### Expense Events
+A **Scenario Banner** keeps you oriented: it summarizes how many modifications are active, shows a badge per event type (click to jump straight to that group in the Events list), and flags any accounts created during the scenario.
 
-* Major Purchases
-* Unexpected Expenses
-* Credit Card Events
+Instantly compare results against your original plan, then save, switch between, import, or export scenarios whenever you like.
 
-### Investment Events
+### 📊 Track Investments
 
-* Contribution Changes
-* Deposits
-* Withdrawals
-* Return Overrides
+Manage multiple investment accounts independently.
 
-### Deposit Events
+For each account you can:
 
-* New FDs
-* New RDs
+* Define opening balance, start month, monthly contribution, and expected return
+* Add deposits
+* Make withdrawals
+* Create contribution (amount) overrides for a date range
+* Create return overrides for a date range
+* Delete the account entirely — with confirmation, cascading to its overrides, deposits, and withdrawals
 
-### Compare Against Base Plan
+Each account's detail view shows a **visual schedule timeline** — every segment of its contribution and return history is explicitly labeled (Default Contribution, Amount Override, Default Return, Return Override) so you always know what's driving the numbers, and overrides can be edited or removed right from there.
 
-* Net Worth Difference
-* Cash Balance Difference
-* Investment Difference
-* Lowest Cash Position Difference
+Track performance using:
 
-# 💸 Cash Flow Analysis
+* Current Value
+* Total Contributions
+* XIRR
+* Net Worth Impact
 
-See where your money comes from and where it goes.
+Accounts added during a scenario (not part of your original plan) are marked with an **"Added"** badge.
 
-### Inflows
+### 🏦 Plan Fixed Deposits & Recurring Deposits
+
+Model both existing and future deposits.
+
+#### Fixed Deposits
+
+* Create new FDs (principal, rate, start month, duration)
+* Track maturity values
+* Automatic payout handling at maturity
+
+#### Recurring Deposits
+
+* Monthly contributions, rate, start month, duration
+* Interest accrual
+* Automatic maturity payouts
+
+New FD/RD/Deposit amounts are validated against your projected **available cash** at the chosen month — you can't commit more than the plan can actually afford.
+
+### 💸 Understand Cash Flow
+
+See where money comes from and where it goes.
+
+#### Income
 
 * Salary
 * Bonuses
@@ -149,173 +102,128 @@ See where your money comes from and where it goes.
 * FD Maturities
 * RD Maturities
 
-### Outflows
+#### Expenses
 
-* Expenses
+* Living Expenses
 * Credit Card Payments
-* Investment Contributions
-* Portfolio Deposits
+* One-Off Expenses
+* Recurring Expenses (Monthly or Annual)
+* Investments
 * FD Creation
 * RD Contributions
-* One-Off Expenses
 
-# 📊 Wealth Projection
+### 🔎 Filter by Month Range
 
-Visualize long-term growth with interactive charts.
+A single, global **month-range filter** sits above the dashboard. Set a "From"/"To" window and every time-series table and timeline narrows to that range together — clear it to instantly return to the full forecast horizon. (Available-cash checks for new FDs/RDs/deposits always use the full forecast, regardless of this filter.)
 
-### Charts
+### 📈 Visualize Your Future
 
-* Cash Balance
-* Investments
-* Net Worth
+Interactive dashboards help you understand:
 
-### Features
+* Cash Position
+* Investment Growth
+* Net Worth Progression
+* Financial Events
+* Scenario Impact
 
-* Monthly Tooltips
-* Event Highlights
-* Portfolio Activity Tracking
-* Scenario Comparisons
+## 🧱 Core Concepts
 
-### Performance Metrics
+### Base Plan
 
-* XIRR
-* Final Net Worth
-* Final Investment Corpus
-* Final Cash Position
+Your primary financial plan, created via the Plan Builder.
 
-# 🖥️ Dashboard Views
+Contains:
 
-### 📅 Forecast Table
-
-Month-by-month projections.
-
-### 💸 Cash Flow Table
-
-Detailed inflow and outflow breakdown.
-
-### 💎 Net Worth Table
-
-Asset-level wealth tracking.
-
-### 🏦 Instruments Table
-
-Active FDs and RDs.
-
-### 🕒 Event Timeline
-
-* Salary Changes
-* Bonuses
+* Income
 * Expenses
-* Credit Card Events
-* FD Events
-* RD Events
+* Cash
+* Investments
+* FDs
+* RDs
+* Forecast Horizon
 
-### 📈 Investment Timeline
+### Scenarios
 
+Temporary modifications applied on top of the Base Plan.
+
+Examples:
+
+* New investment account
+* Salary increase
+* Unexpected expense
+* Investment deposit
+* Return override
+
+Scenarios allow experimentation without changing the underlying plan. They can be saved, reloaded, reset, exported, and imported independently of the Base Plan.
+
+### Investment Accounts
+
+Each investment account is managed independently.
+
+Examples:
+
+* Index Fund
+* Mutual Funds
+* NPS
+* US Stocks
+* Retirement Portfolio
+
+Accounts support:
+
+* Monthly contributions
 * Deposits
 * Withdrawals
-* Contribution Changes
-* Return Overrides
+* Contribution overrides
+* Return overrides
+* Deletion (cascades to its overrides, deposits, and withdrawals)
 
-# 💾 Saved Scenarios
+## 📋 Available Views
 
-Save and revisit alternate plans.
+The dashboard offers eight focused views, all driven by a single global month-range filter:
 
-### Features
+| View | Shows |
+| --- | --- |
+| **Forecast** | Month-by-month projections of cash, investments, and net worth |
+| **Cashflow** | Detailed income vs. expense breakdown per month |
+| **Net Worth** | Asset growth over time |
+| **Instruments** | Every FD/RD — rate, duration, maturity month, principal, interest, maturity value |
+| **One-Offs** | All one-off expenses with month and amount |
+| **Timeline** | Chronological view of all financial events |
+| **Investment Timeline** | Timeline focused on investment-related activity (deposits, withdrawals, overrides) |
+| **Investment Accounts** | Per-account value, visual contribution/return schedule, overrides, XIRR, and deletion |
 
-* Multiple Saved Scenarios
-* Instant Loading
-* Scenario Comparison
-* Export Support
+## 💾 Save, Import & Export
 
-# 📦 Import & Export
+### Save Scenarios
 
-Export and restore complete plans.
+Store multiple scenario variations and switch between them instantly.
 
-### Export Format
+### Export Plans
 
-```json
-{
-  "version": 1,
-  "baseConfig": {},
-  "overrides": {},
-  "savedScenarios": []
-}
-```
+Export complete plans (base plan, active scenario, and saved scenarios) as a `.wfplan` file for:
 
-### Use Cases
+* Backup
+* Sharing
+* Archival
 
-* Backups
-* Sharing Plans
-* Strategy Comparison
-* Scenario Testing
+### Import Plans
 
-# 🛡️ Import Validation
+Restore previously exported plans with built-in validation.
 
-Imported plans are validated before loading.
+## 🔒 Login & Data Privacy
 
-### Checks
+Finance Planner is gated behind a single shared password (set via the `VITE_APP_PASSWORD` environment variable at build time), with the session held in your browser for up to an hour.
 
-* Configuration Structure
-* Dates & Month Formats
-* Income & Expense Rules
-* Investment Rules
-* Deposit Definitions
-* Return Overrides
-* Portfolio Transactions
-* Runtime Events
-* Saved Scenarios
+There is **no backend and no account system** — everything (your base plan, scenarios, and saved scenarios) is stored locally in your browser's storage. Nothing is sent to a server.
 
-# 🌗 Theme Support
+## 🌙 Theme Support
 
-* ☀️ Light Mode
-* 🌙 Dark Mode
+* Light Mode
+* Dark Mode
 
 Theme preference is saved automatically.
 
-# 📚 Supported Events
-
-### 💼 Income
-
-* Salary
-* Salary Changes
-* Bonuses
-
-### 💸 Expenses
-
-* Monthly Expenses
-* Credit Card Payments
-* One-Off Expenses
-
-### 📈 Investments
-
-* Contributions
-* Contribution Overrides
-* Return Overrides
-* Deposits
-* Withdrawals
-
-### 🏦 Deposits
-
-* Fixed Deposits (FD)
-* Recurring Deposits (RD)
-
-# 🏗️ Project Structure
-
-```text
-src
-├── app
-├── assets
-├── components
-├── data
-├── engine
-├── hooks
-├── pages
-├── store
-└── types
-```
-
-# 🚀 Getting Started
+## 🚀 Getting Started
 
 ### Install Dependencies
 
@@ -323,52 +231,65 @@ src
 npm install
 ```
 
-### Start Development Server
+### Configure the Access Password
+
+Create a `.env` file in the project root:
+
+```bash
+VITE_APP_PASSWORD=your-chosen-password
+```
+
+### Run Development Server
 
 ```bash
 npm run dev
 ```
 
-### Build
+### Create Production Build
 
 ```bash
 npm run build
 ```
 
-### Preview Build
+### Preview Production Build
 
 ```bash
 npm run preview
 ```
 
-### Run Lint
+### Run Lint Checks
 
 ```bash
 npm run lint
 ```
 
-# 🧰 Built With
+## 📚 Documentation
+
+For a complete walkthrough of every feature, see:
+
+👉 [MANUAL.md](./MANUAL.md)
+
+## 🛠️ Built With
 
 * React
 * TypeScript
 * Vite
-* Mantine
-* Mantine Charts
+* Mantine (Core, Charts, Hooks, Notifications)
 * Zustand
 * Zod
+* Recharts
 * Tabler Icons
 
-# 🎯 Questions It Can Help Answer
+## 🎯 Questions Finance Planner Can Help Answer
 
-* Can I afford this purchase next year?
+* Can I afford a major purchase?
+* How much cash will I have available in the future?
 * How will a salary change affect my finances?
+* What happens if investment returns are lower than expected?
+* Should I invest more or create an FD?
 * How much could my net worth grow?
 * What is my portfolio's XIRR?
-* Should I invest more or create an FD?
-* What happens if returns are lower than expected?
-* What if I need to withdraw from investments?
 * What is my lowest future cash position?
 * How do different scenarios compare?
-* How long can I manage without income?
 
-**Plan smarter. Forecast confidently. Build wealth intentionally. 💰📈**
+**Plan smarter. Forecast confidently. Build wealth intentionally.**

@@ -36,6 +36,8 @@ export function processRdLifecycle(
     },
 
     events: [],
+
+    minCash: state.cash,
   };
 
   const nextState =
@@ -97,6 +99,11 @@ export function processRdLifecycle(
         nextState.cash -=
           rd.monthlyContribution;
 
+        result.minCash = Math.min(
+          result.minCash,
+          nextState.cash
+        );
+
         updated.totalContributed +=
           rd.monthlyContribution;
       }
@@ -121,6 +128,11 @@ export function processRdLifecycle(
 
     nextState.cash +=
       rd.currentValue;
+
+    result.minCash = Math.min(
+      result.minCash,
+      nextState.cash
+    );
 
     result.events.push({
       id:

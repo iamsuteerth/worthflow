@@ -1,5 +1,6 @@
 // src/components/builder/EventsStep.tsx
 import {
+  Alert,
   Badge,
   Button,
   Card,
@@ -7,6 +8,7 @@ import {
   Grid,
   Group,
   NumberInput,
+  SegmentedControl,
   Stack,
   Table,
   Text,
@@ -14,15 +16,18 @@ import {
   ThemeIcon,
 } from "@mantine/core";
 import {
+  IconAlertCircle,
   IconBolt,
   IconCash,
   IconCreditCard,
   IconPlus,
+  IconRepeat,
   IconTrash,
   IconTrendingUp,
 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
+import { getMaxAnnualYears, deriveAnnualEndMonth } from "@/engine/annualExpense";
 import { useBuilderStore } from "@/store/builderStore";
 import type { MonthKey } from "@/types/simulation";
 import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
@@ -36,6 +41,11 @@ const TYPE_CONFIG: Record<
     color: "red",
     accentColor: "var(--mantine-color-red-5)",
     icon: <IconBolt size={16} />,
+  },
+  Recurring: {
+    color: "red",
+    accentColor: "var(--mantine-color-red-4)",
+    icon: <IconRepeat size={16} />,
   },
   "Credit Card": {
     color: "orange",
@@ -87,31 +97,43 @@ function SectionCard({
 
 export default function EventsStep() {
   const state = useBuilderStore((store) => store.state);
-  const addOneOffExpense = useBuilderStore((store) => store.addOneOffExpense);
-  const removeOneOffExpense = useBuilderStore((store) => store.removeOneOffExpense);
-  const addCreditCardBill = useBuilderStore((store) => store.addCreditCardBill);
-  const removeCreditCardBill = useBuilderStore((store) => store.removeCreditCardBill);
-  const addBonusIncome = useBuilderStore((store) => store.addBonusIncome);
-  const removeBonusIncome = useBuilderStore((store) => store.removeBonusIncome);
-  const addSalaryChange = useBuilderStore((store) => store.addSalaryChange);
-  const removeSalaryChange = useBuilderStore((store) => store.removeSalaryChange);
+  const addOneOffExpense      = useBuilderStore((store) => store.addOneOffExpense);
+  const removeOneOffExpense   = useBuilderStore((store) => store.removeOneOffExpense);
+  const addCreditCardBill     = useBuilderStore((store) => store.addCreditCardBill);
+  const removeCreditCardBill  = useBuilderStore((store) => store.removeCreditCardBill);
+  const addBonusIncome        = useBuilderStore((store) => store.addBonusIncome);
+  const removeBonusIncome     = useBuilderStore((store) => store.removeBonusIncome);
+  const addSalaryChange       = useBuilderStore((store) => store.addSalaryChange);
+  const removeSalaryChange    = useBuilderStore((store) => store.removeSalaryChange);
+  const addRecurringExpense   = useBuilderStore((store) => store.addRecurringExpense);
+  const removeRecurringExpense = useBuilderStore((store) => store.removeRecurringExpense);
+
   const startMonth = useBuilderStore((s) => s.state.startMonth);
 
-  const [expenseMonth, setExpenseMonth] = useState<MonthKey>(state.startMonth);
-  const [expenseLabel, setExpenseLabel] = useState("");
+  const [expenseMonth, setExpenseMonth]   = useState<MonthKey>(state.startMonth);
+  const [expenseLabel, setExpenseLabel]   = useState("");
   const [expenseAmount, setExpenseAmount] = useState(0);
 
-  const [creditCardMonth, setCreditCardMonth] = useState<MonthKey>(state.startMonth);
-  const [creditCardLabel, setCreditCardLabel] = useState("");
+  const [creditCardMonth, setCreditCardMonth]   = useState<MonthKey>(state.startMonth);
+  const [creditCardLabel, setCreditCardLabel]   = useState("");
   const [creditCardAmount, setCreditCardAmount] = useState(0);
 
-  const [bonusMonth, setBonusMonth] = useState<MonthKey>(state.startMonth);
-  const [bonusDescription, setBonusDescription] = useState("");
-  const [bonusAmount, setBonusAmount] = useState(0);
+  const [recurringName, setRecurringName]         = useState("");
+  const [recurringAmount, setRecurringAmount]     = useState(0);
+  const [recurringStart, setRecurringStart]       = useState<MonthKey>(state.startMonth);
+  const [recurringEnd, setRecurringEnd]           = useState<MonthKey>(state.startMonth);
+  const [recurringYears, setRecurringYears]       = useState(1);
+  const [recurringFrequency, setRecurringFrequency] = useState<"MONTHLY" | "ANNUAL">("MONTHLY");
 
-  const [salaryMonth, setSalaryMonth] = useState<MonthKey>(state.startMonth);
+  const recurringMaxYears = getMaxAnnualYears(state.startMonth, state.totalMonths, recurringStart);
+
+  const [bonusMonth, setBonusMonth]           = useState<MonthKey>(state.startMonth);
+  const [bonusDescription, setBonusDescription] = useState("");
+  const [bonusAmount, setBonusAmount]         = useState(0);
+
+  const [salaryMonth, setSalaryMonth]           = useState<MonthKey>(state.startMonth);
   const [salaryDescription, setSalaryDescription] = useState("");
-  const [salaryIncome, setSalaryIncome] = useState(state.monthlyIncome);
+  const [salaryIncome, setSalaryIncome]         = useState(state.monthlyIncome);
 
   const timeline = useMemo(() => {
     const events = [
@@ -129,6 +151,13 @@ export default function EventsStep() {
         description: e.label,
         value: `₹${e.amount.toLocaleString()}`,
       })),
+      ...(state.recurringExpenses ?? []).map((e) => ({
+        id: e.id,
+        month: e.startMonth,
+        type: "Recurring",
+        description: `${e.name} (→ ${formatMonth(e.endMonth)})${e.frequency === "ANNUAL" ? " · Annual" : ""}`,
+        value: e.frequency === "ANNUAL" ? `₹${e.amount.toLocaleString()}/yr` : `₹${e.amount.toLocaleString()}/mo`,
+      })),
       ...state.bonusIncome.map((e) => ({
         id: e.id,
         month: e.month,
@@ -145,14 +174,28 @@ export default function EventsStep() {
       })),
     ];
     return events.sort((a, b) => a.month.localeCompare(b.month));
-  }, [state.oneOffExpenses, state.bonusIncome, state.salaryChanges, state.creditCardBills]);
+  }, [
+    state.oneOffExpenses,
+    state.bonusIncome,
+    state.salaryChanges,
+    state.creditCardBills,
+    state.recurringExpenses,
+  ]);
 
   const removeHandlers: Record<string, (id: string) => void> = {
-    Expense: removeOneOffExpense,
+    Expense:       removeOneOffExpense,
     "Credit Card": removeCreditCardBill,
-    Bonus: removeBonusIncome,
+    Bonus:         removeBonusIncome,
     "Salary Change": removeSalaryChange,
+    Recurring:     removeRecurringExpense,
   };
+
+  const recurringValid =
+    recurringName.trim().length > 0 &&
+    recurringAmount > 0 &&
+    (recurringFrequency === "ANNUAL"
+      ? recurringMaxYears >= 1 && recurringYears >= 1 && recurringYears <= recurringMaxYears
+      : recurringStart <= recurringEnd);
 
   return (
     <BuilderStepContainer>
@@ -161,11 +204,12 @@ export default function EventsStep() {
           Events
         </Text>
         <Text size="sm" c="dimmed">
-          Add one-off expenses, bonuses, credit card bills, and salary changes over your forecast period.
+          Add one-off expenses, recurring obligations, bonuses, credit card bills, and salary changes.
         </Text>
       </Stack>
 
       <Grid gap="md">
+        {/* ── One-Off Expense ── */}
         <Grid.Col span={{ base: 12, md: 6 }}>
           <SectionCard title="One-Off Expense" type="Expense">
             <Stack gap="sm">
@@ -210,6 +254,93 @@ export default function EventsStep() {
           </SectionCard>
         </Grid.Col>
 
+        {/* ── Recurring Expense ── */}
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <SectionCard title="Recurring Expense" type="Recurring">
+            <Stack gap="sm">
+              <TextInput
+                maxLength={50}
+                label="Name"
+                placeholder="e.g. Netflix, Rent, EMI"
+                value={recurringName}
+                onChange={(e) => setRecurringName(e.currentTarget.value)}
+              />
+              <NumberInput
+                label="Monthly Amount"
+                value={recurringAmount}
+                min={1}
+                thousandSeparator=","
+                prefix="₹"
+                onChange={(value) => setRecurringAmount(Number(value))}
+              />
+              <SegmentedControl
+                value={recurringFrequency}
+                onChange={(value) => setRecurringFrequency(value as "MONTHLY" | "ANNUAL")}
+                data={[
+                  { label: "Monthly", value: "MONTHLY" },
+                  { label: "Annual", value: "ANNUAL" },
+                ]}
+              />
+              <BuilderMonthSelect
+                value={recurringStart}
+                minMonth={startMonth}
+                label="Start Month"
+                onChange={(value) => value && setRecurringStart(value as MonthKey)}
+              />
+              {recurringFrequency === "ANNUAL" ? (
+                <NumberInput
+                  label="Number of Years"
+                  value={recurringYears}
+                  min={1}
+                  max={Math.max(recurringMaxYears, 1)}
+                  onChange={(value) => setRecurringYears(Number(value))}
+                />
+              ) : (
+                <BuilderMonthSelect
+                  value={recurringEnd}
+                  minMonth={recurringStart}
+                  label="End Month"
+                  onChange={(value) => value && setRecurringEnd(value as MonthKey)}
+                />
+              )}
+              {recurringFrequency === "ANNUAL" && recurringMaxYears < 1 && (
+                <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light" p="xs">
+                  This start month leaves less than a year before the end of the forecast.
+                </Alert>
+              )}
+              {recurringFrequency === "ANNUAL" && recurringMaxYears >= 1 && recurringYears > recurringMaxYears && (
+                <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light" p="xs">
+                  Number of years exceeds the forecast window. Maximum is {recurringMaxYears}.
+                </Alert>
+              )}
+              <Button
+                leftSection={<IconPlus size={16} />}
+                color="red"
+                disabled={!recurringValid}
+                onClick={() => {
+                  const resolvedEndMonth =
+                    recurringFrequency === "ANNUAL"
+                      ? deriveAnnualEndMonth(recurringStart, recurringYears)
+                      : recurringEnd;
+                  addRecurringExpense({
+                    id: crypto.randomUUID(),
+                    name: recurringName.trim(),
+                    amount: recurringAmount,
+                    startMonth: recurringStart,
+                    endMonth: resolvedEndMonth,
+                    frequency: recurringFrequency,
+                  });
+                  setRecurringName("");
+                  setRecurringAmount(0);
+                }}
+              >
+                Add Recurring Expense
+              </Button>
+            </Stack>
+          </SectionCard>
+        </Grid.Col>
+
+        {/* ── Credit Card ── */}
         <Grid.Col span={{ base: 12, md: 6 }}>
           <SectionCard title="Credit Card Bill" type="Credit Card">
             <Stack gap="sm">
@@ -254,6 +385,7 @@ export default function EventsStep() {
           </SectionCard>
         </Grid.Col>
 
+        {/* ── Bonus ── */}
         <Grid.Col span={{ base: 12, md: 6 }}>
           <SectionCard title="Bonus Income" type="Bonus">
             <Stack gap="sm">
@@ -298,6 +430,7 @@ export default function EventsStep() {
           </SectionCard>
         </Grid.Col>
 
+        {/* ── Salary Change ── */}
         <Grid.Col span={{ base: 12, md: 6 }}>
           <SectionCard title="Salary Change" type="Salary Change">
             <Stack gap="sm">
@@ -342,6 +475,7 @@ export default function EventsStep() {
         </Grid.Col>
       </Grid>
 
+      {/* ── Timeline ── */}
       <Card withBorder radius="md" p="lg">
         <Group justify="space-between" mb="md">
           <Text fw={600} size="sm">

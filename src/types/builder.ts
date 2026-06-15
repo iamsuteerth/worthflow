@@ -1,18 +1,8 @@
 // src/types/builder.ts
-import type {
-  MonthKey,
-} from "@/types/simulation";
-
-import type {
-  FixedDeposit,
-  RecurringDeposit,
-} from "@/types/instrument";
-
-export interface InvestmentRange {
-  startMonth: MonthKey;
-  endMonth: MonthKey;
-  amount: number;
-}
+import type { MonthKey } from "@/types/simulation";
+import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
+import type { RecurringExpense } from "@/types/recurringExpense";
+import type { InvestmentAccount } from "@/types/investmentAccount";
 
 export interface BuilderOneOffExpense {
   id: string;
@@ -49,26 +39,19 @@ export interface BuilderState {
   monthlyIncome: number;
 
   openingCash: number;
-  openingInvestmentCorpus: number;
   defaultMonthlyExpense: number;
-  defaultAnnualReturn: number;
 
-  investmentRanges: InvestmentRange[];
+  investmentAccounts: InvestmentAccount[];
 
-  creditCardBills:
-  BuilderCreditCardBill[];
+  creditCardBills: BuilderCreditCardBill[];
 
-  oneOffExpenses:
-  BuilderOneOffExpense[];
+  oneOffExpenses: BuilderOneOffExpense[];
 
-  salaryChanges:
-  BuilderSalaryChange[];
+  salaryChanges: BuilderSalaryChange[];
 
-  bonusIncome:
-  BuilderBonusIncome[];
+  bonusIncome: BuilderBonusIncome[];
 
-  instruments: (
-    | FixedDeposit
-    | RecurringDeposit
-  )[];
+  recurringExpenses: RecurringExpense[];
+
+  instruments: (FixedDeposit | RecurringDeposit)[];
 }

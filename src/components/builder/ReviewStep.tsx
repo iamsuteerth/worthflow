@@ -143,18 +143,10 @@ export default function ReviewStep() {
           </Grid.Col>
           <Grid.Col span={{ base: 6, md: 3 }}>
             <MetricCard
-              label="Opening Portfolio"
-              value={`₹${state.openingInvestmentCorpus.toLocaleString()}`}
+              label="Investment Accounts"
+              value={String(state.investmentAccounts.length)}
               icon={<IconCoins size={14} />}
               color="indigo"
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 3 }}>
-            <MetricCard
-              label="Investment Ranges"
-              value={String(state.investmentRanges.length)}
-              icon={<IconCoins size={14} />}
-              color="teal"
             />
           </Grid.Col>
           <Grid.Col span={{ base: 6, md: 3 }}>

@@ -1,37 +1,37 @@
 // src/components/tables/tableUtils.ts
+import type { FinancialEvent } from "@/types/events";
+
+/**
+ * Formats a number as Indian-locale currency string (e.g. ₹1,23,456).
+ */
 export function money(value: number): string {
   return "₹" + Math.round(value).toLocaleString("en-IN");
 }
 
-export function sumEvents<T extends { type: string; amount: number }>(
-  events: T[],
-  type: string
-): number {
+/**
+ * Sums the `amount` of all events matching a given type.
+ */
+export function sumEvents(events: FinancialEvent[], type: string): number {
   return events
     .filter((e) => e.type === type)
     .reduce((sum, e) => sum + e.amount, 0);
 }
 
-const INSTRUMENT_OUTFLOW_TYPES = new Set(["FD_CREATED", "RD_CREATED"]);
-const INSTRUMENT_INFLOW_TYPES = new Set(["FD_MATURED", "RD_MATURED"]);
-const ALL_INSTRUMENT_TYPES = new Set([
-  ...INSTRUMENT_OUTFLOW_TYPES,
-  ...INSTRUMENT_INFLOW_TYPES,
-]);
-
-export function netInstrumentFlow<T extends { type: string; amount: number }>(
-  events: T[]
-): number {
-  return events
-    .filter((e) => {
-      const known = ALL_INSTRUMENT_TYPES.has(e.type);
-      if (!known && e.type.includes("FD") || e.type.includes("RD")) {
-        console.warn(`netInstrumentFlow: unrecognised instrument event "${e.type}" — skipped`);
-      }
-      return known;
-    })
-    .reduce((sum, e) => {
-      const isOutflow = INSTRUMENT_OUTFLOW_TYPES.has(e.type);
-      return sum + (isOutflow ? -e.amount : e.amount);
-    }, 0);
+/**
+ * Net cash impact of FD/RD instrument events in a month.
+ * FD_CREATED and RD_CREATED reduce cash; FD_MATURED and RD_MATURED add cash.
+ */
+export function netInstrumentFlow(events: FinancialEvent[]): number {
+  return events.reduce((sum, e) => {
+    switch (e.type) {
+      case "FD_CREATED":
+      case "RD_CREATED":
+        return sum - e.amount;
+      case "FD_MATURED":
+      case "RD_MATURED":
+        return sum + e.amount;
+      default:
+        return sum;
+    }
+  }, 0);
 }

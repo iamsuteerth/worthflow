@@ -1,0 +1,154 @@
+// src/components/scenario/InvestmentEventGroups.tsx
+import { Group, Stack, Text } from "@mantine/core";
+import { useState } from "react";
+import { usePlannerStore } from "@/store/plannerStore";
+import RuntimeEventList from "@/components/scenario/RuntimeEventList";
+import type { RuntimeEvent } from "@/types/runtimeEvent";
+import type { MonthKey } from "@/types/simulation";
+
+type InvestmentEventType = Extract<
+  RuntimeEvent["type"],
+  "ACCOUNT_AMOUNT_OVERRIDE" | "ACCOUNT_RETURN_OVERRIDE" | "INVESTMENT_DEPOSIT" | "INVESTMENT_WITHDRAWAL"
+>;
+
+const INVESTMENT_EVENT_TYPES: { type: InvestmentEventType; label: string }[] = [
+  { type: "ACCOUNT_AMOUNT_OVERRIDE", label: "Amount Overrides" },
+  { type: "ACCOUNT_RETURN_OVERRIDE", label: "Return Overrides" },
+  { type: "INVESTMENT_DEPOSIT",      label: "Deposits" },
+  { type: "INVESTMENT_WITHDRAWAL",   label: "Withdrawals" },
+];
+
+const INVESTMENT_TYPE_SET = new Set<string>(INVESTMENT_EVENT_TYPES.map((t) => t.type));
+
+function FilterChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <Text
+      onClick={onClick}
+      size="xs"
+      fw={active ? 600 : 400}
+      c={active ? "indigo" : "dimmed"}
+      style={{
+        cursor: "pointer",
+        padding: "4px 10px",
+        borderRadius: 999,
+        border: active ? "1px solid var(--mantine-color-indigo-5)" : "1px solid var(--mantine-color-default-border)",
+        background: active ? "var(--mantine-color-indigo-light)" : "transparent",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {label}
+    </Text>
+  );
+}
+
+// Single month, or [startMonth, endMonth] range, an event occupies — used for
+// optional time-window filtering (RD-5 scope: Investment Timeline only).
+function eventMonthRange(event: RuntimeEvent): [MonthKey, MonthKey] | null {
+  if ("startMonth" in event && "endMonth" in event) return [event.startMonth, event.endMonth];
+  if ("month" in event) return [event.month, event.month];
+  return null;
+}
+
+interface Props {
+  // Pre-scope to a single account (Banner navigation / Investment Timeline selector).
+  defaultAccountId?: string | null;
+  // Pre-scope to a subset of investment event types (Banner navigation only — no UI).
+  typeFilter?: RuntimeEvent["type"][] | null;
+  // Optional time window (Investment Timeline, RD-5). Omit for the Events tab,
+  // which always shows the full, unfiltered scenario.
+  monthRange?: { start: MonthKey | null; end: MonthKey | null } | null;
+}
+
+// Canonical investment-events presentation: grouped by account, then event
+// type, with a single optional account selector (RD-2). Reused by the Events
+// tab, the Investment Timeline, and as the Banner's navigation target.
+export default function InvestmentEventGroups({ defaultAccountId = null, typeFilter = null, monthRange = null }: Props) {
+  const events   = usePlannerStore((s) => s.overrides.runtimeEvents) ?? [];
+  const accounts = usePlannerStore((s) => s.config.investments.accounts);
+
+  const [accountFilter, setAccountFilter] = useState<string | null>(defaultAccountId);
+  const [appliedDefault, setAppliedDefault] = useState(defaultAccountId);
+
+  // Re-derive the selection when navigation supplies a new default (RD-4),
+  // without overriding the user's own subsequent selection.
+  if (defaultAccountId !== appliedDefault) {
+    setAppliedDefault(defaultAccountId);
+    setAccountFilter(defaultAccountId);
+  }
+
+  const inRange = (event: RuntimeEvent): boolean => {
+    if (!monthRange || (!monthRange.start && !monthRange.end)) return true;
+    const range = eventMonthRange(event);
+    if (!range) return true;
+    const [eStart, eEnd] = range;
+    if (monthRange.start && eEnd < monthRange.start) return false;
+    if (monthRange.end && eStart > monthRange.end) return false;
+    return true;
+  };
+
+  const investmentEvents = events.filter((e) => INVESTMENT_TYPE_SET.has(e.type) && inRange(e));
+
+  if (investmentEvents.length === 0) {
+    return (
+      <Text size="sm" c="dimmed" ta="center" py="md">
+        No events.
+      </Text>
+    );
+  }
+
+  const accountsWithEvents = accounts.filter((account) =>
+    investmentEvents.some((e) => "accountId" in e && e.accountId === account.id)
+  );
+
+  const visibleAccounts = accountFilter
+    ? accountsWithEvents.filter((a) => a.id === accountFilter)
+    : accountsWithEvents;
+
+  const visibleTypes = typeFilter
+    ? INVESTMENT_EVENT_TYPES.filter((t) => typeFilter.includes(t.type))
+    : INVESTMENT_EVENT_TYPES;
+
+  return (
+    <Stack gap="md">
+      <Group gap={6} wrap="wrap">
+        <FilterChip label="All Accounts" active={accountFilter === null} onClick={() => setAccountFilter(null)} />
+        {accountsWithEvents.map((account) => (
+          <FilterChip
+            key={account.id}
+            label={account.name}
+            active={accountFilter === account.id}
+            onClick={() => setAccountFilter(account.id)}
+          />
+        ))}
+      </Group>
+
+      {visibleAccounts.length === 0 ? (
+        <Text size="sm" c="dimmed" ta="center" py="md">
+          No events for this account.
+        </Text>
+      ) : (
+        visibleAccounts.map((account) => (
+          <Stack key={account.id} gap="xs">
+            <Text size="sm" fw={700}>{account.name}</Text>
+            {visibleTypes.map(({ type, label }) => {
+              const matching = investmentEvents.filter(
+                (e) => e.type === type && "accountId" in e && e.accountId === account.id
+              );
+              if (matching.length === 0) return null;
+              return (
+                <Stack key={type} gap={4} pl="sm">
+                  <Text size="xs" fw={600} c="dimmed" tt="uppercase">{label}</Text>
+                  <RuntimeEventList
+                    filterTypes={[type]}
+                    filterAccountId={account.id}
+                    filterIds={matching.map((e) => e.id)}
+                  />
+                </Stack>
+              );
+            })}
+          </Stack>
+        ))
+      )}
+    </Stack>
+  );
+}

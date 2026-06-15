@@ -5,6 +5,12 @@ import type {
   SalaryChange,
   BonusIncome,
 } from "@/types/incomeEvents";
+import type { RecurringExpense } from "@/types/recurringExpense";
+import type {
+  InvestmentAccount,
+  AccountAmountOverride,
+  AccountReturnOverride,
+} from "@/types/investmentAccount";
 
 export interface ForecastConfig {
   startMonth: MonthKey;
@@ -24,17 +30,10 @@ export interface ExpenseConfig {
   overrides: Record<string, number>;
 }
 
-export interface InvestmentReturnOverride {
-  startMonth: MonthKey;
-  endMonth: MonthKey;
-  annualReturn: number;
-}
-
 export interface InvestmentConfig {
-  openingCorpus: number;
-  schedule: Record<string, number>;
-  defaultAnnualReturn: number;
-  returnOverrides: InvestmentReturnOverride[];
+  accounts: InvestmentAccount[];
+  amountOverrides: AccountAmountOverride[];
+  returnOverrides: AccountReturnOverride[];
 }
 
 export interface OneOffExpense {
@@ -65,6 +64,8 @@ export interface PlannerConfig {
   oneOffExpenses: OneOffExpense[];
 
   creditCardBills: CreditCardBill[];
+
+  recurringExpenses: RecurringExpense[];
 
   instruments: Instrument[];
 

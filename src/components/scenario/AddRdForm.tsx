@@ -1,10 +1,10 @@
 // src/components/scenario/AddRdForm.tsx
-import { Button, Grid, NumberInput, Stack, TextInput } from "@mantine/core";
+import { Button, Grid, NumberInput, Stack, Text, TextInput } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import { useState } from "react";
 import { addMonths } from "@/engine/dateUtils";
 import { formatMonth } from "@/engine/monthFormatting";
-import { usePlannerStore } from "@/store/plannerStore";
+import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
 import type { MonthKey } from "@/types/simulation";
 import MonthSelect from "@/components/common/MonthSelect";
 import InstrumentPreview from "@/components/scenario/InstrumentPreview";
@@ -12,6 +12,8 @@ import { money } from "@/components/scenario/moneyFormat";
 
 export default function AddRdForm() {
   const addRd = usePlannerStore((state) => state.addTransientRd);
+  const config = usePlannerStore((state) => state.config);
+  const overrides = usePlannerStore((state) => state.overrides);
 
   const [month, setMonth] = useState<MonthKey | null>("2028-01");
   const [name, setName] = useState("");
@@ -23,6 +25,9 @@ export default function AddRdForm() {
   const maturityValue = totalContribution * Math.pow(1 + rate / 100, durationMonths / 12);
   const interest = maturityValue - totalContribution;
   const maturityMonth = month ? addMonths(month, durationMonths) : null;
+
+  const availableCash = month ? getAvailableCash(config, overrides, month) : 0;
+  const exceedsCash = monthlyContribution > availableCash;
 
   return (
     <Stack gap="sm">
@@ -43,6 +48,7 @@ export default function AddRdForm() {
         label="Monthly Contribution"
         value={monthlyContribution}
         min={1}
+        max={availableCash}
         thousandSeparator=","
         prefix="₹"
         onChange={(value) => setMonthlyContribution(Number(value))}
@@ -74,6 +80,13 @@ export default function AddRdForm() {
         </Grid.Col>
       </Grid>
 
+      <Text size="xs" c="dimmed">
+        Available cash{month ? ` at ${formatMonth(month)}` : ""}:{" "}
+        <Text span fw={600} c={exceedsCash ? "red" : "green"} style={{ fontVariantNumeric: "tabular-nums" }}>
+          ₹{availableCash.toLocaleString("en-IN")}
+        </Text>
+      </Text>
+
       {monthlyContribution > 0 && rate > 0 && maturityMonth && (
         <InstrumentPreview
           title="Recurring Deposit Forecast"
@@ -89,7 +102,7 @@ export default function AddRdForm() {
       <Button
         leftSection={<IconRefresh size={16} />}
         color="violet"
-        disabled={!month || !name.trim() || monthlyContribution <= 0 || rate <= 0 || durationMonths <= 0}
+        disabled={!month || !name.trim() || monthlyContribution <= 0 || rate <= 0 || durationMonths <= 0 || exceedsCash}
         onClick={() => {
           if (!month) return;
           addRd(month, monthlyContribution, rate, durationMonths, name.trim());

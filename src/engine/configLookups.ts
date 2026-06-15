@@ -1,6 +1,24 @@
 // src/engine/configLookups.ts
 import type { PlannerConfig } from "@/types/config";
+import type { RecurringExpense } from "@/types/recurringExpense";
 import type { MonthKey } from "@/types/simulation";
+
+/**
+ * Shared by getRecurringExpense (cash effect) and buildCashflowEvents (display)
+ * so the two never drift on when a recurring expense is "active" for a month.
+ */
+export function isRecurringExpenseActive(
+  re: RecurringExpense,
+  month: MonthKey
+): boolean {
+  if (month < re.startMonth || month > re.endMonth) return false;
+
+  if ((re.frequency ?? "MONTHLY") === "ANNUAL") {
+    return month.slice(5) === re.startMonth.slice(5);
+  }
+
+  return true;
+}
 
 export function getMonthlyExpense(
   config: PlannerConfig,
@@ -32,41 +50,32 @@ export function getOneOffExpense(
     .reduce((sum, expense) => sum + expense.amount, 0);
 }
 
-export function getInvestmentAmount(
+/**
+ * Returns the total recurring expense amount for a given month.
+ * Includes all recurring expenses whose range covers this month.
+ */
+export function getRecurringExpense(
   config: PlannerConfig,
   month: MonthKey
 ): number {
-  return (
-    config.investments.schedule[month] ?? 0
-  );
+  return (config.recurringExpenses ?? [])
+    .filter((re) => isRecurringExpenseActive(re, month))
+    .reduce((sum, re) => sum + re.amount, 0);
 }
 
 export function getMonthlyIncome(
   config: PlannerConfig,
   month: MonthKey
 ): number {
-  const applicableChanges =
-    config.salaryChanges
-      .filter(
-        (change) =>
-          change.effectiveMonth <=
-          month
-      )
-      .sort((a, b) =>
-        a.effectiveMonth.localeCompare(
-          b.effectiveMonth
-        )
-      );
+  const applicableChanges = config.salaryChanges
+    .filter((change) => change.effectiveMonth <= month)
+    .sort((a, b) => a.effectiveMonth.localeCompare(b.effectiveMonth));
 
-  if (
-    applicableChanges.length === 0
-  ) {
+  if (applicableChanges.length === 0) {
     return config.income.monthly;
   }
 
-  return applicableChanges[
-    applicableChanges.length - 1
-  ].newMonthlyIncome;
+  return applicableChanges[applicableChanges.length - 1].newMonthlyIncome;
 }
 
 export function getBonusIncome(
@@ -74,34 +83,6 @@ export function getBonusIncome(
   month: MonthKey
 ): number {
   return config.bonusIncome
-    .filter(
-      (bonus) =>
-        bonus.month === month
-    )
-    .reduce(
-      (sum, bonus) =>
-        sum + bonus.amount,
-      0
-    );
-}
-
-export function getInvestmentReturn(
-  config: PlannerConfig,
-  month: MonthKey
-): number {
-  const override =
-    config.investments.returnOverrides.find(
-      (entry) =>
-        month >=
-          entry.startMonth &&
-        month <=
-          entry.endMonth
-    );
-
-  return (
-    override
-      ?.annualReturn ??
-    config.investments
-      .defaultAnnualReturn
-  );
+    .filter((bonus) => bonus.month === month)
+    .reduce((sum, bonus) => sum + bonus.amount, 0);
 }

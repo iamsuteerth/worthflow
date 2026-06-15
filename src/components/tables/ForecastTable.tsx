@@ -1,12 +1,12 @@
 // src/components/tables/ForecastTable.tsx
 import { Badge, Group, ScrollArea, Stack, Table, Text } from "@mantine/core";
-import { useSimulation } from "@/hooks/useSimulation";
+import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { formatMonth } from "@/engine/monthFormatting";
 import { Emptystate } from "@/components/tables/Emptystate";
 import { money } from "@/components/tables/tableUtils";
 
 export default function ForecastTable() {
-  const result = useSimulation();
+  const result = useFilteredSimulation();
 
   if (result.rows.length === 0) {
     return (

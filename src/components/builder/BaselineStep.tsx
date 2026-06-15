@@ -3,7 +3,6 @@ import { Card, Grid, Group, NumberInput, Stack, Text, ThemeIcon } from "@mantine
 import {
   IconBolt,
   IconCash,
-  IconCoins,
   IconWallet,
 } from "@tabler/icons-react";
 import { useBuilderStore } from "@/store/builderStore";
@@ -82,12 +81,7 @@ export default function BaselineStep() {
               prefix="₹"
               value={state.monthlyIncome}
               onChange={(value) =>
-                setBaseline(
-                  Number(value),
-                  state.openingCash,
-                  state.openingInvestmentCorpus,
-                  state.defaultMonthlyExpense
-                )
+                setBaseline(Number(value), state.openingCash, state.defaultMonthlyExpense)
               }
             />
           </FieldCard>
@@ -109,12 +103,7 @@ export default function BaselineStep() {
               prefix="₹"
               value={state.defaultMonthlyExpense}
               onChange={(value) =>
-                setBaseline(
-                  state.monthlyIncome,
-                  state.openingCash,
-                  state.openingInvestmentCorpus,
-                  Number(value)
-                )
+                setBaseline(state.monthlyIncome, state.openingCash, Number(value))
               }
             />
           </FieldCard>
@@ -136,39 +125,7 @@ export default function BaselineStep() {
               prefix="₹"
               value={state.openingCash}
               onChange={(value) =>
-                setBaseline(
-                  state.monthlyIncome,
-                  Number(value),
-                  state.openingInvestmentCorpus,
-                  state.defaultMonthlyExpense
-                )
-              }
-            />
-          </FieldCard>
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <FieldCard
-            icon={<IconCoins size={16} />}
-            color="violet"
-            title="Opening Investment Corpus"
-            description="Existing mutual funds, stocks, or other investments."
-            accentColor="var(--mantine-color-violet-5)"
-          >
-            <NumberInput
-              label="Amount"
-              required
-              min={0}
-              thousandSeparator=","
-              prefix="₹"
-              value={state.openingInvestmentCorpus}
-              onChange={(value) =>
-                setBaseline(
-                  state.monthlyIncome,
-                  state.openingCash,
-                  Number(value),
-                  state.defaultMonthlyExpense
-                )
+                setBaseline(state.monthlyIncome, Number(value), state.defaultMonthlyExpense)
               }
             />
           </FieldCard>

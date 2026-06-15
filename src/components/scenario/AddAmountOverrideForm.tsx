@@ -1,16 +1,16 @@
-// src/components/scenario/AddInvestmentReturnOverrideForm.tsx
+// src/components/scenario/AddAmountOverrideForm.tsx
 import { Alert, Button, Grid, NumberInput, Select, Stack, Text } from "@mantine/core";
-import { IconAlertCircle, IconTrendingUp } from "@tabler/icons-react";
+import { IconAlertCircle, IconChartLine } from "@tabler/icons-react";
 import { useState } from "react";
 import { generateMonths } from "@/engine/dateUtils";
 import { usePlannerStore } from "@/store/plannerStore";
 import type { MonthKey } from "@/types/simulation";
-import type { RuntimeAccountReturnOverride } from "@/types/runtimeEvent";
+import type { RuntimeAccountAmountOverride } from "@/types/runtimeEvent";
 import MonthSelect from "@/components/common/MonthSelect";
 
-export default function AddInvestmentReturnOverrideForm() {
+export default function AddAmountOverrideForm() {
   const config = usePlannerStore((state) => state.config);
-  const addReturnOverride = usePlannerStore((state) => state.addTransientAccountReturnOverride);
+  const addAmountOverride = usePlannerStore((state) => state.addTransientAccountAmountOverride);
   const runtimeEvents = usePlannerStore((state) => state.overrides.runtimeEvents);
 
   const months = generateMonths(config.forecast.startMonth, config.forecast.totalMonths);
@@ -27,14 +27,14 @@ export default function AddInvestmentReturnOverrideForm() {
 
   const [startMonth, setStartMonth] = useState<MonthKey | null>(minMonth);
   const [endMonth, setEndMonth] = useState<MonthKey | null>(minMonth);
-  const [annualReturn, setAnnualReturn] = useState(0);
+  const [amount, setAmount] = useState(0);
 
   const validRange = !!startMonth && !!endMonth && startMonth <= endMonth;
   const validStart = !!startMonth && !!account && startMonth >= account.startMonth;
 
   const existing = (runtimeEvents ?? []).filter(
-    (event): event is RuntimeAccountReturnOverride =>
-      event.type === "ACCOUNT_RETURN_OVERRIDE" && event.accountId === accountId
+    (event): event is RuntimeAccountAmountOverride =>
+      event.type === "ACCOUNT_AMOUNT_OVERRIDE" && event.accountId === accountId
   );
 
   const overlap =
@@ -53,7 +53,7 @@ export default function AddInvestmentReturnOverrideForm() {
   return (
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
-        Override the annual return for a specific account over a date range.
+        Temporarily replace an account&apos;s monthly contribution for a date range. Use ₹0 to pause contributions.
       </Text>
 
       <Select
@@ -92,13 +92,12 @@ export default function AddInvestmentReturnOverrideForm() {
       </Grid>
 
       <NumberInput
-        label="Annual Return"
-        value={annualReturn}
-        min={-99.99}
-        max={1000}
-        decimalScale={2}
-        suffix="%"
-        onChange={(value) => setAnnualReturn(Number(value))}
+        label="Monthly Contribution"
+        value={amount}
+        min={0}
+        thousandSeparator=","
+        prefix="₹"
+        onChange={(value) => setAmount(Number(value))}
       />
 
       {!validRange && startMonth && endMonth && (
@@ -109,28 +108,21 @@ export default function AddInvestmentReturnOverrideForm() {
 
       {overlap && (
         <Alert icon={<IconAlertCircle size={16} />} color="orange" variant="light" p="xs">
-          This account already has a return override for that range.
+          This account already has an amount override for that range.
         </Alert>
       )}
 
       <Button
-        leftSection={<IconTrendingUp size={16} />}
-        color="indigo"
-        disabled={
-          !accountId ||
-          !validRange ||
-          !validStart ||
-          overlap ||
-          annualReturn < -99.99 ||
-          annualReturn > 1000
-        }
+        leftSection={<IconChartLine size={16} />}
+        color="violet"
+        disabled={!accountId || !validRange || !validStart || overlap || amount < 0}
         onClick={() => {
           if (!accountId || !startMonth || !endMonth) return;
-          addReturnOverride(accountId, startMonth, endMonth, annualReturn);
-          setAnnualReturn(0);
+          addAmountOverride(accountId, startMonth, endMonth, amount);
+          setAmount(0);
         }}
       >
-        Add Return Override
+        Add Amount Override
       </Button>
     </Stack>
   );

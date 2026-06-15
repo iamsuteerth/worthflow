@@ -51,5 +51,10 @@ export function processInstrumentLifecycle(
 
       ...rdResult.events,
     ],
+
+    minCash: Math.min(
+      fdResult.minCash,
+      rdResult.minCash
+    ),
   };
 }

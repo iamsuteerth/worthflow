@@ -33,7 +33,7 @@ export async function exportPlan(
     app:
       "wealth-forecast",
 
-    version: 2,
+    version: 3,
 
     exportedAt:
       new Date().toISOString(),

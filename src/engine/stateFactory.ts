@@ -1,95 +1,44 @@
 // src/engine/stateFactory.ts
-import type {
-  PlannerConfig,
-} from "@/types/config";
+import type { PlannerConfig } from "@/types/config";
+import type { SimulationState } from "@/types/simulationState";
+import { addMonths } from "@/engine/dateUtils";
+import { createHistoricalFdPosition } from "@/engine/fd";
+import { createHistoricalRdPosition } from "@/engine/rd";
+import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
 
-import type {
-  SimulationState,
-} from "@/types/simulationState";
+export function createInitialState(config: PlannerConfig): SimulationState {
+  const forecastStart = config.forecast.startMonth;
 
-import {
-  addMonths,
-} from "@/engine/dateUtils";
+  const fds = config.instruments
+    .filter(
+      (i): i is FixedDeposit =>
+        i.type === "FD" &&
+        i.startMonth < forecastStart &&
+        addMonths(i.startMonth, i.durationMonths) >= forecastStart
+    )
+    .map((i) => createHistoricalFdPosition(i, forecastStart));
 
-import {
-  createHistoricalFdPosition,
-} from "@/engine/fd";
+  const rds = config.instruments
+    .filter(
+      (i): i is RecurringDeposit =>
+        i.type === "RD" &&
+        i.startMonth < forecastStart &&
+        addMonths(i.startMonth, i.durationMonths) >= forecastStart
+    )
+    .map((i) => createHistoricalRdPosition(i, forecastStart));
 
-import {
-  createHistoricalRdPosition,
-} from "@/engine/rd";
-
-import type {
-  FixedDeposit,
-  RecurringDeposit,
-} from "@/types/instrument";
-
-export function createInitialState(
-  config: PlannerConfig
-): SimulationState {
-  const forecastStart =
-    config.forecast.startMonth;
-
-  const fds =
-    config.instruments
-      .filter(
-        (
-          instrument
-        ): instrument is FixedDeposit =>
-          instrument.type === "FD" &&
-          instrument.startMonth <
-          forecastStart &&
-          addMonths(
-            instrument.startMonth,
-            instrument.durationMonths
-          ) >=
-          forecastStart
-      )
-      .map(
-        (
-          instrument
-        ) =>
-          createHistoricalFdPosition(
-            instrument,
-            forecastStart
-          )
-      );
-
-  const rds =
-    config.instruments
-      .filter(
-        (
-          instrument
-        ): instrument is RecurringDeposit =>
-          instrument.type === "RD" &&
-          instrument.startMonth <
-          forecastStart &&
-          addMonths(
-            instrument.startMonth,
-            instrument.durationMonths
-          ) >=
-          forecastStart
-      )
-      .map(
-        (
-          instrument
-        ) =>
-          createHistoricalRdPosition(
-            instrument,
-            forecastStart
-          )
-      );
+  // Account balances are seeded inside the simulation loop when each
+  // account's startMonth is reached.
+  const accountBalances: Record<string, number> = {};
+  for (const account of config.investments.accounts) {
+    accountBalances[account.id] = 0;
+  }
 
   return {
-    cash:
-      config.cash.openingBalance,
-
-    investmentCorpus:
-      config.investments
-        .openingCorpus,
-
+    cash: config.cash.openingBalance,
+    investmentCorpus: 0,
+    accountBalances,
     fds,
-
     rds,
   };
 }

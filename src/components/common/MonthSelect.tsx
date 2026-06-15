@@ -1,65 +1,83 @@
 // src/components/common/MonthSelect.tsx
-import {
-  Select,
-} from "@mantine/core";
-
-import {
-  useSimulation,
-} from "@/hooks/useSimulation";
-
-import {
-  formatMonth,
-} from "@/engine/monthFormatting";
+import { Select } from "@mantine/core";
+import { useMemo } from "react";
+import { formatMonth } from "@/engine/monthFormatting";
+import type { MonthKey } from "@/types/simulation";
 
 interface Props {
-  value: string | null;
-
-  onChange: (
-    value: string | null
-  ) => void;
-
+  value: MonthKey | null;
+  onChange: (value: string | null) => void;
   label?: string;
+  placeholder?: string;
+  /** Minimum selectable month (inclusive). If omitted, no lower bound. */
+  minMonth?: MonthKey | string | null;
+  /** Maximum selectable month (inclusive). If omitted, no upper bound. */
+  maxMonth?: MonthKey | string | null;
+  /** Mantine component size */
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  required?: boolean;
+  disabled?: boolean;
+}
 
-  minMonth?: string;
+/**
+ * Generates MonthKey options between a start year-month and an end year-month.
+ * Falls back to a ±5 year window around today when no bounds are provided.
+ */
+function generateOptions(
+  minMonth?: string | null,
+  maxMonth?: string | null
+): { value: string; label: string }[] {
+  const today = new Date();
 
-  maxMonth?: string;
+  const start = minMonth
+    ? new Date(`${minMonth}-01`)
+    : new Date(today.getFullYear() - 2, today.getMonth(), 1);
+
+  const end = maxMonth
+    ? new Date(`${maxMonth}-01`)
+    : new Date(today.getFullYear() + 5, today.getMonth(), 1);
+
+  const options: { value: string; label: string }[] = [];
+  const cursor = new Date(start);
+
+  while (cursor <= end) {
+    const year = cursor.getFullYear();
+    const month = String(cursor.getMonth() + 1).padStart(2, "0");
+    const key = `${year}-${month}` as MonthKey;
+    options.push({ value: key, label: formatMonth(key) });
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+
+  return options;
 }
 
 export default function MonthSelect({
   value,
   onChange,
   label = "Month",
+  placeholder = "Select month",
   minMonth,
   maxMonth,
+  size = "sm",
+  required,
+  disabled,
 }: Props) {
-  const result =
-    useSimulation();
-
-  const months =
-    result.rows
-      .map(
-        (row) => ({
-          value: row.month,
-          label: formatMonth(
-            row.month
-          ),
-        })
-      )
-      .filter(
-        (month) =>
-          (!minMonth ||
-            month.value >= minMonth) &&
-          (!maxMonth ||
-            month.value <= maxMonth)
-      );
+  const options = useMemo(
+    () => generateOptions(minMonth, maxMonth),
+    [minMonth, maxMonth]
+  );
 
   return (
     <Select
-      defaultValue={value}
       label={label}
-      data={months}
+      placeholder={placeholder}
+      data={options}
       value={value}
       onChange={onChange}
+      searchable
+      size={size}
+      required={required}
+      disabled={disabled}
     />
   );
 }

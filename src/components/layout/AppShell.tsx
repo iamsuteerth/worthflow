@@ -10,10 +10,6 @@ import {
   Title,
 } from "@mantine/core";
 
-import {
-  useDisclosure,
-} from "@mantine/hooks";
-
 import type {
   ReactNode,
 } from "react";
@@ -29,6 +25,10 @@ import {
 } from "@/store/plannerStore";
 
 import {
+  useUiStore,
+} from "@/store/uiStore";
+
+import {
   IconLogout,
 } from "@tabler/icons-react";
 import { useAuthStore } from "@/store/authStore";
@@ -40,10 +40,9 @@ interface Props {
 export default function PlannerShell({
   children,
 }: Props) {
-  const [
-    opened,
-    { open, close },
-  ] = useDisclosure(false);
+  const opened = useUiStore((state) => state.scenarioDrawerOpened);
+  const open = useUiStore((state) => state.openScenarioDrawer);
+  const close = useUiStore((state) => state.closeScenarioDrawer);
 
   const activeView = usePlannerStore((state) => state.activeView);
   const logout = useAuthStore((state) => state.logout);

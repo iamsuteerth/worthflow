@@ -33,6 +33,8 @@ export function processFdLifecycle(
     },
 
     events: [],
+
+    minCash: state.cash,
   };
 
   const nextState =
@@ -57,6 +59,11 @@ export function processFdLifecycle(
       ) {
         nextState.cash -=
           instrument.principal;
+
+        result.minCash = Math.min(
+          result.minCash,
+          nextState.cash
+        );
 
         nextState.fds.push(
           createFdPosition(
@@ -101,6 +108,11 @@ export function processFdLifecycle(
   maturedFds.forEach((fd) => {
     nextState.cash +=
       fd.currentValue;
+
+    result.minCash = Math.min(
+      result.minCash,
+      nextState.cash
+    );
 
     result.events.push({
       id:

@@ -16,8 +16,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconDeviceFloppy, IconFolderOpen, IconTrash } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
-import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
-import { simulate } from "@/engine/simulate";
+import { compareScenario } from "@/engine/scenarioComparison";
 import { usePlannerStore } from "@/store/plannerStore";
 
 function DeltaStat({ label, value }: { label: string; value: number }) {
@@ -59,24 +58,11 @@ export default function SavedScenarios() {
   };
 
   const scenarioComparisons = useMemo(() => {
-    const baseResult = simulate(baseConfig);
     return Object.fromEntries(
-      scenarios.map((scenario) => {
-        const scenarioResult = simulate(
-          buildEffectiveConfig(baseConfig, scenario.overrides)
-        );
-        return [
-          scenario.id,
-          {
-            netWorth:
-              scenarioResult.summary.finalNetWorth - baseResult.summary.finalNetWorth,
-            cash:
-              scenarioResult.summary.finalBalance - baseResult.summary.finalBalance,
-            lowestCash:
-              scenarioResult.summary.lowestBalance - baseResult.summary.lowestBalance,
-          },
-        ];
-      })
+      scenarios.map((scenario) => [
+        scenario.id,
+        compareScenario(baseConfig, scenario.overrides),
+      ])
     );
   }, [scenarios, baseConfig]);
 

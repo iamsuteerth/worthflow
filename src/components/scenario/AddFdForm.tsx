@@ -1,10 +1,10 @@
 // src/components/scenario/AddFdForm.tsx
-import { Button, Grid, NumberInput, Stack, TextInput } from "@mantine/core";
+import { Button, Grid, NumberInput, Stack, Text, TextInput } from "@mantine/core";
 import { IconBuildingBank } from "@tabler/icons-react";
 import { useState } from "react";
 import { addMonths } from "@/engine/dateUtils";
 import { formatMonth } from "@/engine/monthFormatting";
-import { usePlannerStore } from "@/store/plannerStore";
+import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
 import type { MonthKey } from "@/types/simulation";
 import MonthSelect from "@/components/common/MonthSelect";
 import InstrumentPreview from "@/components/scenario/InstrumentPreview";
@@ -12,6 +12,8 @@ import { money } from "@/components/scenario/moneyFormat";
 
 export default function AddFdForm() {
   const addFd = usePlannerStore((state) => state.addTransientFd);
+  const config = usePlannerStore((state) => state.config);
+  const overrides = usePlannerStore((state) => state.overrides);
 
   const [month, setMonth] = useState<MonthKey | null>("2028-01");
   const [name, setName] = useState("");
@@ -22,6 +24,9 @@ export default function AddFdForm() {
   const maturityValue = principal * Math.pow(1 + rate / 100, durationMonths / 12);
   const interest = maturityValue - principal;
   const maturityMonth = month ? addMonths(month, durationMonths) : null;
+
+  const availableCash = month ? getAvailableCash(config, overrides, month) : 0;
+  const exceedsCash = principal > availableCash;
 
   return (
     <Stack gap="sm">
@@ -42,6 +47,7 @@ export default function AddFdForm() {
         label="Principal"
         value={principal}
         min={1}
+        max={availableCash}
         thousandSeparator=","
         prefix="₹"
         onChange={(value) => setPrincipal(Number(value))}
@@ -73,6 +79,13 @@ export default function AddFdForm() {
         </Grid.Col>
       </Grid>
 
+      <Text size="xs" c="dimmed">
+        Available cash{month ? ` at ${formatMonth(month)}` : ""}:{" "}
+        <Text span fw={600} c={exceedsCash ? "red" : "green"} style={{ fontVariantNumeric: "tabular-nums" }}>
+          ₹{availableCash.toLocaleString("en-IN")}
+        </Text>
+      </Text>
+
       {principal > 0 && rate > 0 && maturityMonth && (
         <InstrumentPreview
           title="Fixed Deposit Forecast"
@@ -88,7 +101,7 @@ export default function AddFdForm() {
       <Button
         leftSection={<IconBuildingBank size={16} />}
         color="teal"
-        disabled={!month || !name.trim() || principal <= 0 || rate <= 0 || durationMonths <= 0}
+        disabled={!month || !name.trim() || principal <= 0 || rate <= 0 || durationMonths <= 0 || exceedsCash}
         onClick={() => {
           if (!month) return;
           addFd(month, principal, rate, durationMonths, name.trim());

@@ -19,18 +19,17 @@ export default defineConfig([
       globals: globals.browser,
     },
     rules: {
-      "no-restricted-imports": [
-        "error",
+      'no-restricted-imports': [
+        'error',
         {
           patterns: [
-            "../*",
-            "../../*",
-            "../../../*",
-            "../../../../*"
+            {
+              group: ['../*'],
+              message: 'Use @/ imports instead of relative paths',
+            },
           ],
-          message: "Use @/ imports instead of relative paths"
-        }
-      ]
-    }
+        },
+      ],
+    },
   },
 ])
