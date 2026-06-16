@@ -1,4 +1,3 @@
-// src/engine/builderToConfig.ts
 import type { PlannerConfig } from "@/types/config";
 import type { BuilderState } from "@/types/builder";
 

@@ -1,4 +1,3 @@
-// src/components/scenario/AddRdForm.tsx
 import { Button, Grid, NumberInput, Stack, Text, TextInput } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import { useState } from "react";

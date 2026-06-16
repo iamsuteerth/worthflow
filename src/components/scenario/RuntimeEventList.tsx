@@ -1,4 +1,3 @@
-// src/components/scenario/RuntimeEventList.tsx
 import {
   ActionIcon,
   Badge,
@@ -22,8 +21,6 @@ import type { InvestmentAccount } from "@/types/investmentAccount";
 import { formatMonth } from "@/engine/monthFormatting";
 import MonthSelect from "@/components/common/MonthSelect";
 
-// ── Badge display config ─────────────────────────────────────────────────────
-
 const TYPE_META: Record<string, { label: string; color: string }> = {
   ONE_OFF_EXPENSE:            { label: "Expense",          color: "red"    },
   CREDIT_CARD_EXPENSE:        { label: "Credit Card",      color: "orange" },
@@ -39,8 +36,6 @@ const TYPE_META: Record<string, { label: string; color: string }> = {
   INVESTMENT_DEPOSIT:         { label: "Deposit",          color: "cyan"   },
   INVESTMENT_WITHDRAWAL:      { label: "Withdrawal",       color: "orange" },
 };
-
-// ── Human-readable summary per event type ────────────────────────────────────
 
 function eventSummary(event: RuntimeEvent, accounts: InvestmentAccount[]): string {
   switch (event.type) {
@@ -83,8 +78,6 @@ function eventSummary(event: RuntimeEvent, accounts: InvestmentAccount[]): strin
   }
 }
 
-// ── Edit modal ───────────────────────────────────────────────────────────────
-
 export function EditEventModal({
   event,
   opened,
@@ -96,8 +89,7 @@ export function EditEventModal({
 }) {
   const updateEvent = usePlannerStore((s) => s.updateRuntimeEvent);
 
-  // Extract initial values by switching on the discriminant — avoids accessing
-  // keys that don't exist on all union members (TypeScript strict mode).
+  // Extract initial values by switching on the discriminant
   function getInitialAmount(): number {
     switch (event.type) {
       case "ONE_OFF_EXPENSE":
@@ -252,8 +244,6 @@ export function EditEventModal({
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
-
 interface Props {
   filterTypes?: RuntimeEvent["type"][];
   filterAccountId?: string;
@@ -281,7 +271,6 @@ export default function RuntimeEventList({ filterTypes, filterAccountId, filterI
     );
   }
 
-  // These event types have complex nested structure — offer delete only
   const deleteOnlyTypes = new Set(["FD", "RD"]);
 
   return (

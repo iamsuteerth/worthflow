@@ -1,4 +1,3 @@
-// src/components/scenario/AddExpenseForm.tsx
 import { Button, NumberInput, Stack, TextInput } from "@mantine/core";
 import { IconBolt } from "@tabler/icons-react";
 import { useState } from "react";

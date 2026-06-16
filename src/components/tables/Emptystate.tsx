@@ -1,4 +1,3 @@
-// src/components/tables/Emptystate.tsx
 import { Paper, Stack, Text } from "@mantine/core";
 
 type EmptystateProps = {

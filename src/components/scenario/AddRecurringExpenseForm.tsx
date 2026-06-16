@@ -1,4 +1,3 @@
-// src/components/scenario/AddRecurringExpenseForm.tsx
 import { Alert, Button, Grid, NumberInput, SegmentedControl, Stack, Text, TextInput } from "@mantine/core";
 import { IconAlertCircle, IconRepeat } from "@tabler/icons-react";
 import { useState } from "react";

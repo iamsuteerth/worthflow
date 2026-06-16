@@ -1,4 +1,3 @@
-// src/components/builder/EventsStep.tsx
 import {
   Alert,
   Badge,

@@ -1,4 +1,3 @@
-// src/components/timeline/InvestmentTimeline.tsx
 import {
   Badge,
   Group,
@@ -59,9 +58,6 @@ function formatMoney(amount: number) {
   return "₹" + Math.round(amount).toLocaleString("en-IN");
 }
 
-// Read-only visual timeline of investment-account events, scoped by the
-// dashboard's single global month-range filter (RD-5). No type chips (NS-4)
-// and no edit/delete — that lives in the Events tab via InvestmentEventGroups.
 export default function InvestmentTimeline() {
   const result = useFilteredSimulation();
 

@@ -1,4 +1,3 @@
-// src/engine/buildCashflowEvents.ts
 import type { PlannerConfig } from "@/types/config";
 import type { FinancialEvent } from "@/types/events";
 import type { MonthKey } from "@/types/simulation";
@@ -10,7 +9,6 @@ export function buildCashflowEvents(
 ): FinancialEvent[] {
   const events: FinancialEvent[] = [];
 
-  // One-off expenses
   config.oneOffExpenses
     .filter((expense) => expense.month === month)
     .forEach((expense) => {
@@ -23,7 +21,6 @@ export function buildCashflowEvents(
       });
     });
 
-  // Credit card bills
   config.creditCardBills
     .filter((bill) => bill.month === month)
     .forEach((bill) => {
@@ -36,7 +33,6 @@ export function buildCashflowEvents(
       });
     });
 
-  // Recurring expenses — emit one event per active recurring expense this month
   (config.recurringExpenses ?? [])
     .filter((re) => isRecurringExpenseActive(re, month))
     .forEach((re) => {
@@ -49,7 +45,6 @@ export function buildCashflowEvents(
       });
     });
 
-  // Bonus income
   config.bonusIncome
     .filter((bonus) => bonus.month === month)
     .forEach((bonus) => {
@@ -62,7 +57,6 @@ export function buildCashflowEvents(
       });
     });
 
-  // Salary changes
   config.salaryChanges
     .filter((change) => change.effectiveMonth === month)
     .forEach((change) => {

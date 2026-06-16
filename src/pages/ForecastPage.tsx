@@ -1,4 +1,3 @@
-// src/pages/ForecastPage.tsx
 import { Card } from "@mantine/core";
 
 import SummaryCards

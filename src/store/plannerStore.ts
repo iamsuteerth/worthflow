@@ -1,4 +1,3 @@
-// src/store/plannerStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -33,7 +32,6 @@ interface PlannerStore {
 
   setActiveView: (view: AppView) => void;
 
-  // ── Expense events ────────────────────────────────────────────────────────
   addTransientOneOffExpense: (month: MonthKey, amount: number, label: string) => void;
   addTransientCreditCardExpense: (month: MonthKey, amount: number, label: string) => void;
   addTransientRecurringExpense: (
@@ -44,7 +42,6 @@ interface PlannerStore {
     frequency: "MONTHLY" | "ANNUAL"
   ) => void;
 
-  // ── Income events ─────────────────────────────────────────────────────────
   addTransientBonusIncome: (month: MonthKey, amount: number, description: string) => void;
   addTransientSalaryChange: (
     effectiveMonth: MonthKey,
@@ -52,7 +49,6 @@ interface PlannerStore {
     description: string
   ) => void;
 
-  // ── Spending / cash overrides ─────────────────────────────────────────────
   addTransientSpendingOverride: (
     startMonth: MonthKey,
     endMonth: MonthKey,
@@ -60,7 +56,6 @@ interface PlannerStore {
   ) => void;
   addTransientOpeningCashOverride: (amount: number) => void;
 
-  // ── Instrument events ─────────────────────────────────────────────────────
   addTransientFd: (
     month: MonthKey,
     principal: number,
@@ -76,11 +71,9 @@ interface PlannerStore {
     name: string
   ) => void;
 
-  // ── Investment accounts ───────────────────────────────────────────────────
   createInvestmentAccount: (account: Omit<InvestmentAccount, "id">) => string | null;
   deleteInvestmentAccount: (accountId: string) => void;
 
-  // ── Investment overrides / transfers ──────────────────────────────────────
   addTransientAccountAmountOverride: (
     accountId: string,
     startMonth: MonthKey,
@@ -96,11 +89,9 @@ interface PlannerStore {
   addTransientInvestmentDeposit: (accountId: string, month: MonthKey, amount: number) => void;
   addTransientInvestmentWithdrawal: (accountId: string, month: MonthKey, amount: number) => void;
 
-  // ── Runtime event editing ─────────────────────────────────────────────────
   updateRuntimeEvent: (id: string, changes: Partial<RuntimeEvent>) => void;
   deleteRuntimeEvent: (id: string) => void;
 
-  // ── Plan management ───────────────────────────────────────────────────────
   setOverrides: (overrides: Partial<PlannerOverrides>) => void;
   resetOverrides: () => void;
   resetAll: () => void;
@@ -113,8 +104,6 @@ interface PlannerStore {
   loadScenario: (id: string) => void;
   deleteScenario: (id: string) => void;
 }
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 
 const initialConfig = configJson as PlannerConfig;
 
@@ -136,9 +125,6 @@ function appendEvent(
   return [...current, event];
 }
 
-// Available cash (the NS-1 "maxCommitment") at `month`: the floored, non-negative
-// closing balance from a full, unfiltered simulation. This is the single source
-// of truth for cash-limited UI (deposits, FD, RD) and store-level guards.
 export function getAvailableCash(
   config: PlannerConfig,
   overrides: PlannerOverrides,
@@ -148,8 +134,6 @@ export function getAvailableCash(
   const row = result.rows.find((r) => r.month === month);
   return Math.floor(Math.max(0, row?.closingBalance ?? 0));
 }
-
-// ── Store ─────────────────────────────────────────────────────────────────────
 
 export const usePlannerStore = create<PlannerStore>()(
   persist(
@@ -162,8 +146,6 @@ export const usePlannerStore = create<PlannerStore>()(
       baselineAccountIds: captureBaselineAccountIds(initialConfig),
 
       setActiveView: (activeView) => set({ activeView }),
-
-      // ── Expenses ────────────────────────────────────────────────────────
 
       addTransientOneOffExpense: (month, amount, label) =>
         set((s) => {
@@ -197,8 +179,6 @@ export const usePlannerStore = create<PlannerStore>()(
           return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
-      // ── Income ──────────────────────────────────────────────────────────
-
       addTransientBonusIncome: (month, amount, description) =>
         set((s) => {
           const events = appendEvent(s.overrides.runtimeEvents ?? [], {
@@ -215,8 +195,6 @@ export const usePlannerStore = create<PlannerStore>()(
           });
           return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
-
-      // ── Spending / cash overrides ────────────────────────────────────────
 
       addTransientSpendingOverride: (startMonth, endMonth, amount) =>
         set((s) => {
@@ -252,8 +230,6 @@ export const usePlannerStore = create<PlannerStore>()(
           return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
-      // ── Instruments ─────────────────────────────────────────────────────
-
       addTransientFd: (month, principal, rate, durationMonths, name) =>
         set((s) => {
           const availableCash = getAvailableCash(s.config, s.overrides, month);
@@ -277,8 +253,6 @@ export const usePlannerStore = create<PlannerStore>()(
           });
           return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
-
-      // ── Investment accounts ───────────────────────────────────────────────
 
       createInvestmentAccount: (account) => {
         let newAccountId: string | null = null;
@@ -329,8 +303,6 @@ export const usePlannerStore = create<PlannerStore>()(
 
           return rebuild(baseConfig, { ...s.overrides, runtimeEvents });
         }),
-
-      // ── Investment overrides / transfers ────────────────────────────────
 
       addTransientAccountAmountOverride: (accountId, startMonth, endMonth, amount) =>
         set((s) => {
@@ -402,8 +374,6 @@ export const usePlannerStore = create<PlannerStore>()(
           return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
-      // ── Event editing ────────────────────────────────────────────────────
-
       updateRuntimeEvent: (id, changes) =>
         set((s) => {
           const events = (s.overrides.runtimeEvents ?? []).map((e) =>
@@ -417,8 +387,6 @@ export const usePlannerStore = create<PlannerStore>()(
           const events = (s.overrides.runtimeEvents ?? []).filter((e) => e.id !== id);
           return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
-
-      // ── Plan management ──────────────────────────────────────────────────
 
       setOverrides: (incoming) =>
         set((s) => {

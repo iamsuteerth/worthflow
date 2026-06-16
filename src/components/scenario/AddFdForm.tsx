@@ -1,4 +1,3 @@
-// src/components/scenario/AddFdForm.tsx
 import { Button, Grid, NumberInput, Stack, Text, TextInput } from "@mantine/core";
 import { IconBuildingBank } from "@tabler/icons-react";
 import { useState } from "react";

@@ -1,4 +1,3 @@
-// src/engine/fdLifecycle.ts
 import type {
   PlannerConfig,
 } from "@/types/config";

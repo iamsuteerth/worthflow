@@ -1,4 +1,3 @@
-// src/components/tables/InvestmentAccountsTable.tsx
 import { Fragment, useEffect, useState } from "react";
 import {
   ActionIcon,
@@ -25,10 +24,6 @@ import { money } from "@/components/tables/tableUtils";
 import { Emptystate } from "@/components/tables/Emptystate";
 import { EditEventModal } from "@/components/scenario/RuntimeEventList";
 
-// ── Range Ownership Contract (NS-3) ─────────────────────────────────────────
-// Every segment carries an explicit text label from this closed vocabulary —
-// never a bare date range, never color-only.
-
 function rangeLabel(range: ScheduleRange, kind: "contribution" | "return"): string {
   if (range.source === "DEFAULT") {
     return kind === "contribution" ? "Default Contribution" : "Default Return";
@@ -47,8 +42,6 @@ function rangeSpan(range: ScheduleRange, months: MonthKey[]): number {
   return Math.max(1, end - start + 1);
 }
 
-// Edit/delete an OVERRIDE segment in place via its overrideId, reusing the
-// runtime-event edit modal (NS-3).
 function OverrideActions({ overrideId }: { overrideId: string }) {
   const events = usePlannerStore((s) => s.overrides.runtimeEvents) ?? [];
   const deleteEvent = usePlannerStore((s) => s.deleteRuntimeEvent);
@@ -314,7 +307,7 @@ export default function InvestmentAccountsTable() {
                                 <Stat label="Monthly Contribution" value={`${money(account.defaultMonthlyContribution)}/mo`} />
                                 <Stat label="Return %" value={`${account.defaultAnnualReturn}%`} />
                                 <Stat label="Total Contributions" value={money(totalContributions)} />
-                                <Stat label="XIRR" value={xirr === null ? "—" : `${xirr.toFixed(2)}%`} />
+                                <Stat label="XIRR" value={xirr === null ? "-" : `${xirr.toFixed(2)}%`} />
                               </SimpleGrid>
 
                               <Group align="flex-start" gap="xl" wrap="wrap">

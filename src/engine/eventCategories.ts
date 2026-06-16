@@ -1,4 +1,3 @@
-// src/engine/eventCategories.ts
 import type { EventType } from "@/types/events";
 
 // Shared by EventTimeline / InvestmentTimeline filter chips (#2) and any other

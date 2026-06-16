@@ -1,4 +1,3 @@
-// src/components/tables/OneOffExpenses.tsx
 import { Badge, ScrollArea, Table } from "@mantine/core";
 import { usePlannerStore } from "@/store/plannerStore";
 import { formatMonth } from "@/engine/monthFormatting";

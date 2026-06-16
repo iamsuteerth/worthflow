@@ -1,4 +1,3 @@
-// src/app/theme-context.ts
 import {
   createContext,
 } from "react";

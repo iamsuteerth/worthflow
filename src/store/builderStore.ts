@@ -1,4 +1,3 @@
-// src/store/builderStore.ts
 import { create } from "zustand";
 
 import type {

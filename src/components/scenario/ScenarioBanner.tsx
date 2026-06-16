@@ -1,4 +1,3 @@
-// src/components/scenario/ScenarioBanner.tsx
 import {
   Badge,
   Card,

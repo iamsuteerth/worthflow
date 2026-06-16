@@ -1,4 +1,3 @@
-// src/types/builder.ts
 import type { MonthKey } from "@/types/simulation";
 import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
 import type { RecurringExpense } from "@/types/recurringExpense";

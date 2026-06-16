@@ -1,4 +1,3 @@
-// src/components/scenario/AddInvestmentDepositForm.tsx
 import { Button, NumberInput, Select, Stack, Text } from "@mantine/core";
 import { IconArrowDown } from "@tabler/icons-react";
 import { useState } from "react";

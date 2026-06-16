@@ -1,4 +1,3 @@
-// src/components/builder/BuilderWizard.tsx
 import {
   Box,
   Button,

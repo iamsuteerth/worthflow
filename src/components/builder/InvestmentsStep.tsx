@@ -1,4 +1,3 @@
-// src/components/builder/InvestmentsStep.tsx
 import {
   Badge,
   Button,

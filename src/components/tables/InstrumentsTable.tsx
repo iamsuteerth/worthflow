@@ -1,4 +1,3 @@
-// src/components/tables/InstrumentsTable.tsx
 import { Badge, ScrollArea, Table, Text } from "@mantine/core";
 import { useMemo } from "react";
 import { usePlannerStore } from "@/store/plannerStore";

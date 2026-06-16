@@ -1,4 +1,3 @@
-// src/engine/scenarioComparison.ts
 import { simulate } from "@/engine/simulate";
 import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 import type { PlannerConfig } from "@/types/config";

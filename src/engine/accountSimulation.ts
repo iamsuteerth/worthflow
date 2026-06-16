@@ -1,11 +1,3 @@
-/**
- * Per-account investment simulation helpers.
- *
- * Every investment is modelled as an InvestmentAccount with its own
- * lifecycle: dormant before startMonth, seeded with openingBalance at
- * startMonth, then growth + contribution + deposits + withdrawals each
- * month thereafter.
- */
 import type { PlannerConfig } from "@/types/config";
 import type { MonthKey } from "@/types/simulation";
 import type { AccountSnapshot } from "@/types/investmentAccount";
@@ -14,7 +6,6 @@ import type {
   RuntimeInvestmentWithdrawal,
 } from "@/types/runtimeEvent";
 
-/** Return the effective annual return % for an account in a given month. */
 export function getAccountReturn(
   config: PlannerConfig,
   accountId: string,
@@ -33,7 +24,6 @@ export function getAccountReturn(
   return override?.annualReturn ?? account.defaultAnnualReturn;
 }
 
-/** Return the effective monthly contribution for an account in a given month. */
 export function getAccountContribution(
   config: PlannerConfig,
   accountId: string,
@@ -53,13 +43,10 @@ export function getAccountContribution(
 }
 
 export interface AccountMonthResult {
-  /** Updated balances after this month's growth + contributions + transfers */
   accountBalances: Record<string, number>;
-  /** Total contribution cash outflow this month (reduces cash) */
   totalContribution: number;
-  /** Per-account snapshots for the asset row */
   accountSnapshots: AccountSnapshot[];
-  /** Cashflow entries for XIRR (negative = outflow, positive = inflow), tagged by account */
+  /** negative = outflow, positive = inflow */
   xirrEntries: { amount: number; date: Date; accountId: string }[];
 }
 
@@ -89,13 +76,11 @@ export function processAccountMonth(
       }
     }
 
-    // Growth
     const annualReturn = getAccountReturn(config, account.id, month);
     const growthFactor = Math.max(0, 1 + annualReturn / 100);
     const monthlyReturn = Math.pow(growthFactor, 1 / 12) - 1;
     updated[account.id] = (updated[account.id] ?? 0) * (1 + monthlyReturn);
 
-    // Contribution
     const contribution = getAccountContribution(config, account.id, month);
     if (contribution > 0) {
       updated[account.id] += contribution;
@@ -116,7 +101,6 @@ export function processAccountMonth(
     xirrEntries.push({ amount: -deposit.amount, date, accountId: deposit.accountId });
   }
 
-  // Withdrawals (account → cash), clamped to account balance.
   for (const withdrawal of withdrawals) {
     const account = accounts.find((a) => a.id === withdrawal.accountId);
     if (!account || month < account.startMonth) continue;

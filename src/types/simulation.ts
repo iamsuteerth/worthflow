@@ -1,4 +1,3 @@
-// src/types/simulation.ts
 import type { AssetSnapshot } from "@/types/assets";
 import type { FinancialEvent } from "@/types/events";
 

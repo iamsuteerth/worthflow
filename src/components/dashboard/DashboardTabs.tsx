@@ -1,4 +1,3 @@
-// src/components/dashboard/DashboardTabs.tsx
 import { Card, Tabs } from "@mantine/core";
 
 import ForecastTable          from "@/components/tables/ForecastTable";
@@ -12,8 +11,6 @@ import InvestmentAccountsTable from "@/components/tables/InvestmentAccountsTable
 import { useUiStore, type DashboardTabValue } from "@/store/uiStore";
 
 import classes from "@/components/dashboard/DashboardTabs.module.css";
-
-// ─── Tab manifest ─────────────────────────────────────────────────────────────
 
 const TABS: { value: DashboardTabValue; label: string }[] = [
   { value: "forecast",     label: "Forecast"     },
@@ -36,8 +33,6 @@ const PANELS: Record<DashboardTabValue, React.ReactNode> = {
   investments: <InvestmentTimeline />,
   accounts:    <InvestmentAccountsTable />,
 };
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function DashboardTabs() {
   const dashboardTab = useUiStore((s) => s.dashboardTab);

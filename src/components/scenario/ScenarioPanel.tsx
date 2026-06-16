@@ -1,4 +1,3 @@
-// src/components/scenario/ScenarioPanel.tsx
 import {
   Box,
   Button,
@@ -48,13 +47,9 @@ import InvestmentEventGroups         from "@/components/scenario/InvestmentEvent
 import SavedScenarios                from "@/components/scenario/SavedScenarios";
 import type { RuntimeEvent } from "@/types/runtimeEvent";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type ExpenseSub    = "expense" | "recurring" | "card" | "spendingOverride";
 type CashEventsSub = "salary" | "bonus" | "openingCash";
 type InvestmentSub = "account" | "amountOverride" | "returnOverride" | "deposit" | "withdraw";
-
-// ─── Event categories (Events tab) ─────────────────────────────────────────────
 
 const EVENT_CATEGORIES: { label: string; types: RuntimeEvent["type"][] }[] = [
   { label: "Cash Events", types: ["SALARY_CHANGE", "BONUS_INCOME", "OPENING_CASH_OVERRIDE"] },
@@ -63,8 +58,6 @@ const EVENT_CATEGORIES: { label: string; types: RuntimeEvent["type"][] }[] = [
   { label: "FD",          types: ["FD"] },
   { label: "RD",          types: ["RD"] },
 ];
-
-// ─── Chip ─────────────────────────────────────────────────────────────────────
 
 function Chip({ label, active, onClick }: {
   label: string; active: boolean; onClick: () => void;
@@ -88,8 +81,6 @@ function Chip({ label, active, onClick }: {
     </UnstyledButton>
   );
 }
-
-// ─── Section button ───────────────────────────────────────────────────────────
 
 function SectionButton({ icon: Icon, label, active, onClick }: {
   icon: React.ElementType; label: string; active: boolean; onClick: () => void;
@@ -120,8 +111,6 @@ function SectionButton({ icon: Icon, label, active, onClick }: {
   );
 }
 
-// ─── Form panel wrapper ───────────────────────────────────────────────────────
-
 function FormBox({ children }: { children: React.ReactNode }) {
   return (
     <Box
@@ -136,8 +125,6 @@ function FormBox({ children }: { children: React.ReactNode }) {
     </Box>
   );
 }
-
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ScenarioPanel() {
   const baseConfig     = usePlannerStore((s) => s.baseConfig);
@@ -241,21 +228,18 @@ export default function ScenarioPanel() {
         </Stack>
       )}
 
-      {/* ── FD ── */}
       {section === "fd" && (
         <FormBox>
           <AddFdForm />
         </FormBox>
       )}
 
-      {/* ── RD ── */}
       {section === "rd" && (
         <FormBox>
           <AddRdForm />
         </FormBox>
       )}
 
-      {/* ── Events list ── */}
       {section === "events" && (
         <Stack gap="md">
           <Group justify="space-between" align="flex-start" wrap="wrap" gap="xs">
@@ -296,7 +280,6 @@ export default function ScenarioPanel() {
         </Stack>
       )}
 
-      {/* ── Import / Export / Reset ── */}
       <Divider />
       <Text size="xs" c="dimmed">
         Import or export complete planner snapshots.

@@ -1,4 +1,3 @@
-// src/engine/rd.ts
 import type {
   RecurringDeposit,
 } from "@/types/instrument";

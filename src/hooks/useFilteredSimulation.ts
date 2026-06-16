@@ -1,4 +1,3 @@
-// src/hooks/useFilteredSimulation.ts
 import { useMemo } from "react";
 import { useSimulation } from "@/hooks/useSimulation";
 import { useFilterStore } from "@/store/filterStore";
@@ -23,9 +22,8 @@ export function useFilteredSimulation(): SimulationResult {
     });
 
     return {
-      // Filtered rows for display
       rows: filtered,
-      // Summary always reflects the full simulation (spec requirement)
+      // Summary uses the full result — only table/timeline views respect the filter.
       summary: full.summary,
     };
   }, [full, startMonth, endMonth]);

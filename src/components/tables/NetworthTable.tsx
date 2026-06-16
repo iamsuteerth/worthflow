@@ -1,4 +1,3 @@
-// src/components/tables/NetworthTable.tsx
 import { Badge, ScrollArea, Stack, Table, Text } from "@mantine/core";
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { formatMonth } from "@/engine/monthFormatting";

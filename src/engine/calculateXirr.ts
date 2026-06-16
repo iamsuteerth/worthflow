@@ -1,4 +1,3 @@
-// src/engine/calculateXirr.ts
 export function calculateXirr(
   cashflows: {
     amount: number;
@@ -25,7 +24,6 @@ export function calculateXirr(
   const amounts = sorted.map((cf) => cf.amount);
   const n = amounts.length;
 
-  // Net Present Value at a given rate
   function npv(rate: number): number {
     let sum = 0;
     for (let i = 0; i < n; i++) {
@@ -35,7 +33,6 @@ export function calculateXirr(
     return sum;
   }
 
-  // Derivative of NPV with respect to rate
   function dnpv(rate: number): number {
     let sum = 0;
     for (let i = 0; i < n; i++) {
@@ -122,7 +119,6 @@ export function calculateXirr(
   const bracket = findBracket();
   if (!bracket) return null;
 
-  // Brent's method implementation
   function brent(a: number, b: number): number | null {
     let fa = npv(a);
     let fb = npv(b);
@@ -138,13 +134,13 @@ export function calculateXirr(
     let c = a;
     let fc = fa;
     let mflag = true;
-    let d = 0; // 's' has been removed from here
+    let d = 0;
 
     for (let i = 0; i < MAX_ITER; i++) {
       if (Math.abs(b - a) < RATE_TOL && Math.abs(fb) < NPV_TOL) break;
       if (Math.abs(fb) < NPV_TOL) break;
 
-      let s: number; // Declare 's' cleanly inside the loop
+      let s: number;
 
       if (fa !== fc && fb !== fc) {
         // Inverse quadratic interpolation
@@ -165,17 +161,16 @@ export function calculateXirr(
       const cond5 = !mflag && Math.abs(c - d) < RATE_TOL;
 
       if (cond1 || cond2 || cond3 || cond4 || cond5) {
-        // Bisection fallback
         s = (a + b) / 2;
         mflag = true;
       } else {
         mflag = false;
       }
 
-      let fs = npv(s); // Switched to let
+      let fs = npv(s); 
       if (!Number.isFinite(fs)) {
         s = (a + b) / 2;
-        fs = npv(s); // Recalculate fs so it doesn't break the loop logic
+        fs = npv(s);
       }
 
       d = c;

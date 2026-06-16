@@ -1,4 +1,3 @@
-// src/components/builder/BaselineStep.tsx
 import {
   Alert,
   Button,

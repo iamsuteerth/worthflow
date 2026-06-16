@@ -1,4 +1,3 @@
-// src/store/uiStore.ts
 import { create } from "zustand";
 import type { RuntimeEvent } from "@/types/runtimeEvent";
 
@@ -20,8 +19,7 @@ interface UiStore {
 
   highlightAccountId: string | null;
   setHighlightAccountId: (id: string | null) => void;
-
-  // ── Scenario Lab routing (RD-4) ───────────────────────────────────────────
+  
   scenarioSection: ScenarioSection;
   setScenarioSection: (section: ScenarioSection) => void;
 
@@ -32,8 +30,6 @@ interface UiStore {
   openScenarioDrawer: () => void;
   closeScenarioDrawer: () => void;
 
-  // Routes the Scenario Lab to the Events section, optionally pre-scoped to a
-  // set of event types and/or an investment account (Banner navigation, RD-4).
   navigateToEvents: (filter?: { types?: RuntimeEvent["type"][]; accountId?: string }) => void;
 }
 

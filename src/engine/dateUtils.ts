@@ -1,4 +1,3 @@
-// src/engine/dateUtils.ts
 import type { MonthKey } from "@/types/simulation";
 
 const MONTH_NAMES = [

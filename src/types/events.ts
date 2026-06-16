@@ -1,4 +1,3 @@
-// src/types/events.ts
 import type { MonthKey } from "@/types/simulation";
 
 export type EventType =

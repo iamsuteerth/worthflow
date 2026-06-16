@@ -1,4 +1,3 @@
-// src/components/scenario/AddSpendingOverrideForm.tsx
 import { Alert, Button, Grid, NumberInput, Stack, Text } from "@mantine/core";
 import { IconAlertCircle, IconAdjustments } from "@tabler/icons-react";
 import { useState } from "react";
@@ -37,7 +36,7 @@ export default function AddSpendingOverrideForm() {
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
         Replaces the baseline monthly spend (₹{config.expenses.defaultMonthly.toLocaleString("en-IN")}/mo) for a date range.
-        Additive items — recurring, credit card, and one-off expenses — still stack on top of the override amount.
+        Additive items: Recurring, Credit Card, and One-Off expenses stack on top of the override amount.
       </Text>
 
       <NumberInput

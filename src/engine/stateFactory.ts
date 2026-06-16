@@ -1,4 +1,3 @@
-// src/engine/stateFactory.ts
 import type { PlannerConfig } from "@/types/config";
 import type { SimulationState } from "@/types/simulationState";
 import { addMonths } from "@/engine/dateUtils";

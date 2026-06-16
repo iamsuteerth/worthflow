@@ -1,4 +1,3 @@
-// src/types/incomeEvents.ts
 import type { MonthKey }
   from "@/types/simulation"
 

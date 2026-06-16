@@ -1,4 +1,3 @@
-// src/engine/fd.ts
 import type { FixedDeposit } from "@/types/instrument";
 import type { MonthKey } from "@/types/simulation";
 import { addMonths } from "@/engine/dateUtils";

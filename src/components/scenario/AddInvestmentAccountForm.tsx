@@ -1,4 +1,3 @@
-// src/components/scenario/AddInvestmentAccountForm.tsx
 import { Button, Grid, NumberInput, Stack, Text, TextInput } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";

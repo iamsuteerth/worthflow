@@ -1,4 +1,3 @@
-// src/utils/uniquifyAccountName.ts
 
 /**
  * Resolves a possibly-duplicate account name into a unique one by

@@ -1,4 +1,3 @@
-// src/store/filterStore.ts
 import { create } from "zustand";
 import type { MonthKey } from "@/types/simulation";
 import type { EventCategory } from "@/engine/eventCategories";
@@ -11,8 +10,6 @@ interface FilterStore {
   setRange: (start: MonthKey | null, end: MonthKey | null) => void;
   reset: () => void;
 
-  // ── Display-only event-category filters (#2) ────────────────────────────
-  // Empty array = no filter (show everything). These never affect simulation.
   categoryFilter: EventCategory[];
   toggleCategory: (category: EventCategory) => void;
   resetCategoryFilter: () => void;

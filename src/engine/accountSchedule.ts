@@ -1,4 +1,3 @@
-// src/engine/accountSchedule.ts
 import { generateMonths } from "@/engine/dateUtils";
 import { getAccountContribution, getAccountReturn } from "@/engine/accountSimulation";
 import type { PlannerConfig } from "@/types/config";
@@ -48,11 +47,6 @@ function collapse(
   return ranges;
 }
 
-/**
- * Builds the contribution and return schedule for an account: a collapsed,
- * source-tagged list of ranges spanning [account.startMonth, forecast end].
- * Pure — feeds InvestmentAccountsTable's range display (#6).
- */
 export function buildAccountSchedule(
   config: PlannerConfig,
   accountId: string

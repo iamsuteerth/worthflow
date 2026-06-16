@@ -1,4 +1,3 @@
-// src/engine/simulate.ts
 import { generateMonths } from "@/engine/dateUtils";
 
 import type { AssetSnapshot } from "@/types/assets";
@@ -79,7 +78,6 @@ export function simulate(
     const oneOffExpense = getOneOffExpense(config, month);
     const recurringExpense = getRecurringExpense(config, month);
 
-    // ── Apply income & expenses to cash ─────────────────────────────────────
     const openingBalance = state.cash;
     let cashFloor = state.cash;
 
@@ -87,7 +85,6 @@ export function simulate(
     state.cash -= flatExpense + creditCardExpense + oneOffExpense + recurringExpense;
     cashFloor = Math.min(cashFloor, state.cash);
 
-    // ── Per-month deposit/withdrawal runtime events ──────────────────────────
     const monthDeposits =
       overrides?.runtimeEvents?.filter(
         (e): e is RuntimeInvestmentDeposit =>
@@ -151,7 +148,6 @@ export function simulate(
       accountCashflows[entry.accountId]?.push({ amount: entry.amount, date: entry.date });
     }
 
-    // ── FD / RD lifecycle ────────────────────────────────────────────────────
     const lifecycle = processInstrumentLifecycle(state, config, month);
     state = lifecycle.state;
     cashFloor = Math.min(cashFloor, lifecycle.minCash);
@@ -161,7 +157,6 @@ export function simulate(
       lowestCashMonth = month;
     }
 
-    // ── Assemble row ─────────────────────────────────────────────────────────
     const fdValue = state.fds.reduce((s, fd) => s + fd.currentValue, 0);
     const rdValue = state.rds.reduce((s, rd) => s + rd.currentValue, 0);
 
@@ -192,7 +187,6 @@ export function simulate(
       totalOutflow,
     };
 
-    // ── Build override events for row ────────────────────────────────────────
     const accountAmountOverrideEvents =
       overrides?.runtimeEvents
         ?.filter(
@@ -282,7 +276,7 @@ export function simulate(
 
   const finalRow = rows[rows.length - 1];
 
-  // Terminal XIRR cashflow: final portfolio value as inflow
+  // Final portfolio value is the terminal inflow for XIRR computation.
   investmentCashflows.push({
     amount: finalRow.assets.investmentCorpus,
     date: new Date(`${finalRow.month}-01`),
@@ -290,8 +284,6 @@ export function simulate(
 
   const xirr = calculateXirr(investmentCashflows);
 
-  // Per-account XIRR + total contributions (#10): partition the existing
-  // cashflow streams by account and append each account's terminal value.
   const accountXirr: Record<string, number | null> = {};
   const accountContributions: Record<string, number> = {};
 

@@ -1,11 +1,8 @@
-// src/components/charts/NetWorthChart.tsx
 import { Card, Stack, Text, Badge, Group, Divider, Paper } from "@mantine/core";
 import { LineChart } from "@mantine/charts";
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { formatMonth } from "@/engine/monthFormatting";
 import type { FinancialEvent } from "@/types/events";
-
-// ─── Formatting helpers ───────────────────────────────────────────────────────
 
 function formatMoney(value: number) {
   return "₹" + Math.round(value).toLocaleString("en-IN");
@@ -28,8 +25,6 @@ function deltaColor(value: number): string {
   if (value < 0) return "red";
   return "gray";
 }
-
-// ─── Event aggregation ────────────────────────────────────────────────────────
 
 type EventSummary = {
   label: string;
@@ -100,8 +95,6 @@ function getEventSummary(events: FinancialEvent[]): EventSummary[] {
 
   return results;
 }
-
-// ─── Tooltip ─────────────────────────────────────────────────────────────────
 
 type DataPoint = {
   month: string;
@@ -180,15 +173,11 @@ function ChartTooltip({
   );
 }
 
-// ─── Chart series ─────────────────────────────────────────────────────────────
-
 const SERIES = [
   { name: "cash",             label: "Cash",        color: "blue"   },
   { name: "investmentCorpus", label: "Investments", color: "green"  },
   { name: "netWorth",         label: "Net Worth",   color: "violet" },
 ];
-
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function NetWorthChart() {
   const result = useFilteredSimulation();

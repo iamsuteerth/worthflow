@@ -1,4 +1,3 @@
-// src/types/scenario.ts
 import type { PlannerOverrides }
   from "@/types/overrides";
 

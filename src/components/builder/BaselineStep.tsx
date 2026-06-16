@@ -1,4 +1,3 @@
-// src/components/builder/BaselineStep.tsx
 import { Card, Grid, Group, NumberInput, Stack, Text, ThemeIcon } from "@mantine/core";
 import {
   IconBolt,

@@ -1,4 +1,3 @@
-// src/components/common/MonthSelect.tsx
 import { Select } from "@mantine/core";
 import { useMemo } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
@@ -9,20 +8,14 @@ interface Props {
   onChange: (value: string | null) => void;
   label?: string;
   placeholder?: string;
-  /** Minimum selectable month (inclusive). If omitted, no lower bound. */
   minMonth?: MonthKey | string | null;
-  /** Maximum selectable month (inclusive). If omitted, no upper bound. */
   maxMonth?: MonthKey | string | null;
-  /** Mantine component size */
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   required?: boolean;
   disabled?: boolean;
 }
 
-/**
- * Generates MonthKey options between a start year-month and an end year-month.
- * Falls back to a ±5 year window around today when no bounds are provided.
- */
+// Generates MonthKey options between a start year-month and an end year-month.
 function generateOptions(
   minMonth?: string | null,
   maxMonth?: string | null

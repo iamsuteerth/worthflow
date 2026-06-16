@@ -1,4 +1,3 @@
-// src/engine/buildEffectiveConfig.ts
 import type { PlannerConfig } from "@/types/config";
 import type { PlannerOverrides } from "@/types/overrides";
 import { generateMonths } from "@/engine/dateUtils";
@@ -144,8 +143,6 @@ export function buildEffectiveConfig(
         config.cash.openingBalance = event.amount;
         break;
 
-      // INVESTMENT_DEPOSIT and INVESTMENT_WITHDRAWAL are handled directly
-      // in simulate.ts from overrides.runtimeEvents — no config mutation needed.
       default:
         break;
     }

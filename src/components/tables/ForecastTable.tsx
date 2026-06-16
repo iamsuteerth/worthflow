@@ -1,4 +1,3 @@
-// src/components/tables/ForecastTable.tsx
 import { Badge, Group, ScrollArea, Stack, Table, Text } from "@mantine/core";
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { formatMonth } from "@/engine/monthFormatting";

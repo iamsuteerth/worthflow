@@ -1,4 +1,3 @@
-// src/components/scenario/InvestmentEventGroups.tsx
 import { Group, Stack, Text } from "@mantine/core";
 import { useState } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
@@ -40,9 +39,6 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
     </Text>
   );
 }
-
-// Single month, or [startMonth, endMonth] range, an event occupies — used for
-// optional time-window filtering (RD-5 scope: Investment Timeline only).
 function eventMonthRange(event: RuntimeEvent): [MonthKey, MonthKey] | null {
   if ("startMonth" in event && "endMonth" in event) return [event.startMonth, event.endMonth];
   if ("month" in event) return [event.month, event.month];
@@ -50,17 +46,13 @@ function eventMonthRange(event: RuntimeEvent): [MonthKey, MonthKey] | null {
 }
 
 interface Props {
-  // Pre-scope to a single account (Banner navigation / Investment Timeline selector).
   defaultAccountId?: string | null;
-  // Pre-scope to a subset of investment event types (Banner navigation only — no UI).
   typeFilter?: RuntimeEvent["type"][] | null;
-  // Optional time window (Investment Timeline, RD-5). Omit for the Events tab,
-  // which always shows the full, unfiltered scenario.
   monthRange?: { start: MonthKey | null; end: MonthKey | null } | null;
 }
 
 // Canonical investment-events presentation: grouped by account, then event
-// type, with a single optional account selector (RD-2). Reused by the Events
+// type, with a single optional account selector. Reused by the Events
 // tab, the Investment Timeline, and as the Banner's navigation target.
 export default function InvestmentEventGroups({ defaultAccountId = null, typeFilter = null, monthRange = null }: Props) {
   const events   = usePlannerStore((s) => s.overrides.runtimeEvents) ?? [];
@@ -69,7 +61,7 @@ export default function InvestmentEventGroups({ defaultAccountId = null, typeFil
   const [accountFilter, setAccountFilter] = useState<string | null>(defaultAccountId);
   const [appliedDefault, setAppliedDefault] = useState(defaultAccountId);
 
-  // Re-derive the selection when navigation supplies a new default (RD-4),
+  // Re-derive the selection when navigation supplies a new default,
   // without overriding the user's own subsequent selection.
   if (defaultAccountId !== appliedDefault) {
     setAppliedDefault(defaultAccountId);

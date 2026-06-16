@@ -1,4 +1,3 @@
-// src/components/SummaryCards.tsx
 import { Card, Grid, Group, Text, ThemeIcon, Title } from "@mantine/core";
 import {
   IconChartLine,

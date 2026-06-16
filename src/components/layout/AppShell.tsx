@@ -1,4 +1,3 @@
-// src/components/layout/AppShell.tsx
 import {
   ActionIcon,
   AppShell,

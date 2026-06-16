@@ -1,4 +1,3 @@
-// src/components/tables/tableUtils.ts
 import type { FinancialEvent } from "@/types/events";
 
 /**

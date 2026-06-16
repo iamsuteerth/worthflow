@@ -1,4 +1,3 @@
-// src/engine/importPlan.ts
 import type { PlannerConfig } from "@/types/config";
 import type { PlannerOverrides } from "@/types/overrides";
 import { z } from "zod";
@@ -69,8 +68,6 @@ const BonusIncomeSchema = z.object({
   amount: z.number().nonnegative(),
   description: z.string(),
 });
-
-// ── Runtime event schemas ─────────────────────────────────────────────────────
 
 const RuntimeOneOffExpenseSchema = z.object({
   id: z.string(),
@@ -264,7 +261,6 @@ const ImportedPlanSchema = z.object({
 
     oneOffExpenses: z.array(OneOffExpenseSchema),
 
-    // Optional for backward compat with plans saved before v2
     recurringExpenses: z.array(RecurringExpenseSchema).optional(),
 
     instruments: z.array(
@@ -312,7 +308,6 @@ export async function importPlan(file: File): Promise<{
 
     const baseConfig: PlannerConfig = {
       ...(result.baseConfig as PlannerConfig),
-      // Ensure recurringExpenses always exists
       recurringExpenses: result.baseConfig.recurringExpenses ?? [],
     };
 

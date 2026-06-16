@@ -1,4 +1,3 @@
-// src/components/timeline/EventTimeline.tsx
 import {
   Badge,
   Chip,

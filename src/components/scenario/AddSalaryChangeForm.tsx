@@ -1,4 +1,3 @@
-// src/components/scenario/AddSalaryChangeForm.tsx
 import { Button, NumberInput, Stack, TextInput } from "@mantine/core";
 import { IconTrendingUp } from "@tabler/icons-react";
 import { useState } from "react";

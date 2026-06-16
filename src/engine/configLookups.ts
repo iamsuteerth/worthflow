@@ -1,12 +1,8 @@
-// src/engine/configLookups.ts
 import type { PlannerConfig } from "@/types/config";
 import type { RecurringExpense } from "@/types/recurringExpense";
 import type { MonthKey } from "@/types/simulation";
 
-/**
- * Shared by getRecurringExpense (cash effect) and buildCashflowEvents (display)
- * so the two never drift on when a recurring expense is "active" for a month.
- */
+// Single definition used by both cash simulation and event display so the two never drift.
 export function isRecurringExpenseActive(
   re: RecurringExpense,
   month: MonthKey
@@ -50,10 +46,6 @@ export function getOneOffExpense(
     .reduce((sum, expense) => sum + expense.amount, 0);
 }
 
-/**
- * Returns the total recurring expense amount for a given month.
- * Includes all recurring expenses whose range covers this month.
- */
 export function getRecurringExpense(
   config: PlannerConfig,
   month: MonthKey

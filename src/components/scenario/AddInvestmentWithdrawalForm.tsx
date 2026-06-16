@@ -1,4 +1,3 @@
-// src/components/scenario/AddInvestmentWithdrawalForm.tsx
 import { Button, NumberInput, Select, Stack, Text } from "@mantine/core";
 import { IconArrowUp } from "@tabler/icons-react";
 import { useState } from "react";

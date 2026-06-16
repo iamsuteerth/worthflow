@@ -1,4 +1,3 @@
-// src/components/scenario/AddAmountOverrideForm.tsx
 import { Alert, Button, Grid, NumberInput, Select, Stack, Text } from "@mantine/core";
 import { IconAlertCircle, IconChartLine } from "@tabler/icons-react";
 import { useState } from "react";

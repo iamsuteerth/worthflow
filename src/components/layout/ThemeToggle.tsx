@@ -1,4 +1,3 @@
-// src/components/layout/ThemeToggle.tsx
 import {
   ActionIcon,
 } from "@mantine/core";

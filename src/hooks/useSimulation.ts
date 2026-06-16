@@ -1,4 +1,3 @@
-// src/hooks/useSimulation.ts
 import { simulate }
   from "@/engine/simulate";
 

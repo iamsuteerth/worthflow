@@ -1,4 +1,3 @@
-// src/components/scenario/AddOpeningCashOverrideForm.tsx
 import { Alert, Button, NumberInput, Stack, Text } from "@mantine/core";
 import { IconAlertCircle, IconWallet } from "@tabler/icons-react";
 import { useState } from "react";
@@ -19,7 +18,7 @@ export default function AddOpeningCashOverrideForm() {
   return (
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
-        Replaces the opening cash balance for this scenario. Negative values are allowed — they model starting in debt or overdraft.
+        Replaces the opening cash balance for this scenario. Negative values are allowed. They model starting in debt or overdraft.
         Only one override is active at a time; saving a new value replaces the existing one.
       </Text>
 
