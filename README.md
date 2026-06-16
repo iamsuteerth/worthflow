@@ -39,12 +39,16 @@ Examples:
 * Salary changes
 * Bonuses
 * Major expenses (one-off, recurring, credit card)
+* **Spending Override** — replace your baseline monthly spend for any date range
+* **Opening Cash Override** — start the scenario with a different cash balance (negative values allowed)
 * New investment accounts
 * Investment deposits & withdrawals
 * Contribution and return overrides
 * FD and RD creation
 
 A **Scenario Banner** keeps you oriented: it summarizes how many modifications are active, shows a badge per event type (click to jump straight to that group in the Events list), and flags any accounts created during the scenario.
+
+The **Scenario Lab** sidebar is organized into six sections — **Expenses**, **Cash**, **Investments**, **FD**, **RD**, and **Events** — so each type of modification has a focused home.
 
 Instantly compare results against your original plan, then save, switch between, import, or export scenarios whenever you like.
 
@@ -104,7 +108,7 @@ See where money comes from and where it goes.
 
 #### Expenses
 
-* Living Expenses
+* Living Expenses (baseline, with optional per-range Spending Override)
 * Credit Card Payments
 * One-Off Expenses
 * Recurring Expenses (Monthly or Annual)
@@ -285,6 +289,8 @@ For a complete walkthrough of every feature, see:
 * Can I afford a major purchase?
 * How much cash will I have available in the future?
 * How will a salary change affect my finances?
+* What happens if my monthly spending rises or falls for a period?
+* What if I start the scenario with more or less cash?
 * What happens if investment returns are lower than expected?
 * Should I invest more or create an FD?
 * How much could my net worth grow?

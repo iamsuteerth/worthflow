@@ -1,6 +1,7 @@
 // src/engine/buildEffectiveConfig.ts
 import type { PlannerConfig } from "@/types/config";
 import type { PlannerOverrides } from "@/types/overrides";
+import { generateMonths } from "@/engine/dateUtils";
 
 export function buildEffectiveConfig(
   baseConfig: PlannerConfig,
@@ -128,6 +129,20 @@ export function buildEffectiveConfig(
         }
         break;
       }
+
+      case "SPENDING_OVERRIDE": {
+        const forecastMonths = generateMonths(config.forecast.startMonth, config.forecast.totalMonths);
+        for (const month of forecastMonths) {
+          if (month >= event.startMonth && month <= event.endMonth) {
+            config.expenses.overrides[month] = event.amount;
+          }
+        }
+        break;
+      }
+
+      case "OPENING_CASH_OVERRIDE":
+        config.cash.openingBalance = event.amount;
+        break;
 
       // INVESTMENT_DEPOSIT and INVESTMENT_WITHDRAWAL are handled directly
       // in simulate.ts from overrides.runtimeEvents — no config mutation needed.

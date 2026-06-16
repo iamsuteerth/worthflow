@@ -4,14 +4,17 @@ import {
   Button,
   Divider,
   Group,
+  SimpleGrid,
   Stack,
   Text,
   UnstyledButton,
 } from "@mantine/core";
 import {
   IconBuildingBank,
+  IconCoins,
   IconDownload,
   IconList,
+  IconPigMoney,
   IconReceipt,
   IconRefresh,
   IconTrendingUp,
@@ -35,9 +38,11 @@ import AddInvestmentAccountForm      from "@/components/scenario/AddInvestmentAc
 import AddInvestmentDepositForm      from "@/components/scenario/AddInvestmentDepositForm";
 import AddInvestmentReturnOverrideForm from "@/components/scenario/AddInvestmentReturnOverrideForm";
 import AddInvestmentWithdrawalForm   from "@/components/scenario/AddInvestmentWithdrawalForm";
+import AddOpeningCashOverrideForm    from "@/components/scenario/AddOpeningCashOverrideForm";
 import AddRdForm                     from "@/components/scenario/AddRdForm";
 import AddRecurringExpenseForm       from "@/components/scenario/AddRecurringExpenseForm";
 import AddSalaryChangeForm           from "@/components/scenario/AddSalaryChangeForm";
+import AddSpendingOverrideForm       from "@/components/scenario/AddSpendingOverrideForm";
 import RuntimeEventList              from "@/components/scenario/RuntimeEventList";
 import InvestmentEventGroups         from "@/components/scenario/InvestmentEventGroups";
 import SavedScenarios                from "@/components/scenario/SavedScenarios";
@@ -45,15 +50,15 @@ import type { RuntimeEvent } from "@/types/runtimeEvent";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ExpenseSub   = "expense" | "recurring" | "card" | "bonus" | "salary";
+type ExpenseSub    = "expense" | "recurring" | "card" | "spendingOverride";
+type CashEventsSub = "salary" | "bonus" | "openingCash";
 type InvestmentSub = "account" | "amountOverride" | "returnOverride" | "deposit" | "withdraw";
-type InstrumentSub = "fd" | "rd";
 
 // ─── Event categories (Events tab) ─────────────────────────────────────────────
 
 const EVENT_CATEGORIES: { label: string; types: RuntimeEvent["type"][] }[] = [
-  { label: "Income",      types: ["SALARY_CHANGE", "BONUS_INCOME"] },
-  { label: "Expenses",    types: ["ONE_OFF_EXPENSE", "RECURRING_EXPENSE", "CREDIT_CARD_EXPENSE"] },
+  { label: "Cash Events", types: ["SALARY_CHANGE", "BONUS_INCOME", "OPENING_CASH_OVERRIDE"] },
+  { label: "Expenses",    types: ["ONE_OFF_EXPENSE", "RECURRING_EXPENSE", "CREDIT_CARD_EXPENSE", "SPENDING_OVERRIDE"] },
   { label: "Investments", types: ["ACCOUNT_AMOUNT_OVERRIDE", "ACCOUNT_RETURN_OVERRIDE", "INVESTMENT_DEPOSIT", "INVESTMENT_WITHDRAWAL"] },
   { label: "FD",          types: ["FD"] },
   { label: "RD",          types: ["RD"] },
@@ -93,12 +98,11 @@ function SectionButton({ icon: Icon, label, active, onClick }: {
     <UnstyledButton
       onClick={onClick}
       style={{
-        flex: 1,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         gap: 4,
-        padding: "10px 8px",
+        padding: "8px 4px",
         borderRadius: "var(--mantine-radius-md)",
         border: active
           ? "0.5px solid var(--mantine-color-default-border)"
@@ -108,8 +112,8 @@ function SectionButton({ icon: Icon, label, active, onClick }: {
         transition: "all 120ms ease",
       }}
     >
-      <Icon size={18} style={{ color: active ? "#185FA5" : "inherit" }} stroke={1.8} />
-      <Text size="xs" fw={active ? 500 : 400} style={{ color: "inherit" }}>
+      <Icon size={16} style={{ color: active ? "#185FA5" : "inherit" }} stroke={1.8} />
+      <Text size="xs" fw={active ? 500 : 400} style={{ color: "inherit", lineHeight: 1.2 }}>
         {label}
       </Text>
     </UnstyledButton>
@@ -148,9 +152,9 @@ export default function ScenarioPanel() {
   const eventsFilterAccountId  = useUiStore((s) => s.eventsFilterAccountId);
   const navigateToEvents       = useUiStore((s) => s.navigateToEvents);
 
-  const [expenseSub, setExpenseSub]     = useState<ExpenseSub>("expense");
-  const [investmentSub, setInvestmentSub] = useState<InvestmentSub>("account");
-  const [instrumentSub, setInstrumentSub] = useState<InstrumentSub>("fd");
+  const [expenseSub, setExpenseSub]         = useState<ExpenseSub>("expense");
+  const [cashEventsSub, setCashEventsSub]   = useState<CashEventsSub>("salary");
+  const [investmentSub, setInvestmentSub]   = useState<InvestmentSub>("account");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -167,34 +171,52 @@ export default function ScenarioPanel() {
   return (
     <Stack gap="lg">
 
-      {/* ── Section switcher ── */}
+      {/* ── Section switcher (2 rows × 3 columns) ── */}
       <Box style={{
-        display: "flex", gap: 2, padding: 4,
+        padding: 4,
         borderRadius: "var(--mantine-radius-lg)",
         background: "var(--mantine-color-default-hover)",
       }}>
-        <SectionButton icon={IconReceipt}     label="Expenses"    active={section === "expenses"}    onClick={() => setSection("expenses")} />
-        <SectionButton icon={IconTrendingUp}  label="Investments" active={section === "investments"} onClick={() => setSection("investments")} />
-        <SectionButton icon={IconBuildingBank} label="Instruments" active={section === "instruments"} onClick={() => setSection("instruments")} />
-        <SectionButton icon={IconList}        label="Events"      active={section === "events"}      onClick={() => setSection("events")} />
+        <SimpleGrid cols={3} spacing={2}>
+          <SectionButton icon={IconReceipt}      label="Expenses"    active={section === "expenses"}    onClick={() => setSection("expenses")} />
+          <SectionButton icon={IconCoins}        label="Cash"        active={section === "cashEvents"}  onClick={() => setSection("cashEvents")} />
+          <SectionButton icon={IconTrendingUp}   label="Investments" active={section === "investments"} onClick={() => setSection("investments")} />
+          <SectionButton icon={IconBuildingBank} label="FD"          active={section === "fd"}          onClick={() => setSection("fd")} />
+          <SectionButton icon={IconPigMoney}     label="RD"          active={section === "rd"}          onClick={() => setSection("rd")} />
+          <SectionButton icon={IconList}         label="Events"      active={section === "events"}      onClick={() => setSection("events")} />
+        </SimpleGrid>
       </Box>
 
       {/* ── Expenses ── */}
       {section === "expenses" && (
         <Stack gap="md">
           <Group gap={6} wrap="wrap">
-            <Chip label="Expense"       active={expenseSub === "expense"}   onClick={() => setExpenseSub("expense")} />
-            <Chip label="Recurring"     active={expenseSub === "recurring"} onClick={() => setExpenseSub("recurring")} />
-            <Chip label="Credit card"   active={expenseSub === "card"}      onClick={() => setExpenseSub("card")} />
-            <Chip label="Bonus"         active={expenseSub === "bonus"}     onClick={() => setExpenseSub("bonus")} />
-            <Chip label="Salary change" active={expenseSub === "salary"}    onClick={() => setExpenseSub("salary")} />
+            <Chip label="Expense"          active={expenseSub === "expense"}         onClick={() => setExpenseSub("expense")} />
+            <Chip label="Recurring"        active={expenseSub === "recurring"}       onClick={() => setExpenseSub("recurring")} />
+            <Chip label="Credit card"      active={expenseSub === "card"}            onClick={() => setExpenseSub("card")} />
+            <Chip label="Spending Override" active={expenseSub === "spendingOverride"} onClick={() => setExpenseSub("spendingOverride")} />
           </Group>
           <FormBox>
-            {expenseSub === "expense"   && <AddExpenseForm />}
-            {expenseSub === "recurring" && <AddRecurringExpenseForm />}
-            {expenseSub === "card"      && <AddCreditCardExpenseForm />}
-            {expenseSub === "bonus"     && <AddBonusForm />}
-            {expenseSub === "salary"    && <AddSalaryChangeForm />}
+            {expenseSub === "expense"          && <AddExpenseForm />}
+            {expenseSub === "recurring"        && <AddRecurringExpenseForm />}
+            {expenseSub === "card"             && <AddCreditCardExpenseForm />}
+            {expenseSub === "spendingOverride" && <AddSpendingOverrideForm />}
+          </FormBox>
+        </Stack>
+      )}
+
+      {/* ── Cash Events ── */}
+      {section === "cashEvents" && (
+        <Stack gap="md">
+          <Group gap={6} wrap="wrap">
+            <Chip label="Salary change"       active={cashEventsSub === "salary"}      onClick={() => setCashEventsSub("salary")} />
+            <Chip label="Bonus"               active={cashEventsSub === "bonus"}       onClick={() => setCashEventsSub("bonus")} />
+            <Chip label="Opening Cash"        active={cashEventsSub === "openingCash"} onClick={() => setCashEventsSub("openingCash")} />
+          </Group>
+          <FormBox>
+            {cashEventsSub === "salary"      && <AddSalaryChangeForm />}
+            {cashEventsSub === "bonus"       && <AddBonusForm />}
+            {cashEventsSub === "openingCash" && <AddOpeningCashOverrideForm />}
           </FormBox>
         </Stack>
       )}
@@ -213,24 +235,24 @@ export default function ScenarioPanel() {
             {investmentSub === "account"        && <AddInvestmentAccountForm />}
             {investmentSub === "amountOverride" && <AddAmountOverrideForm />}
             {investmentSub === "returnOverride" && <AddInvestmentReturnOverrideForm />}
-            {investmentSub === "deposit"         && <AddInvestmentDepositForm />}
-            {investmentSub === "withdraw"        && <AddInvestmentWithdrawalForm />}
+            {investmentSub === "deposit"        && <AddInvestmentDepositForm />}
+            {investmentSub === "withdraw"       && <AddInvestmentWithdrawalForm />}
           </FormBox>
         </Stack>
       )}
 
-      {/* ── Instruments ── */}
-      {section === "instruments" && (
-        <Stack gap="md">
-          <Group gap={6}>
-            <Chip label="Fixed deposit"     active={instrumentSub === "fd"} onClick={() => setInstrumentSub("fd")} />
-            <Chip label="Recurring deposit" active={instrumentSub === "rd"} onClick={() => setInstrumentSub("rd")} />
-          </Group>
-          <FormBox>
-            {instrumentSub === "fd" && <AddFdForm />}
-            {instrumentSub === "rd" && <AddRdForm />}
-          </FormBox>
-        </Stack>
+      {/* ── FD ── */}
+      {section === "fd" && (
+        <FormBox>
+          <AddFdForm />
+        </FormBox>
+      )}
+
+      {/* ── RD ── */}
+      {section === "rd" && (
+        <FormBox>
+          <AddRdForm />
+        </FormBox>
       )}
 
       {/* ── Events list ── */}

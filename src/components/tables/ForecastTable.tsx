@@ -25,7 +25,7 @@ export default function ForecastTable() {
         </Badge>
       </Group>
 
-      <ScrollArea>
+      <ScrollArea viewportProps={{ style: { overscrollBehaviorX: "contain" } }}>
         <Table miw={1080} striped highlightOnHover verticalSpacing="sm">
           <Table.Thead>
             <Table.Tr>

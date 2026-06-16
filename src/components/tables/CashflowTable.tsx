@@ -19,7 +19,7 @@ export default function CashflowTable() {
 
   return (
     <Stack gap="md">
-      <ScrollArea>
+      <ScrollArea viewportProps={{ style: { overscrollBehaviorX: "contain" } }}>
         <Table miw={1400} striped highlightOnHover verticalSpacing="sm">
           <Table.Thead>
             <Table.Tr>

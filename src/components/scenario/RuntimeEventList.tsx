@@ -25,17 +25,19 @@ import MonthSelect from "@/components/common/MonthSelect";
 // ── Badge display config ─────────────────────────────────────────────────────
 
 const TYPE_META: Record<string, { label: string; color: string }> = {
-  ONE_OFF_EXPENSE:            { label: "Expense",         color: "red"    },
-  CREDIT_CARD_EXPENSE:        { label: "Credit Card",     color: "orange" },
-  RECURRING_EXPENSE:          { label: "Recurring",       color: "red"    },
-  BONUS_INCOME:               { label: "Bonus",           color: "green"  },
-  SALARY_CHANGE:              { label: "Salary",          color: "blue"   },
-  FD:                         { label: "FD",              color: "teal"   },
-  RD:                         { label: "RD",              color: "violet" },
-  ACCOUNT_AMOUNT_OVERRIDE:    { label: "Amount Override", color: "indigo" },
-  ACCOUNT_RETURN_OVERRIDE:    { label: "Return Override", color: "grape"  },
-  INVESTMENT_DEPOSIT:         { label: "Deposit",         color: "cyan"   },
-  INVESTMENT_WITHDRAWAL:      { label: "Withdrawal",      color: "orange" },
+  ONE_OFF_EXPENSE:            { label: "Expense",          color: "red"    },
+  CREDIT_CARD_EXPENSE:        { label: "Credit Card",      color: "orange" },
+  RECURRING_EXPENSE:          { label: "Recurring",        color: "red"    },
+  SPENDING_OVERRIDE:          { label: "Spending Override", color: "pink"  },
+  BONUS_INCOME:               { label: "Bonus",            color: "green"  },
+  SALARY_CHANGE:              { label: "Salary",           color: "blue"   },
+  OPENING_CASH_OVERRIDE:      { label: "Opening Cash",     color: "yellow" },
+  FD:                         { label: "FD",               color: "teal"   },
+  RD:                         { label: "RD",               color: "violet" },
+  ACCOUNT_AMOUNT_OVERRIDE:    { label: "Amount Override",  color: "indigo" },
+  ACCOUNT_RETURN_OVERRIDE:    { label: "Return Override",  color: "grape"  },
+  INVESTMENT_DEPOSIT:         { label: "Deposit",          color: "cyan"   },
+  INVESTMENT_WITHDRAWAL:      { label: "Withdrawal",       color: "orange" },
 };
 
 // ── Human-readable summary per event type ────────────────────────────────────
@@ -72,6 +74,10 @@ function eventSummary(event: RuntimeEvent, accounts: InvestmentAccount[]): strin
       const account = accounts.find((a) => a.id === event.accountId);
       return `${account?.name ?? "Account"} • ₹${event.amount.toLocaleString("en-IN")} in ${formatMonth(event.month)}`;
     }
+    case "SPENDING_OVERRIDE":
+      return `₹${event.amount.toLocaleString("en-IN")}/mo · ${formatMonth(event.startMonth)} → ${formatMonth(event.endMonth)} (replaces baseline)`;
+    case "OPENING_CASH_OVERRIDE":
+      return `Opening cash → ₹${event.amount.toLocaleString("en-IN")}`;
     default:
       return "";
   }
@@ -101,6 +107,8 @@ export function EditEventModal({
       case "INVESTMENT_DEPOSIT":
       case "INVESTMENT_WITHDRAWAL":
       case "ACCOUNT_AMOUNT_OVERRIDE":
+      case "SPENDING_OVERRIDE":
+      case "OPENING_CASH_OVERRIDE":
         return event.amount;
       case "SALARY_CHANGE":
         return event.newMonthlyIncome;
@@ -171,6 +179,10 @@ export function EditEventModal({
         Object.assign(changes, { amount: localAmount, month: localMonth });
         break;
       case "ACCOUNT_AMOUNT_OVERRIDE":
+      case "SPENDING_OVERRIDE":
+        Object.assign(changes, { amount: localAmount });
+        break;
+      case "OPENING_CASH_OVERRIDE":
         Object.assign(changes, { amount: localAmount });
         break;
       case "ACCOUNT_RETURN_OVERRIDE":
@@ -184,10 +196,12 @@ export function EditEventModal({
   }
 
   const showAmount = ["ONE_OFF_EXPENSE","CREDIT_CARD_EXPENSE","RECURRING_EXPENSE",
-    "BONUS_INCOME","INVESTMENT_DEPOSIT","INVESTMENT_WITHDRAWAL","ACCOUNT_AMOUNT_OVERRIDE"].includes(event.type);
+    "BONUS_INCOME","INVESTMENT_DEPOSIT","INVESTMENT_WITHDRAWAL","ACCOUNT_AMOUNT_OVERRIDE",
+    "SPENDING_OVERRIDE","OPENING_CASH_OVERRIDE"].includes(event.type);
   const showReturn = event.type === "ACCOUNT_RETURN_OVERRIDE";
   const showLabel = ["ONE_OFF_EXPENSE","CREDIT_CARD_EXPENSE","RECURRING_EXPENSE","BONUS_INCOME","SALARY_CHANGE"].includes(event.type);
   const showMonth = ["ONE_OFF_EXPENSE","CREDIT_CARD_EXPENSE","BONUS_INCOME","SALARY_CHANGE","INVESTMENT_DEPOSIT","INVESTMENT_WITHDRAWAL"].includes(event.type);
+  const allowNegativeAmount = event.type === "OPENING_CASH_OVERRIDE";
 
   return (
     <Modal opened={opened} onClose={onClose} title="Edit Event" centered size="sm">
@@ -211,7 +225,8 @@ export function EditEventModal({
           <NumberInput
             label={event.type === "SALARY_CHANGE" ? "New Monthly Salary" : "Amount"}
             value={localAmount}
-            min={0}
+            min={allowNegativeAmount ? undefined : 0}
+            allowNegative={allowNegativeAmount}
             thousandSeparator=","
             prefix="₹"
             onChange={(v) => setLocalAmount(Number(v))}

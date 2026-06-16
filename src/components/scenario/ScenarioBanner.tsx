@@ -13,17 +13,19 @@ import { useUiStore } from "@/store/uiStore";
 import type { RuntimeEvent } from "@/types/runtimeEvent";
 
 const BADGE_CONFIG: Record<string, { label: string; color: string }> = {
-  ONE_OFF_EXPENSE:            { label: "Expense",         color: "red"    },
-  CREDIT_CARD_EXPENSE:        { label: "Credit Card",     color: "orange" },
-  RECURRING_EXPENSE:          { label: "Recurring",       color: "red"    },
-  BONUS_INCOME:               { label: "Bonus",           color: "green"  },
-  SALARY_CHANGE:              { label: "Salary",          color: "blue"   },
-  FD:                         { label: "FD",              color: "teal"   },
-  RD:                         { label: "RD",              color: "violet" },
-  ACCOUNT_AMOUNT_OVERRIDE:    { label: "Amount Override", color: "indigo" },
-  ACCOUNT_RETURN_OVERRIDE:    { label: "Return Override", color: "grape"  },
-  INVESTMENT_DEPOSIT:         { label: "Deposit",         color: "cyan"   },
-  INVESTMENT_WITHDRAWAL:      { label: "Withdrawal",      color: "orange" },
+  ONE_OFF_EXPENSE:            { label: "Expense",          color: "red"    },
+  CREDIT_CARD_EXPENSE:        { label: "Credit Card",      color: "orange" },
+  RECURRING_EXPENSE:          { label: "Recurring",        color: "red"    },
+  SPENDING_OVERRIDE:          { label: "Spending Override", color: "pink"  },
+  BONUS_INCOME:               { label: "Bonus",            color: "green"  },
+  SALARY_CHANGE:              { label: "Salary",           color: "blue"   },
+  OPENING_CASH_OVERRIDE:      { label: "Opening Cash",     color: "yellow" },
+  FD:                         { label: "FD",               color: "teal"   },
+  RD:                         { label: "RD",               color: "violet" },
+  ACCOUNT_AMOUNT_OVERRIDE:    { label: "Amount Override",  color: "indigo" },
+  ACCOUNT_RETURN_OVERRIDE:    { label: "Return Override",  color: "grape"  },
+  INVESTMENT_DEPOSIT:         { label: "Deposit",          color: "cyan"   },
+  INVESTMENT_WITHDRAWAL:      { label: "Withdrawal",       color: "orange" },
 };
 
 export default function ScenarioBanner() {

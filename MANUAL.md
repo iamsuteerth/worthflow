@@ -287,30 +287,47 @@ RD creation requires sufficient available cash to sustain the first monthly cont
 
 # 7. The Scenario Lab
 
-The Scenario Lab is the sidebar (or drawer, on mobile) where you build and manage your active scenario. It has four sections:
+The Scenario Lab is the sidebar (or drawer, on mobile) where you build and manage your active scenario. It has **six sections**, arranged in a 2 × 3 grid:
 
 ## Expenses
 
-Add Expense, Recurring Expense, Credit Card, Bonus, or Salary Change events.
+Add modifications that affect outflows:
+
+* **Expense** — one-off expense for a single month
+* **Recurring** — a named expense charged monthly or annually over a date range
+* **Credit card** — a single credit-card payment for a chosen month
+* **Spending Override** — replace your baseline monthly spend with a different amount for a date range (see [Spending Override](#spending-override))
+
+## Cash
+
+Add modifications that affect income or the opening cash balance:
+
+* **Salary change** — set a new monthly income from a chosen effective month
+* **Bonus** — add one-time bonus income in a chosen month
+* **Opening Cash** — replace the starting cash balance for this scenario (see [Opening Cash Override](#opening-cash-override))
 
 ## Investments
 
 Create a new investment account, or add an Amount Override, Return Override, Deposit, or Withdrawal against an existing account.
 
-## Instruments
+## FD
 
-Create a new Fixed Deposit or Recurring Deposit.
+Create a new Fixed Deposit for the scenario.
+
+## RD
+
+Create a new Recurring Deposit for the scenario.
 
 ## Events
 
-A single, categorized list of **every active modification** in your current scenario — grouped by Income, Expenses, Investments, FD, and RD. Each entry can be edited or deleted directly. Investment-related events are further grouped by account.
+A single, categorized list of **every active modification** in your current scenario — grouped by **Cash Events**, **Expenses**, **Investments**, **FD**, and **RD**. Each entry can be edited or deleted directly. Investment-related events are further grouped by account.
 
 ## The Scenario Banner
 
 Whenever you have an active scenario, a banner appears above the dashboard summarizing it:
 
 * A count of total modifications — click it to jump to the **Events** section, showing everything
-* A colored badge per event type (e.g. "Deposit ×2", "Return Override ×1") — click a badge to jump to the Events section filtered to just that type (use **Show all** to clear the filter)
+* A colored badge per event type (e.g. "Deposit ×2", "Spending Override ×1") — click a badge to jump to the Events section filtered to just that type (use **Show all** to clear the filter)
 * A green **"New account ×N"** badge if your scenario has created new investment accounts (informational only)
 
 ## Resetting
@@ -321,13 +338,15 @@ The **Reset** button in the Scenario Lab clears all active scenario modification
 
 Scenario Planning allows you to test alternate futures.
 
-## Income Scenarios
+## Cash Event Scenarios
 
 Examples:
 
 * Salary Increase
 * Salary Reduction
 * Bonus Income
+* **Start the scenario with more cash** — e.g. model receiving a lump sum before the forecast begins
+* **Start the scenario with less cash / in debt** — Opening Cash Override accepts negative values
 
 ## Expense Scenarios
 
@@ -337,6 +356,8 @@ Examples:
 * New Vehicle Purchase
 * Home Renovation
 * Annual Recurring Expenses (e.g. insurance premiums, property tax)
+* **Higher living costs for a period** — e.g. model ₹40,000/mo baseline rising to ₹60,000/mo for 2028 using a Spending Override
+* **Lower living costs for a period** — e.g. model reduced spending after a lifestyle change
 
 ## Investment Scenarios
 
@@ -388,6 +409,59 @@ Expected Annual Return
 ```
 
 for a selected period.
+
+## Spending Override
+
+A **Spending Override** replaces your baseline monthly spend (`defaultMonthly`) with a different amount for a chosen date range.
+
+Key points:
+
+* **Replacement, not addition.** The override amount *becomes* your baseline spend for that period — it does not add to it.
+* **Additive items still stack.** Recurring expenses, credit-card bills, and one-off expenses are unaffected and continue to layer on top of the overridden baseline.
+* **Non-overlapping ranges only.** Two spending overrides cannot cover the same month. The form will warn you before you try.
+* **Edit later.** You can update the amount from the **Events** tab. To change the date range, delete and recreate.
+
+Example:
+
+```text
+Baseline: ₹40,000/mo
+
+Spending Override: Jan 2028 → Dec 2028
+Override Amount:  ₹60,000/mo
+
+Effect:
+  Jan–Dec 2028: baseline becomes ₹60,000/mo
+  All other months: ₹40,000/mo (unchanged)
+```
+
+## Opening Cash Override
+
+An **Opening Cash Override** replaces the starting cash balance for the current scenario.
+
+Key points:
+
+* **Singleton.** Only one opening cash override can be active at a time. Adding a new value automatically replaces the previous one.
+* **Negative values are allowed.** Use a negative amount to model starting in debt or overdraft.
+* **Replacement, not additive.** The override value becomes the scenario's opening balance; the base plan's opening balance is ignored for the scenario.
+* **All downstream values recompute.** Cash balances, lowest-cash projection, net worth, and available-cash limits for FD/RD/deposits all update immediately to reflect the new opening balance.
+
+Example:
+
+```text
+Base Plan Opening Cash: ₹500,000
+
+Opening Cash Override: ₹200,000
+
+Effect: the scenario starts with ₹200,000 instead of ₹500,000
+```
+
+Negative example:
+
+```text
+Opening Cash Override: -₹50,000
+
+Effect: the scenario starts ₹50,000 in debt — the planner models this as an overdraft and surfaces the impact on all future cash flows.
+```
 
 ## Available Cash & Spending Limits
 
@@ -554,6 +628,22 @@ It is generally more accurate than simple return percentages.
 Lowest Cash is the minimum projected cash balance reached during the forecast.
 
 This helps identify future liquidity problems before they occur.
+
+## Does a Spending Override affect recurring expenses?
+
+No. A Spending Override only replaces the *baseline* monthly spend (`defaultMonthly` from your Base Plan). Recurring expenses, credit-card bills, and one-off expenses continue to stack on top of the overridden amount, exactly as they would without the override.
+
+## Can two Spending Overrides cover the same months?
+
+No — overlapping ranges are blocked. The form will show a warning and disable the submit button if your chosen range overlaps an existing override. To change an existing range, delete it and create a new one with the desired dates.
+
+## Can an Opening Cash Override be negative?
+
+Yes. A negative opening cash balance models starting the scenario in debt or overdraft. All projected cash flows, the lowest-cash figure, and available-cash limits for FD/RD/deposit creation all reflect this adjusted starting point correctly.
+
+## What happens if I add a second Opening Cash Override?
+
+Only one Opening Cash Override can be active at a time. Adding a new value silently replaces the previous one (you'll see a yellow warning in the form when an existing override is present). The old value is removed; the new value takes effect immediately.
 
 ---
 

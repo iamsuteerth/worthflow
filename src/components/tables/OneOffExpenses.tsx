@@ -18,7 +18,7 @@ export default function OneOffExpensesTable() {
   }
 
   return (
-    <ScrollArea>
+    <ScrollArea viewportProps={{ style: { overscrollBehaviorX: "contain" } }}>
       <Table miw={400} striped highlightOnHover verticalSpacing="sm">
         <Table.Thead>
           <Table.Tr>

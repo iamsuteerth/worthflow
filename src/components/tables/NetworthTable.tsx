@@ -19,7 +19,7 @@ export default function NetWorthTable() {
 
   return (
     <Stack gap="md">
-      <ScrollArea>
+      <ScrollArea viewportProps={{ style: { overscrollBehaviorX: "contain" } }}>
         <Table miw={840} striped highlightOnHover verticalSpacing="sm">
           <Table.Thead>
             <Table.Tr>

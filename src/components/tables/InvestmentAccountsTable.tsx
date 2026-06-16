@@ -223,7 +223,7 @@ export default function InvestmentAccountsTable() {
 
   return (
     <Stack gap="md">
-      <ScrollArea>
+      <ScrollArea viewportProps={{ style: { overscrollBehaviorX: "contain" } }}>
         <Table miw={520} striped highlightOnHover verticalSpacing="sm">
           <Table.Thead>
             <Table.Tr>

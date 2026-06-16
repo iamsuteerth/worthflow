@@ -97,6 +97,20 @@ export interface RuntimeRecurringExpense {
   frequency: "MONTHLY" | "ANNUAL";
 }
 
+export interface RuntimeSpendingOverride {
+  id: string;
+  type: "SPENDING_OVERRIDE";
+  startMonth: MonthKey;
+  endMonth: MonthKey;
+  amount: number;
+}
+
+export interface RuntimeOpeningCashOverride {
+  id: string;
+  type: "OPENING_CASH_OVERRIDE";
+  amount: number;
+}
+
 export type RuntimeEvent =
   | RuntimeOneOffExpense
   | RuntimeFixedDeposit
@@ -108,4 +122,6 @@ export type RuntimeEvent =
   | RuntimeAccountReturnOverride
   | RuntimeInvestmentDeposit
   | RuntimeInvestmentWithdrawal
-  | RuntimeRecurringExpense;
+  | RuntimeRecurringExpense
+  | RuntimeSpendingOverride
+  | RuntimeOpeningCashOverride;

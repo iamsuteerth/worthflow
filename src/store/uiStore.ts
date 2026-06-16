@@ -12,7 +12,7 @@ export type DashboardTabValue =
   | "investments"
   | "accounts";
 
-export type ScenarioSection = "expenses" | "investments" | "instruments" | "events";
+export type ScenarioSection = "expenses" | "cashEvents" | "investments" | "fd" | "rd" | "events";
 
 interface UiStore {
   dashboardTab: DashboardTabValue;

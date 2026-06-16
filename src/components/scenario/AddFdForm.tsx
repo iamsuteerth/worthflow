@@ -46,7 +46,7 @@ export default function AddFdForm() {
       <NumberInput
         label="Principal"
         value={principal}
-        min={1}
+        min={0}
         max={availableCash}
         thousandSeparator=","
         prefix="₹"

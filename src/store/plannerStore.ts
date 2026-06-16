@@ -10,10 +10,12 @@ import type { RuntimeEvent } from "@/types/runtimeEvent";
 import type {
   RuntimeAccountAmountOverride,
   RuntimeAccountReturnOverride,
+  RuntimeSpendingOverride,
 } from "@/types/runtimeEvent";
 import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 import { simulate } from "@/engine/simulate";
 import { isValidAnnualRange } from "@/engine/annualExpense";
+import { generateMonths } from "@/engine/dateUtils";
 import type { MonthKey } from "@/types/simulation";
 import type { SavedScenario } from "@/types/scenario";
 import type { InvestmentAccount } from "@/types/investmentAccount";
@@ -49,6 +51,14 @@ interface PlannerStore {
     newMonthlyIncome: number,
     description: string
   ) => void;
+
+  // ── Spending / cash overrides ─────────────────────────────────────────────
+  addTransientSpendingOverride: (
+    startMonth: MonthKey,
+    endMonth: MonthKey,
+    amount: number
+  ) => void;
+  addTransientOpeningCashOverride: (amount: number) => void;
 
   // ── Instrument events ─────────────────────────────────────────────────────
   addTransientFd: (
@@ -202,6 +212,42 @@ export const usePlannerStore = create<PlannerStore>()(
           const events = appendEvent(s.overrides.runtimeEvents ?? [], {
             id: crypto.randomUUID(), type: "SALARY_CHANGE",
             effectiveMonth, newMonthlyIncome, description,
+          });
+          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+        }),
+
+      // ── Spending / cash overrides ────────────────────────────────────────
+
+      addTransientSpendingOverride: (startMonth, endMonth, amount) =>
+        set((s) => {
+          if (startMonth > endMonth) return s;
+          const forecastMonths = generateMonths(s.config.forecast.startMonth, s.config.forecast.totalMonths);
+          const forecastStart = forecastMonths[0];
+          const forecastEnd = forecastMonths[forecastMonths.length - 1];
+          if (startMonth < forecastStart || endMonth > forecastEnd) return s;
+
+          const current = s.overrides.runtimeEvents ?? [];
+          const existing = current.filter(
+            (e): e is RuntimeSpendingOverride => e.type === "SPENDING_OVERRIDE"
+          );
+          const overlap = existing.some(
+            (e) => !(endMonth < e.startMonth || startMonth > e.endMonth)
+          );
+          if (overlap) return s;
+
+          const events = appendEvent(current, {
+            id: crypto.randomUUID(), type: "SPENDING_OVERRIDE",
+            startMonth, endMonth, amount,
+          });
+          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+        }),
+
+      addTransientOpeningCashOverride: (amount) =>
+        set((s) => {
+          const current = s.overrides.runtimeEvents ?? [];
+          const filtered = current.filter((e) => e.type !== "OPENING_CASH_OVERRIDE");
+          const events = appendEvent(filtered, {
+            id: crypto.randomUUID(), type: "OPENING_CASH_OVERRIDE", amount,
           });
           return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),

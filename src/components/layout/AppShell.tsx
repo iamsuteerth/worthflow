@@ -9,6 +9,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 
 import type {
   ReactNode,
@@ -47,11 +48,18 @@ export default function PlannerShell({
   const activeView = usePlannerStore((state) => state.activeView);
   const logout = useAuthStore((state) => state.logout);
 
+  // Gate the mobile Drawer so it can never be `opened` on desktop.
+  // hiddenFrom="sm" only applies CSS display:none — react-remove-scroll still
+  // locks <body> when opened=true even if the overlay is invisible. Using
+  // useMediaQuery prevents the lock from firing on desktop entirely (RC-1 fix).
+  // Default to false (not mobile) on first paint to avoid an accidental open.
+  const isMobile = useMediaQuery("(max-width: 48em)") ?? false;
+
   return (
     <>
       {activeView === "forecast" && (
         <Drawer
-          opened={opened}
+          opened={isMobile && opened}
           onClose={close}
           title={
             <div>

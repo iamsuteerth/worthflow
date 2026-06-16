@@ -47,7 +47,7 @@ export default function AddRdForm() {
       <NumberInput
         label="Monthly Contribution"
         value={monthlyContribution}
-        min={1}
+        min={0}
         max={availableCash}
         thousandSeparator=","
         prefix="₹"

@@ -53,7 +53,7 @@ export default function InstrumentsTable() {
   }
 
   return (
-    <ScrollArea>
+    <ScrollArea viewportProps={{ style: { overscrollBehaviorX: "contain" } }}>
       <Table miw={750} striped highlightOnHover verticalSpacing="sm">
         <Table.Thead>
           <Table.Tr>
