@@ -21,6 +21,7 @@ export const FINANCIAL_EVENT_CATEGORY: Record<EventType, EventCategory> = {
   ONE_OFF_EXPENSE: "Expenses",
   RECURRING_EXPENSE: "Expenses",
   CREDIT_CARD_EXPENSE: "Expenses",
+  SPENDING_OVERRIDE: "Expenses",
   ACCOUNT_AMOUNT_OVERRIDE: "Investments",
   ACCOUNT_RETURN_OVERRIDE: "Investments",
   INVESTMENT_DEPOSIT: "Investments",

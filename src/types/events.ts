@@ -14,7 +14,8 @@ export type EventType =
   | "ACCOUNT_AMOUNT_OVERRIDE"
   | "ACCOUNT_RETURN_OVERRIDE"
   | "INVESTMENT_DEPOSIT"
-  | "INVESTMENT_WITHDRAWAL";
+  | "INVESTMENT_WITHDRAWAL"
+  | "SPENDING_OVERRIDE";
 
 export interface FinancialEvent {
   id: string;
@@ -23,4 +24,5 @@ export interface FinancialEvent {
   amount: number;
   description: string;
   accountId?: string;
+  rangeEnd?: MonthKey;
 }

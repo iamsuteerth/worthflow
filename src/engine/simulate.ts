@@ -25,6 +25,7 @@ import type {
   RuntimeInvestmentWithdrawal,
   RuntimeAccountAmountOverride,
   RuntimeAccountReturnOverride,
+  RuntimeSpendingOverride,
 } from "@/types/runtimeEvent";
 
 import { calculateXirr } from "@/engine/calculateXirr";
@@ -240,12 +241,28 @@ export function simulate(
       description: `Withdrawal ← ${accounts.find((a) => a.id === e.accountId)?.name ?? "Account"}`,
     }));
 
+    const spendingOverrideEvents =
+      overrides?.runtimeEvents
+        ?.filter(
+          (e): e is RuntimeSpendingOverride =>
+            e.type === "SPENDING_OVERRIDE" && e.startMonth === month
+        )
+        .map((e) => ({
+          id: e.id,
+          month,
+          type: "SPENDING_OVERRIDE" as const,
+          amount: e.amount,
+          description: `Monthly spend → ₹${e.amount.toLocaleString("en-IN")}/mo`,
+          rangeEnd: e.endMonth,
+        })) ?? [];
+
     const events = [
       ...buildCashflowEvents(config, month),
       ...accountAmountOverrideEvents,
       ...accountReturnOverrideEvents,
       ...investmentDepositEvents,
       ...investmentWithdrawalEvents,
+      ...spendingOverrideEvents,
       ...lifecycle.events,
     ];
 

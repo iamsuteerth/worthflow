@@ -18,6 +18,7 @@ import {
   IconRepeat,
   IconTrendingUp,
   IconWallet,
+  IconAdjustments,
 } from "@tabler/icons-react";
 
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
@@ -38,6 +39,7 @@ function getEventIcon(type: string) {
     case "RD_MATURED":            return <IconArrowUp size={16} />;
     case "INVESTMENT_DEPOSIT":    return <IconArrowDown size={16} />;
     case "INVESTMENT_WITHDRAWAL": return <IconArrowUp size={16} />;
+    case "SPENDING_OVERRIDE":     return <IconAdjustments size={16} />;
     default:                      return <IconCoins size={16} />;
   }
 }
@@ -55,6 +57,7 @@ function getEventLabel(type: string) {
     case "RD_MATURED":            return "RD Matured";
     case "INVESTMENT_DEPOSIT":    return "Portfolio Deposit";
     case "INVESTMENT_WITHDRAWAL": return "Portfolio Withdrawal";
+    case "SPENDING_OVERRIDE":     return "Spending Override";
     default:                      return type;
   }
 }
@@ -72,6 +75,7 @@ function getEventColor(type: string) {
     case "CREDIT_CARD_EXPENSE":   return "orange";
     case "INVESTMENT_DEPOSIT":    return "blue";
     case "INVESTMENT_WITHDRAWAL": return "orange";
+    case "SPENDING_OVERRIDE":     return "pink";
     default:                      return "gray";
   }
 }
@@ -157,7 +161,9 @@ export default function EventTimeline() {
                 >
                   <Stack gap={4} mt={4}>
                     <Text size="xs" c="dimmed" fw={500}>
-                      {formatMonth(row.month)}
+                      {event.rangeEnd
+                        ? `${formatMonth(row.month)} → ${formatMonth(event.rangeEnd)}`
+                        : formatMonth(row.month)}
                     </Text>
                     <Text fw={700} size="lg">
                       {formatMoney(event.amount)}
