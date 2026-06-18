@@ -5,16 +5,43 @@ import { importPlan } from '@/engine/importPlan'
 import { usePlannerStore } from '@/store/plannerStore'
 import {
   loadManifest,
+  loadManifestWithETag,
   saveManifest,
   uploadSave,
   downloadSave,
-  deleteSave as storagDeleteSave,
+  deleteSave as storageDeleteSave,
   generateSaveKey,
   type SaveFileMeta,
 } from '@/lib/storage'
-import { useAuthStore } from '@/store/authStore'
 
 export type { SaveFileMeta }
+
+export const SAVE_LIMIT = 5
+export const SAVE_LIMIT_ERROR = 'SAVE_LIMIT_REACHED'
+
+function isPreconditionFailed(err: unknown): boolean {
+  const e = err as { name?: string; $metadata?: { httpStatusCode?: number } }
+  return e?.name === 'PreconditionFailed' || e?.$metadata?.httpStatusCode === 412
+}
+
+// Reads the manifest fresh, applies `mutate`, and commits with a conditional write.
+// On a concurrent change (412) it re-reads and retries. Returns the committed list.
+async function commitManifest(
+  mutate: (entries: SaveFileMeta[]) => SaveFileMeta[]
+): Promise<SaveFileMeta[]> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { entries, etag } = await loadManifestWithETag()
+    const updated = mutate(entries)
+    try {
+      await saveManifest(updated, etag)
+      return updated
+    } catch (err) {
+      if (isPreconditionFailed(err) && attempt < 2) continue
+      throw err
+    }
+  }
+  throw new Error('Could not update saves. Please try again.')
+}
 
 interface CloudStore {
   saves: SaveFileMeta[]
@@ -27,6 +54,13 @@ interface CloudStore {
   loadSave: (key: string) => Promise<void>
   downloadSave: (key: string, label: string) => Promise<void>
   deleteSave: (key: string) => Promise<void>
+}
+
+async function applySaveToPlanner(key: string): Promise<void> {
+  const content = await downloadSave(key)
+  const file = new File([content], key, { type: 'application/octet-stream' })
+  const result = await importPlan(file)
+  usePlannerStore.getState().loadPlan(result.baseConfig, result.overrides, result.savedScenarios)
 }
 
 async function serializePlan(): Promise<string> {
@@ -56,7 +90,7 @@ function getSimulationSummary(): { finalNetWorth: number; totalMonths: number } 
   }
 }
 
-export const useCloudStore = create<CloudStore>((set, get) => ({
+export const useCloudStore = create<CloudStore>((set) => ({
   saves: [],
   savesLoading: false,
   savesError: null,
@@ -77,20 +111,26 @@ export const useCloudStore = create<CloudStore>((set, get) => ({
   autoLoadLatest: async () => {
     set({ savesLoading: true, savesError: null, initialLoadFailed: false })
     try {
+      const planner = usePlannerStore.getState()
       const saves = await loadManifest()
       set({ saves })
+
+      // Preserve unsaved in-session edits across a refresh: if the rehydrated local
+      // plan has unsaved changes, keep them instead of overwriting with the cloud copy.
+      // The persisted view is left as-is. Cloud stays source of truth only when local is clean.
+      if (planner.isPlanDirty()) {
+        return false
+      }
+
       if (saves.length === 0) {
-        usePlannerStore.getState().setActiveView('builder')
+        planner.setActiveView('builder')
         return false
       }
       const latest = [...saves].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )[0]
-      const content = await downloadSave(latest.key)
-      const file = new File([content], latest.key, { type: 'application/octet-stream' })
-      const result = await importPlan(file)
-      usePlannerStore.getState().loadPlan(result.baseConfig, result.overrides, result.savedScenarios)
-      usePlannerStore.getState().setActiveView('forecast')
+      await applySaveToPlanner(latest.key)
+      planner.setActiveView('forecast')
       return true
     } catch {
       usePlannerStore.getState().setActiveView('builder')
@@ -102,43 +142,52 @@ export const useCloudStore = create<CloudStore>((set, get) => ({
   },
 
   uploadCurrentPlan: async (label, overwriteKey) => {
-    const user = useAuthStore.getState().user
-    const email = user?.email ?? 'unknown'
-    const key = overwriteKey ?? generateSaveKey(email)
+    const key = overwriteKey ?? generateSaveKey()
     const content = await serializePlan()
     const { finalNetWorth, totalMonths } = getSimulationSummary()
+    const entry = (k: string): SaveFileMeta => ({
+      key: k,
+      label,
+      networth: finalNetWorth,
+      timeframeMonths: totalMonths,
+      createdAt: new Date().toISOString(),
+    })
 
-    await uploadSave(key, content)
+    let objectUploaded = false
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { entries, etag } = await loadManifestWithETag()
 
-    const currentSaves = get().saves
-    let updatedSaves: SaveFileMeta[]
-
-    if (overwriteKey) {
-      updatedSaves = currentSaves.map((s) =>
-        s.key === overwriteKey
-          ? { ...s, label, networth: finalNetWorth, timeframeMonths: totalMonths, createdAt: new Date().toISOString() }
-          : s
-      )
-    } else {
-      const newEntry: SaveFileMeta = {
-        key,
-        label,
-        networth: finalNetWorth,
-        timeframeMonths: totalMonths,
-        createdAt: new Date().toISOString(),
+      // Authoritative cap check against the fresh manifest (the in-memory count may be stale).
+      if (!overwriteKey && entries.length >= SAVE_LIMIT) {
+        throw new Error(SAVE_LIMIT_ERROR)
       }
-      updatedSaves = [newEntry, ...currentSaves]
-    }
 
-    await saveManifest(updatedSaves)
-    set({ saves: updatedSaves })
+      // Upload the plan object once, only after the cap check passes.
+      if (!objectUploaded) {
+        await uploadSave(key, content)
+        objectUploaded = true
+      }
+
+      const exists = overwriteKey && entries.some((s) => s.key === overwriteKey)
+      const updated = exists
+        ? entries.map((s) => (s.key === overwriteKey ? entry(overwriteKey) : s))
+        : [entry(key), ...entries] // new save, or overwrite target removed elsewhere
+
+      try {
+        await saveManifest(updated, etag)
+        set({ saves: updated })
+        usePlannerStore.getState().markSaved()
+        return
+      } catch (err) {
+        if (isPreconditionFailed(err) && attempt < 2) continue
+        throw err
+      }
+    }
+    throw new Error('Could not update saves. Please try again.')
   },
 
   loadSave: async (key) => {
-    const content = await downloadSave(key)
-    const file = new File([content], key, { type: 'application/octet-stream' })
-    const result = await importPlan(file)
-    usePlannerStore.getState().loadPlan(result.baseConfig, result.overrides, result.savedScenarios)
+    await applySaveToPlanner(key)
   },
 
   downloadSave: async (key, label) => {
@@ -153,9 +202,10 @@ export const useCloudStore = create<CloudStore>((set, get) => ({
   },
 
   deleteSave: async (key) => {
-    await storagDeleteSave(key)
-    const updatedSaves = get().saves.filter((s) => s.key !== key)
-    await saveManifest(updatedSaves)
-    set({ saves: updatedSaves })
+    // Commit the manifest first (with retry), then delete the object — a mid-failure
+    // orphans an object rather than leaving the manifest pointing at a missing file.
+    const updated = await commitManifest((entries) => entries.filter((s) => s.key !== key))
+    set({ saves: updated })
+    await storageDeleteSave(key)
   },
 }))

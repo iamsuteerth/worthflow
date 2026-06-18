@@ -11,7 +11,3 @@ variable "sender_email" {
   type        = string
 }
 
-variable "app_domain" {
-  description = "Production app URL for S3 CORS. Include https:// prefix."
-  default     = "https://worthflow.vercel.app"
-}

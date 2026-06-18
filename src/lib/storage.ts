@@ -38,29 +38,48 @@ async function getClientAndPrefix(): Promise<{ client: S3Client; prefix: string 
 const BUCKET = import.meta.env.VITE_S3_BUCKET_NAME
 
 export async function loadManifest(): Promise<SaveFileMeta[]> {
+  return (await loadManifestWithETag()).entries
+}
+
+// Returns the manifest plus its S3 ETag, so a subsequent write can be made
+// conditional (optimistic concurrency). ETag is null when the manifest doesn't exist yet.
+export async function loadManifestWithETag(): Promise<{
+  entries: SaveFileMeta[]
+  etag: string | null
+}> {
   const { client, prefix } = await getClientAndPrefix()
   try {
     const res = await client.send(
       new GetObjectCommand({ Bucket: BUCKET, Key: `${prefix}/manifest.json` })
     )
     const text = await res.Body?.transformToString()
-    if (!text) return []
-    return JSON.parse(text) as SaveFileMeta[]
+    const entries = text ? (JSON.parse(text) as SaveFileMeta[]) : []
+    return { entries, etag: res.ETag ?? null }
   } catch (err: unknown) {
     const code = (err as { name?: string }).name
-    if (code === 'NoSuchKey' || code === 'NotFound') return []
+    if (code === 'NoSuchKey' || code === 'NotFound') return { entries: [], etag: null }
     throw err
   }
 }
 
-export async function saveManifest(entries: SaveFileMeta[]): Promise<void> {
+// When `ifMatch` is provided, the write is conditional: `IfMatch` for an update,
+// `IfNoneMatch: *` for a create. S3 returns 412 PreconditionFailed if the manifest
+// changed underneath us, letting the caller re-read and retry.
+// Conditional writes are skipped in mock mode (LocalStack v3 doesn't enforce them).
+export async function saveManifest(
+  entries: SaveFileMeta[],
+  ifMatch?: string | null
+): Promise<void> {
   const { client, prefix } = await getClientAndPrefix()
+  const conditional =
+    import.meta.env.VITE_AUTH_MODE !== 'mock' && ifMatch !== undefined
   await client.send(
     new PutObjectCommand({
       Bucket: BUCKET,
       Key: `${prefix}/manifest.json`,
       Body: JSON.stringify(entries),
       ContentType: 'application/json',
+      ...(conditional ? (ifMatch ? { IfMatch: ifMatch } : { IfNoneMatch: '*' }) : {}),
     })
   )
 }
@@ -92,7 +111,6 @@ export async function deleteSave(key: string): Promise<void> {
   )
 }
 
-export function generateSaveKey(email: string): string {
-  const encoded = btoa(email).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
-  return `${encoded}_${Date.now()}.wfplan`
+export function generateSaveKey(): string {
+  return `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.wfplan`
 }

@@ -1,8 +1,8 @@
-# 💰 Finance Planner
+# 💰 Worth Flow
 
 A personal finance forecasting tool that helps you understand how your money, investments, and net worth may evolve over time.
 
-Build a plan, test "what if" scenarios on top of it, and compare outcomes — all running locally in your browser, with your data never leaving your device.
+Build a plan, test "what if" scenarios on top of it, and compare outcomes. Sign in with your own account and your plans sync securely to the cloud — available from any device, while still computing entirely in your browser.
 
 ## ✨ What You Can Do
 
@@ -198,6 +198,19 @@ The dashboard offers eight focused views, all driven by a single global month-ra
 
 ## 💾 Save, Import & Export
 
+### ☁️ Cloud Saves
+
+Sign in with your account and save complete plans to the cloud — up to **5 named saves** per account, accessible from any device.
+
+* **Save current plan** — give it a label; the save also records a snapshot of its final net worth and forecast horizon
+* **Auto-load on sign-in** — your most recent save opens automatically; brand-new accounts land on an empty builder
+* **Load, download, or delete** any save from your **Profile**
+* **Overwrite** an existing save in place
+* **Unsaved-changes guard** — loading a save warns you first if your current plan has edits that haven't been saved
+* **Offline-aware** — if the cloud can't be reached at sign-in, you'll see a retry banner instead of losing your place
+
+Each account's data is fully isolated — you can only ever access your own saves. See [INFRA.md](./INFRA.md) for the security model.
+
 ### Save Scenarios
 
 Store multiple scenario variations and switch between them instantly.
@@ -212,13 +225,19 @@ Export complete plans (base plan, active scenario, and saved scenarios) as a `.w
 
 ### Import Plans
 
-Restore previously exported plans with built-in validation.
+Restore previously exported plans with built-in validation. (Cloud saves use the same `.wfplan` format, so a downloaded cloud save can be re-imported anywhere.)
 
-## 🔒 Login & Data Privacy
+## 🔒 Accounts & Data Privacy
 
-Finance Planner is gated behind a single shared password (set via the `VITE_APP_PASSWORD` environment variable at build time), with the session held in your browser for up to an hour.
+Worth Flow uses individual **email + password accounts** (Amazon Cognito):
 
-There is **no backend and no account system** — everything (your base plan, scenarios, and saved scenarios) is stored locally in your browser's storage. Nothing is sent to a server.
+* Sign up with your email, verify it with a one-time code, and sign in
+* **Forgot-password** reset via emailed code
+* No passwords are ever stored by the app — authentication is handled by Cognito
+
+Your plans are computed **entirely in your browser** — there is no application server doing the math. When you save, the `.wfplan` file is written **directly to private cloud storage scoped to your account**; no other user (or the app itself) can read it. Signing out clears your plan from the browser, so nothing of yours is left behind on a shared computer.
+
+> Worth Flow can also run in a local **mock mode** with no cloud account, for development. See [INFRA.md](./INFRA.md).
 
 ## 🌙 Theme Support
 
@@ -235,13 +254,20 @@ Theme preference is saved automatically.
 npm install
 ```
 
-### Configure the Access Password
+### Configure Environment
 
-Create a `.env` file in the project root:
+Worth Flow runs in one of two modes, selected by `VITE_AUTH_MODE`.
+
+**Local development** — no cloud account needed. Create a `.env` file:
 
 ```bash
-VITE_APP_PASSWORD=your-chosen-password
+VITE_AUTH_MODE=mock
+VITE_AWS_REGION=ap-south-1
+VITE_S3_BUCKET_NAME=worth-flow-saves
+VITE_S3_ENDPOINT=http://localhost:4566   # optional: LocalStack S3
 ```
+
+**Production** — backed by AWS Cognito + S3. See [INFRA.md](./INFRA.md) for the full setup, the production env variables, and deployment.
 
 ### Run Development Server
 
@@ -269,11 +295,12 @@ npm run lint
 
 ## 📚 Documentation
 
-For a complete walkthrough of every feature, see:
-
-👉 [MANUAL.md](./MANUAL.md)
+* 👉 [MANUAL.md](./MANUAL.md) — complete end-user walkthrough of every feature
+* 🏗️ [INFRA.md](./INFRA.md) — cloud infrastructure, Terraform provisioning, and deployment
 
 ## 🛠️ Built With
+
+**Frontend**
 
 * React
 * TypeScript
@@ -284,7 +311,14 @@ For a complete walkthrough of every feature, see:
 * Recharts
 * Tabler Icons
 
-## 🎯 Questions Finance Planner Can Help Answer
+**Cloud (accounts & saves)**
+
+* AWS Cognito (User Pool + Identity Pool) via `aws-amplify`
+* Amazon S3 via `@aws-sdk/client-s3`
+* Amazon SES, AWS Lambda
+* Terraform (infrastructure as code)
+
+## 🎯 Questions Worth Flow Can Help Answer
 
 * Can I afford a major purchase?
 * How much cash will I have available in the future?

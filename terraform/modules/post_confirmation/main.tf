@@ -45,6 +45,11 @@ resource "aws_iam_role_policy" "cognito_update" {
   })
 }
 
+resource "aws_cloudwatch_log_group" "lambda" {
+  name              = "/aws/lambda/${var.app_name}-post-confirmation"
+  retention_in_days = 14
+}
+
 resource "aws_lambda_function" "post_confirmation" {
   function_name    = "${var.app_name}-post-confirmation"
   role             = aws_iam_role.lambda.arn
@@ -52,4 +57,5 @@ resource "aws_lambda_function" "post_confirmation" {
   runtime          = "nodejs22.x"
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+  depends_on       = [aws_cloudwatch_log_group.lambda]
 }

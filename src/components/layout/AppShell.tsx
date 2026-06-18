@@ -19,13 +19,19 @@ import { usePlannerStore } from "@/store/plannerStore";
 import { useUiStore } from "@/store/uiStore";
 import { useAuthStore } from "@/store/authStore";
 import { UserProfileModal } from "@/components/profile/UserProfileModal";
+import { getInitials } from "@/utils/display";
 
 interface Props {
   children: ReactNode;
 }
 
-function getInitials(email: string): string {
-  return (email.split("@")[0]?.[0] ?? "?").toUpperCase();
+function ScenarioLabHeading() {
+  return (
+    <Stack gap={2} mb="md">
+      <Text fw={700} size="sm">Scenario Lab</Text>
+      <Text size="xs" c="dimmed">Explore financial what-if scenarios.</Text>
+    </Stack>
+  );
 }
 
 export default function PlannerShell({ children }: Props) {
@@ -46,16 +52,7 @@ export default function PlannerShell({ children }: Props) {
         <Drawer
           opened={isMobile && opened}
           onClose={close}
-          title={
-            <Stack gap={2}>
-              <Text fw={700} size="sm">
-                Scenario Lab
-              </Text>
-              <Text size="xs" c="dimmed">
-                Explore financial what-if scenarios.
-              </Text>
-            </Stack>
-          }
+          title={<ScenarioLabHeading />}
           styles={{ body: { paddingBottom: 40 } }}
           size="100%"
           hiddenFrom="sm"
@@ -113,14 +110,7 @@ export default function PlannerShell({ children }: Props) {
             p="md"
             style={{ overflowY: "auto", overflowX: "hidden" }}
           >
-            <Stack gap={2} mb="md">
-              <Text fw={700} size="sm">
-                Scenario Lab
-              </Text>
-              <Text size="xs" c="dimmed">
-                Explore financial what-if scenarios.
-              </Text>
-            </Stack>
+            <ScenarioLabHeading />
             <ScenarioPanel />
           </AppShell.Navbar>
         )}

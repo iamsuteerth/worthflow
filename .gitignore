@@ -40,3 +40,6 @@ terraform/*.tfstate
 terraform/*.tfstate.backup
 terraform/terraform.tfvars
 terraform/.terraform.lock.hcl
+
+# Terraform-generated Lambda build artifact
+terraform/modules/post_confirmation/lambda/*.zip

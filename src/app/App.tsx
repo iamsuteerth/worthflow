@@ -48,17 +48,18 @@ export default function App() {
   }, [hydrate]);
 
   useEffect(() => {
-    if (!authenticated) {
-      setCloudReady(false);
-      return;
-    }
+    if (!authenticated) return;
     let cancelled = false;
-    setCloudReady(false);
+    // setState lives in the async callback (allowed) and the cleanup (runs on
+    // sign-out / before re-run), never synchronously in the effect body.
     autoLoadLatest().finally(() => {
       if (!cancelled) setCloudReady(true);
     });
-    return () => { cancelled = true; };
-  }, [authenticated]); // autoLoadLatest is a stable Zustand action
+    return () => {
+      cancelled = true;
+      setCloudReady(false);
+    };
+  }, [authenticated, autoLoadLatest]); // autoLoadLatest is a stable Zustand action
 
   if (loading || (authenticated && !cloudReady)) {
     return (

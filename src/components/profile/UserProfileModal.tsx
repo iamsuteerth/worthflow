@@ -13,27 +13,16 @@ import { notifications } from "@mantine/notifications";
 import { IconCloudUpload, IconLogout } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
-import { useCloudStore } from "@/store/cloudStore";
+import { useCloudStore, SAVE_LIMIT } from "@/store/cloudStore";
+import { usePlannerStore } from "@/store/plannerStore";
 import { EmptyState, SectionLabel } from "@/components/ui";
+import { getInitials, formatDate } from "@/utils/display";
 import { SaveFileCard } from "./SaveFileCard";
 import { SaveDialog } from "./SaveDialog";
 
 interface UserProfileModalProps {
   opened: boolean;
   onClose: () => void;
-}
-
-function getInitials(email: string): string {
-  return (email.split("@")[0]?.[0] ?? "?").toUpperCase();
-}
-
-function formatMemberSince(iso: string): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
 }
 
 export function UserProfileModal({ opened, onClose }: UserProfileModalProps) {
@@ -50,6 +39,7 @@ export function UserProfileModal({ opened, onClose }: UserProfileModalProps) {
 
   const [saveDialogOpened, { open: openSaveDialog, close: closeSaveDialog }] = useDisclosure(false);
   const [pendingDeleteKey, setPendingDeleteKey] = useState<string | null>(null);
+  const [pendingLoadKey, setPendingLoadKey] = useState<string | null>(null);
 
   const pendingDelete = saves.find((s) => s.key === pendingDeleteKey);
 
@@ -60,14 +50,22 @@ export function UserProfileModal({ opened, onClose }: UserProfileModalProps) {
   if (!user) return null;
 
   const initials = getInitials(user.email);
-  const atLimit = saves.length >= 5;
+  const atLimit = saves.length >= SAVE_LIMIT;
 
   async function handleSignOut() {
     onClose();
     await signOut();
   }
 
-  async function handleLoad(key: string) {
+  function handleLoad(key: string) {
+    if (usePlannerStore.getState().isPlanDirty()) {
+      setPendingLoadKey(key);
+    } else {
+      void doLoad(key);
+    }
+  }
+
+  async function doLoad(key: string) {
     try {
       await loadSave(key);
       notifications.show({ message: "Plan loaded.", color: "teal" });
@@ -75,6 +73,13 @@ export function UserProfileModal({ opened, onClose }: UserProfileModalProps) {
     } catch {
       notifications.show({ message: "Failed to load save.", color: "red" });
     }
+  }
+
+  async function confirmLoad() {
+    if (!pendingLoadKey) return;
+    const key = pendingLoadKey;
+    setPendingLoadKey(null);
+    await doLoad(key);
   }
 
   async function handleDownload(key: string, label: string) {
@@ -112,7 +117,7 @@ export function UserProfileModal({ opened, onClose }: UserProfileModalProps) {
             <Stack gap={2}>
               <Text fw={600}>{user.email}</Text>
               <Text size="sm" c="dimmed">
-                Member since {formatMemberSince(user.memberSince)}
+                Member since {formatDate(user.memberSince)}
               </Text>
             </Stack>
           </Group>
@@ -123,14 +128,13 @@ export function UserProfileModal({ opened, onClose }: UserProfileModalProps) {
             <Group justify="space-between">
               <SectionLabel>Cloud Saves</SectionLabel>
               <Group gap="sm">
-                <Text size="xs" c="dimmed">{saves.length} / 5 used</Text>
+                <Text size="xs" c="dimmed">{saves.length} / {SAVE_LIMIT} used</Text>
                 <Button
                   size="xs"
                   variant="light"
                   color="brand"
                   leftSection={<IconCloudUpload size={14} />}
                   onClick={openSaveDialog}
-                  disabled={atLimit}
                 >
                   Save current plan
                 </Button>
@@ -186,6 +190,7 @@ export function UserProfileModal({ opened, onClose }: UserProfileModalProps) {
         opened={saveDialogOpened}
         onClose={closeSaveDialog}
         existingSaves={saves}
+        atLimit={atLimit}
       />
 
       <Modal
@@ -202,6 +207,23 @@ export function UserProfileModal({ opened, onClose }: UserProfileModalProps) {
           <Group justify="flex-end">
             <Button variant="subtle" onClick={() => setPendingDeleteKey(null)}>Cancel</Button>
             <Button color="red" onClick={confirmDelete}>Delete</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={pendingLoadKey !== null}
+        onClose={() => setPendingLoadKey(null)}
+        title="Replace current plan?"
+        size="sm"
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            Loading this save will replace your current plan. Any unsaved changes will be lost.
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="subtle" onClick={() => setPendingLoadKey(null)}>Cancel</Button>
+            <Button color="brand" onClick={confirmLoad}>Load anyway</Button>
           </Group>
         </Stack>
       </Modal>

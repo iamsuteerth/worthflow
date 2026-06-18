@@ -11,6 +11,30 @@ resource "aws_s3_bucket_public_access_block" "saves" {
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_versioning" "saves" {
+  bucket = aws_s3_bucket.saves.id
+  versioning_configuration { status = "Enabled" }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "saves" {
+  bucket     = aws_s3_bucket.saves.id
+  depends_on = [aws_s3_bucket_versioning.saves]
+
+  rule {
+    id     = "expire-noncurrent"
+    status = "Enabled"
+    filter {} # applies to all objects
+    noncurrent_version_expiration { noncurrent_days = 90 }
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "saves" {
+  bucket = aws_s3_bucket.saves.id
+  rule {
+    apply_server_side_encryption_by_default { sse_algorithm = "AES256" }
+  }
+}
+
 resource "aws_s3_bucket_cors_configuration" "saves" {
   bucket = aws_s3_bucket.saves.id
 

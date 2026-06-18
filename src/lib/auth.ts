@@ -61,13 +61,14 @@ class MockAuthService implements AuthService {
   }
 
   async signUp(email: string, password: string): Promise<void> {
-    if (_confirmedUsers.has(email)) throw new Error('An account with this email already exists.')
+    if (_confirmedUsers.has(email) || _pendingUsers.has(email))
+      throw new Error('UsernameExistsException')
     _pendingUsers.set(email, password)
     _mockUser = null
     persistMockSession(null)
   }
 
-  async confirmSignUp(email: string, _code: string): Promise<void> {
+  async confirmSignUp(email: string): Promise<void> {
     const password = _pendingUsers.get(email)
     if (!password) throw new Error('No pending sign-up for this email.')
     _confirmedUsers.set(email, password)
@@ -75,7 +76,10 @@ class MockAuthService implements AuthService {
     persistMockUsers(_confirmedUsers)
   }
 
-  async resendSignUpCode(_email: string): Promise<void> {}
+  async resendSignUpCode(email: string): Promise<void> {
+    if (_confirmedUsers.has(email)) throw new Error('Already confirmed.')
+    if (!_pendingUsers.has(email)) throw new Error('No pending sign-up for this email.')
+  }
 
   async signOut(): Promise<void> {
     _mockUser = null
@@ -86,7 +90,7 @@ class MockAuthService implements AuthService {
     return _mockUser
   }
 
-  async resetPassword(_email: string): Promise<void> {}
+  async resetPassword(): Promise<void> {}
 
   async confirmResetPassword(email: string, _code: string, newPassword: string): Promise<void> {
     if (_confirmedUsers.has(email)) {

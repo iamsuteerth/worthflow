@@ -1,8 +1,8 @@
-# 📘 Finance Planner User Manual
+# 📘 Worth Flow User Manual
 
-Welcome to Finance Planner.
+Welcome to Worth Flow.
 
-This guide explains how to log in, build a financial plan, model investments, test scenarios, and interpret the results.
+This guide explains how to create an account, build a financial plan, model investments, test scenarios, save your work to the cloud, and interpret the results.
 
 # Table of Contents
 
@@ -23,7 +23,7 @@ This guide explains how to log in, build a financial plan, model investments, te
 
 # 1. Getting Started
 
-Finance Planner helps you answer questions such as:
+Worth Flow helps you answer questions such as:
 
 * Can I afford a major purchase?
 * How will my investments grow?
@@ -31,9 +31,26 @@ Finance Planner helps you answer questions such as:
 * How much cash will I have available in the future?
 * What is my expected net worth over time?
 
-## Logging In
+## Creating an Account & Signing In
 
-The app is protected by a single shared password. Enter it on the unlock screen to start a session (sessions last up to one hour, after which you'll be asked again).
+Worth Flow uses individual accounts secured by your email and a password.
+
+**Sign up**
+
+1. On the login screen, choose **Create account**.
+2. Enter your email and a password (at least 8 characters, with an uppercase letter, a lowercase letter, and a number).
+3. We email you a **6-digit verification code**. Enter it to confirm your account.
+4. After verifying, sign in with your email and password.
+
+> Didn't finish entering the code? No problem — just start sign-up again with the same email (or sign in), and Worth Flow will send a fresh code and take you back to the verification screen.
+
+**Forgot your password?**
+
+Choose **Forgot password?**, enter your email, and we'll send a reset code. Enter the code along with your new password to regain access.
+
+**Signing out**
+
+Open your **Profile** (the avatar in the top-right) and choose **Sign out**. For your privacy, signing out clears your current plan from this browser — your saved plans remain safely in the cloud.
 
 ## How It Works
 
@@ -560,9 +577,33 @@ Shows, per account:
 
 # 12. Saving, Importing & Exporting
 
+## Your Profile & Cloud Saves
+
+Open your **Profile** from the avatar in the top-right corner. It shows your email, the date you joined ("Member since"), and your cloud saves.
+
+Cloud saves let you store complete plans against your account and reach them from any device. You can keep up to **5 saves**.
+
+**Save the current plan**
+
+1. In the Profile, choose **Save current plan**.
+2. Pick **New save** and give it a label (e.g. "5-year conservative plan"), or **Overwrite existing** to replace one of your saves in place.
+3. Each save also records a snapshot of its **final net worth** and **forecast length**, shown on the save card.
+
+**When you sign in**
+
+Your **most recent save loads automatically** and opens the Forecast. If you've never saved anything, you start on an empty Plan Builder. If the cloud can't be reached at sign-in, a banner lets you retry — you won't be left stranded.
+
+**Per save, you can:**
+
+* **Load** it into the app. If your current plan has **unsaved changes**, Worth Flow asks for confirmation first so you don't lose work.
+* **Download** it as a `.wfplan` file.
+* **Delete** it (with confirmation).
+
+> Your saves are private to your account — no one else can see or access them.
+
 ## Save Scenario
 
-Save the current scenario configuration for later use. You can create multiple saved scenarios and switch between them instantly.
+Save the current scenario configuration for later use. You can create multiple saved scenarios and switch between them instantly. (This is separate from cloud saves above: scenarios live inside a plan; cloud saves store the whole plan.)
 
 ## Export Plan
 
@@ -584,13 +625,33 @@ Restores a previously exported `.wfplan` file. Imported plans are validated befo
 
 # 13. Data & Privacy
 
-Finance Planner runs entirely in your browser:
-
-* There is **no backend server** and **no account system** beyond the single shared access password.
-* Your Base Plan, active scenario, and saved scenarios are stored **locally in your browser's storage** and persist across sessions on the same device/browser.
-* Exporting a plan produces a `.wfplan` file you control — use it to back up your data or move it to another device.
+* **All forecasting happens in your browser.** There is no server doing the math — your numbers are computed locally.
+* **Accounts** are handled by Amazon Cognito. Worth Flow never stores your password.
+* **Cloud saves** are written directly to private storage scoped to your account. Only you can read your saves — no other user, and not the app itself.
+* **While you work**, your current plan is also kept in your browser's local storage so a refresh doesn't lose it. **Signing out clears it** from the browser, so nothing of yours remains on a shared computer.
+* **Exporting** a plan produces a `.wfplan` file you fully control — use it to back up your data or move it elsewhere. Downloaded cloud saves use the same format.
 
 # 14. Frequently Asked Questions
+
+## I didn't receive my verification / reset email — what now?
+
+First check your spam folder. If it's still missing, use **Resend code** on the verification screen. Codes expire after a short while, so request a fresh one if too much time has passed.
+
+## I signed up but never entered the code. Am I locked out?
+
+No. Start sign-up again with the same email, or just sign in — Worth Flow detects the pending account, sends a new code, and returns you to the verification screen to finish.
+
+## How many plans can I save to the cloud?
+
+Up to **5** per account. To make room, delete or overwrite an existing save from your Profile.
+
+## What's the difference between a cloud save and a saved scenario?
+
+A **saved scenario** is a set of "what if" modifications stored *inside* a plan. A **cloud save** stores an *entire plan* (base plan + scenarios) against your account so you can reload it on any device.
+
+## Why was I asked to confirm before loading a save?
+
+Because your current plan had **unsaved changes**. Loading replaces the current plan, so Worth Flow checks first. If you'd already saved (or hadn't made changes), it loads without asking.
 
 ## Why does an FD require available cash?
 

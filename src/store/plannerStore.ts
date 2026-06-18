@@ -27,6 +27,7 @@ interface PlannerStore {
   savedScenarios: SavedScenario[];
   activeView: AppView;
   baselineAccountIds: string[];
+  pristineSnapshot: string;
 
   setActiveView: (view: AppView) => void;
 
@@ -93,6 +94,9 @@ interface PlannerStore {
   setOverrides: (overrides: Partial<PlannerOverrides>) => void;
   resetOverrides: () => void;
   resetAll: () => void;
+  resetForSignOut: () => void;
+  markSaved: () => void;
+  isPlanDirty: () => boolean;
   loadPlan: (
     baseConfig: PlannerConfig,
     overrides: PlannerOverrides,
@@ -126,6 +130,18 @@ function captureBaselineAccountIds(config: PlannerConfig): string[] {
   return config.investments.accounts.map((a) => a.id);
 }
 
+// Serializes exactly what a saved .wfplan captures (see cloudStore.serializePlan),
+// so the pristine snapshot can be compared 1:1 against the live plan to detect edits.
+function serializePristine(
+  baseConfig: PlannerConfig,
+  overrides: PlannerOverrides,
+  savedScenarios: SavedScenario[]
+): string {
+  return JSON.stringify({ baseConfig, overrides, savedScenarios });
+}
+
+const initialPristine = serializePristine(initialConfig, {}, []);
+
 function rebuild(
   baseConfig: PlannerConfig,
   overrides: PlannerOverrides
@@ -152,13 +168,14 @@ export function getAvailableCash(
 
 export const usePlannerStore = create<PlannerStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       baseConfig: initialConfig,
       overrides: {},
       config: initialConfig,
       savedScenarios: [],
       activeView: "builder",
       baselineAccountIds: captureBaselineAccountIds(initialConfig),
+      pristineSnapshot: initialPristine,
 
       setActiveView: (activeView) => set({ activeView }),
 
@@ -416,6 +433,7 @@ export const usePlannerStore = create<PlannerStore>()(
           savedScenarios: scenarios,
           config: buildEffectiveConfig(baseConfig, overrides),
           baselineAccountIds: captureBaselineAccountIds(baseConfig),
+          pristineSnapshot: serializePristine(baseConfig, overrides, scenarios),
         });
       },
 
@@ -431,7 +449,34 @@ export const usePlannerStore = create<PlannerStore>()(
           overrides: {},
           config: initialConfig,
           baselineAccountIds: captureBaselineAccountIds(initialConfig),
+          pristineSnapshot: serializePristine(initialConfig, {}, get().savedScenarios),
         }),
+
+      resetForSignOut: () => {
+        set({
+          baseConfig: initialConfig,
+          overrides: {},
+          config: initialConfig,
+          savedScenarios: [],
+          baselineAccountIds: captureBaselineAccountIds(initialConfig),
+          activeView: 'builder',
+          pristineSnapshot: initialPristine,
+        })
+        usePlannerStore.persist.clearStorage()
+      },
+
+      // Marks the current plan as the saved baseline (call after a successful cloud save).
+      markSaved: () => {
+        const s = get()
+        set({ pristineSnapshot: serializePristine(s.baseConfig, s.overrides, s.savedScenarios) })
+      },
+
+      // True when the live plan differs from the last loaded/saved baseline.
+      // Computed on demand (not reactive) so it costs nothing during editing.
+      isPlanDirty: () => {
+        const s = get()
+        return serializePristine(s.baseConfig, s.overrides, s.savedScenarios) !== s.pristineSnapshot
+      },
 
       saveScenario: (name) =>
         set((s) => ({
@@ -466,18 +511,25 @@ export const usePlannerStore = create<PlannerStore>()(
         savedScenarios: s.savedScenarios,
         activeView: s.activeView,
         baselineAccountIds: s.baselineAccountIds,
+        pristineSnapshot: s.pristineSnapshot,
       }),
       merge: (persisted, current) => {
         const p = persisted as Partial<PlannerStore>;
         const baseConfig = p.baseConfig ?? current.baseConfig;
         const overrides = p.overrides ?? current.overrides;
+        const savedScenarios = p.savedScenarios ?? current.savedScenarios;
         const baselineAccountIds = p.baselineAccountIds ?? captureBaselineAccountIds(baseConfig);
+        // Pre-existing persisted state (before this field) is treated as clean.
+        const pristineSnapshot =
+          p.pristineSnapshot ?? serializePristine(baseConfig, overrides, savedScenarios);
         return {
           ...current,
           ...p,
           baseConfig,
           overrides,
+          savedScenarios,
           baselineAccountIds,
+          pristineSnapshot,
           config: buildEffectiveConfig(baseConfig, overrides),
         };
       },

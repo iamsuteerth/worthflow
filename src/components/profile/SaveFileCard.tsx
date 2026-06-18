@@ -1,6 +1,7 @@
 import { ActionIcon, Button, Card, Group, Skeleton, Stack, Text } from "@mantine/core";
 import { IconDownload, IconTrash } from "@tabler/icons-react";
 import { Money } from "@/components/ui";
+import { formatDateShort } from "@/utils/display";
 
 interface SaveFileCardProps {
   label: string;
@@ -37,11 +38,7 @@ export function SaveFileCard({
     );
   }
 
-  const formattedDate = new Date(createdAt).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const formattedDate = formatDateShort(createdAt);
 
   return (
     <Card withBorder radius="md" p="md">

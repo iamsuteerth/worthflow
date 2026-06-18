@@ -10,6 +10,15 @@ terraform {
     }
   }
   required_version = ">= 1.6"
+
+  backend "s3" {
+    bucket       = "worth-flow-tf-state"
+    key          = "terraform.tfstate"
+    region       = "ap-south-1"
+    use_lockfile = true
+    encrypt      = true
+    profile      = "worth-flow"
+  }
 }
 
 provider "aws" {

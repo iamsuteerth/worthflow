@@ -15,12 +15,35 @@ import {
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconKey, IconLock, IconMailCheck, IconUserPlus } from "@tabler/icons-react";
+import type { TablerIcon } from "@tabler/icons-react";
 import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { authService } from "@/lib/auth";
 import ThemeToggle from "@/components/layout/ThemeToggle";
 
 type AuthView = "signIn" | "signUp" | "confirmSignUp" | "forgotPassword" | "resetPassword";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function ViewHeader({
+  icon: Icon,
+  title,
+  subtitle,
+}: {
+  icon: TablerIcon;
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <Stack gap="sm" align="center">
+      <ThemeIcon size={56} radius="xl" variant="light" color="brand">
+        <Icon size={28} />
+      </ThemeIcon>
+      <Title order={2} ta="center">{title}</Title>
+      {subtitle && <Text ta="center" c="dimmed" size="sm">{subtitle}</Text>}
+    </Stack>
+  );
+}
 
 export default function LoginPage() {
   const [view, setView] = useState<AuthView>("signIn");
@@ -70,8 +93,15 @@ export default function LoginPage() {
     setError("");
     try {
       await signIn(email, password);
-    } catch {
-      setError("Invalid email or password.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("UserNotConfirmedException")) {
+        setPendingEmail(email);
+        navigate("confirmSignUp");
+        await resendSignUpCode(email);
+      } else {
+        setError("Invalid email or password.");
+      }
     } finally {
       setLoading(false);
     }
@@ -91,7 +121,21 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("UsernameExistsException") || msg.includes("already exists")) {
-        setError("An account with this email already exists.");
+        try {
+          await resendSignUpCode(signUpEmail);
+          setPendingEmail(signUpEmail);
+          navigate("confirmSignUp");
+          notifications.show({
+            message: "This email has a pending sign-up. We re-sent your code.",
+            color: "brand",
+          });
+        } catch {
+          setError("An account with this email already exists. Please sign in.");
+        }
+      } else if (msg.includes("InvalidPasswordException")) {
+        setError("Password must be 8+ characters with uppercase, lowercase, and a number.");
+      } else if (msg.includes("InvalidParameterException")) {
+        setError("Please enter a valid email address.");
       } else {
         setError("Sign up failed. Please try again.");
       }
@@ -104,9 +148,11 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
+      const verifiedEmail = pendingEmail;
       await confirmSignUp(pendingEmail, code);
       notifications.show({ message: "Email verified. Please sign in.", color: "teal" });
       navigate("signIn");
+      setEmail(verifiedEmail);
     } catch {
       setError("Invalid or expired code.");
     } finally {
@@ -164,16 +210,8 @@ export default function LoginPage() {
     if (view === "signIn") {
       return (
         <Stack gap="lg">
-          <Stack gap="sm" align="center">
-            <ThemeIcon size={56} radius="xl" variant="light" color="brand">
-              <IconLock size={28} />
-            </ThemeIcon>
-            <Title order={2} ta="center">Worth Flow</Title>
-            <Text ta="center" c="dimmed" size="sm">Sign in to continue</Text>
-          </Stack>
-
+          <ViewHeader icon={IconLock} title="Worth Flow" subtitle="Sign in to continue" />
           {error && <Alert color="red" radius="md">{error}</Alert>}
-
           <Stack gap="sm">
             <TextInput
               placeholder="Email"
@@ -190,9 +228,9 @@ export default function LoginPage() {
               onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
             />
           </Stack>
-
-          <Button fullWidth onClick={handleSignIn} loading={loading}>Sign In</Button>
-
+          <Button fullWidth onClick={handleSignIn} loading={loading} disabled={!email || !password}>
+            Sign In
+          </Button>
           <Group justify="space-between">
             <Anchor size="sm" onClick={() => navigate("forgotPassword")} style={{ cursor: "pointer" }}>
               Forgot password?
@@ -206,17 +244,11 @@ export default function LoginPage() {
     }
 
     if (view === "signUp") {
+      const emailValid = EMAIL_RE.test(signUpEmail);
       return (
         <Stack gap="lg">
-          <Stack gap="sm" align="center">
-            <ThemeIcon size={56} radius="xl" variant="light" color="brand">
-              <IconUserPlus size={28} />
-            </ThemeIcon>
-            <Title order={2} ta="center">Create Account</Title>
-          </Stack>
-
+          <ViewHeader icon={IconUserPlus} title="Create Account" />
           {error && <Alert color="red" radius="md">{error}</Alert>}
-
           <Stack gap="sm">
             <TextInput
               placeholder="Email"
@@ -229,6 +261,7 @@ export default function LoginPage() {
               placeholder="Password"
               value={signUpPassword}
               onChange={(e) => { setSignUpPassword(e.currentTarget.value); clearError(); }}
+              description="At least 8 characters, with uppercase, lowercase, and a number."
             />
             <PasswordInput
               placeholder="Confirm Password"
@@ -237,9 +270,14 @@ export default function LoginPage() {
               onKeyDown={(e) => e.key === "Enter" && handleSignUp()}
             />
           </Stack>
-
-          <Button fullWidth onClick={handleSignUp} loading={loading}>Create Account</Button>
-
+          <Button
+            fullWidth
+            onClick={handleSignUp}
+            loading={loading}
+            disabled={!emailValid || !signUpPassword || !confirmPassword}
+          >
+            Create Account
+          </Button>
           <Group justify="center">
             <Anchor size="sm" onClick={() => navigate("signIn")} style={{ cursor: "pointer" }}>
               Already have an account? Sign in
@@ -252,18 +290,12 @@ export default function LoginPage() {
     if (view === "confirmSignUp") {
       return (
         <Stack gap="lg">
-          <Stack gap="sm" align="center">
-            <ThemeIcon size={56} radius="xl" variant="light" color="brand">
-              <IconMailCheck size={28} />
-            </ThemeIcon>
-            <Title order={2} ta="center">Verify your email</Title>
-            <Text size="sm" c="dimmed" ta="center">
-              We sent a 6-digit code to <strong>{pendingEmail}</strong>
-            </Text>
-          </Stack>
-
+          <ViewHeader
+            icon={IconMailCheck}
+            title="Verify your email"
+            subtitle={`We sent a 6-digit code to ${pendingEmail}`}
+          />
           {error && <Alert color="red" radius="md">{error}</Alert>}
-
           <TextInput
             placeholder="6-digit code"
             value={code}
@@ -273,9 +305,14 @@ export default function LoginPage() {
             inputMode="numeric"
             autoFocus
           />
-
-          <Button fullWidth onClick={handleConfirmSignUp} loading={loading}>Verify</Button>
-
+          <Button
+            fullWidth
+            onClick={handleConfirmSignUp}
+            loading={loading}
+            disabled={code.length < 6}
+          >
+            Verify
+          </Button>
           <Group justify="center">
             <Anchor size="sm" onClick={handleResendCode} style={{ cursor: "pointer" }}>
               Resend code
@@ -286,20 +323,15 @@ export default function LoginPage() {
     }
 
     if (view === "forgotPassword") {
+      const emailValid = EMAIL_RE.test(forgotEmail);
       return (
         <Stack gap="lg">
-          <Stack gap="sm" align="center">
-            <ThemeIcon size={56} radius="xl" variant="light" color="brand">
-              <IconKey size={28} />
-            </ThemeIcon>
-            <Title order={2} ta="center">Reset password</Title>
-            <Text size="sm" c="dimmed" ta="center">
-              Enter your email and we'll send a reset code.
-            </Text>
-          </Stack>
-
+          <ViewHeader
+            icon={IconKey}
+            title="Reset password"
+            subtitle="Enter your email and we'll send a reset code."
+          />
           {error && <Alert color="red" radius="md">{error}</Alert>}
-
           <TextInput
             placeholder="Email"
             value={forgotEmail}
@@ -308,9 +340,14 @@ export default function LoginPage() {
             type="email"
             autoFocus
           />
-
-          <Button fullWidth onClick={handleForgotPassword} loading={loading}>Send Reset Code</Button>
-
+          <Button
+            fullWidth
+            onClick={handleForgotPassword}
+            loading={loading}
+            disabled={!emailValid}
+          >
+            Send Reset Code
+          </Button>
           <Group justify="center">
             <Anchor size="sm" onClick={() => navigate("signIn")} style={{ cursor: "pointer" }}>
               Back to sign in
@@ -323,18 +360,12 @@ export default function LoginPage() {
     if (view === "resetPassword") {
       return (
         <Stack gap="lg">
-          <Stack gap="sm" align="center">
-            <ThemeIcon size={56} radius="xl" variant="light" color="brand">
-              <IconKey size={28} />
-            </ThemeIcon>
-            <Title order={2} ta="center">Set new password</Title>
-            <Text size="sm" c="dimmed" ta="center">
-              Enter the code sent to <strong>{pendingEmail}</strong>
-            </Text>
-          </Stack>
-
+          <ViewHeader
+            icon={IconKey}
+            title="Set new password"
+            subtitle={`Enter the code sent to ${pendingEmail}`}
+          />
           {error && <Alert color="red" radius="md">{error}</Alert>}
-
           <Stack gap="sm">
             <TextInput
               placeholder="Reset code"
@@ -356,9 +387,14 @@ export default function LoginPage() {
               onKeyDown={(e) => e.key === "Enter" && handleResetPassword()}
             />
           </Stack>
-
-          <Button fullWidth onClick={handleResetPassword} loading={loading}>Reset Password</Button>
-
+          <Button
+            fullWidth
+            onClick={handleResetPassword}
+            loading={loading}
+            disabled={resetCode.length < 6 || !newPassword || !confirmNewPassword}
+          >
+            Reset Password
+          </Button>
           <Group justify="center">
             <Anchor size="sm" onClick={() => navigate("signIn")} style={{ cursor: "pointer" }}>
               Back to sign in
