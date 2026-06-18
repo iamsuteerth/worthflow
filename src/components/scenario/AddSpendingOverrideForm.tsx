@@ -1,5 +1,6 @@
 import { Alert, Button, Grid, NumberInput, Stack, Text } from "@mantine/core";
 import { IconAlertCircle, IconAdjustments } from "@tabler/icons-react";
+import { money } from "@/format/money";
 import { useState } from "react";
 import { generateMonths } from "@/engine/dateUtils";
 import { formatMonth } from "@/engine/monthFormatting";
@@ -35,13 +36,13 @@ export default function AddSpendingOverrideForm() {
   return (
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
-        Replaces the baseline monthly spend (₹{config.expenses.defaultMonthly.toLocaleString("en-IN")}/mo) for a date range.
+        Replaces the baseline monthly spend ({money(config.expenses.defaultMonthly)}/mo) for a date range.
         Additive items: Recurring, Credit Card, and One-Off expenses stack on top of the override amount.
       </Text>
 
       <NumberInput
         label="Override Amount"
-        description={`Baseline is ₹${config.expenses.defaultMonthly.toLocaleString("en-IN")}/mo`}
+        description={`Baseline is ${money(config.expenses.defaultMonthly)}/mo`}
         value={amount}
         min={0}
         thousandSeparator=","
@@ -86,7 +87,7 @@ export default function AddSpendingOverrideForm() {
         <Text size="xs" c="dimmed">
           Baseline spend replaced for{" "}
           <Text span fw={600}>{formatMonth(startMonth)} → {formatMonth(endMonth)}</Text>
-          {" "}with <Text span fw={600} c="pink">₹{amount.toLocaleString("en-IN")}/mo</Text>.
+          {" "}with <Text span fw={600} c="pink">{money(amount)}/mo</Text>.
         </Text>
       )}
 

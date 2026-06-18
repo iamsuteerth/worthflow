@@ -1,10 +1,13 @@
+html,
+body {
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile zoom guard — font size from theme handles desktop, !important overrides Mantine for mobile */
 input,
 textarea,
 select {
   font-size: 16px !important;
-}
-
-html,
-body {
-  overscroll-behavior: none;
 }

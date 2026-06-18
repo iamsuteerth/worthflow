@@ -1,5 +1,6 @@
 import { Alert, Button, NumberInput, Stack, Text } from "@mantine/core";
 import { IconAlertCircle, IconWallet } from "@tabler/icons-react";
+import { money } from "@/format/money";
 import { useState } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 
@@ -24,7 +25,7 @@ export default function AddOpeningCashOverrideForm() {
 
       <NumberInput
         label="Opening Cash Balance"
-        description={`Baseline opening cash: ₹${baseOpening.toLocaleString("en-IN")}`}
+        description={`Baseline opening cash: ${money(baseOpening)}`}
         value={amount}
         allowNegative
         thousandSeparator=","
@@ -40,7 +41,7 @@ export default function AddOpeningCashOverrideForm() {
 
       <Button
         leftSection={<IconWallet size={16} />}
-        color="yellow"
+        color="brand"
         onClick={() => addOpeningCashOverride(amount)}
       >
         {hasExisting ? "Update Opening Cash Override" : "Set Opening Cash Override"}

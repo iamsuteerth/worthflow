@@ -99,7 +99,7 @@ export default function BuilderWizard() {
           size="sm"
           radius="xl"
           mb="lg"
-          color="indigo"
+          color="brand"
         />
         {stepContent[active]}
       </Box>

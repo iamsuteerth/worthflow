@@ -26,10 +26,10 @@ export default function ForecastStep() {
             withBorder
             radius="md"
             p="lg"
-            style={{ borderLeft: "3px solid var(--mantine-color-indigo-5)" }}
+            style={{ borderLeft: "3px solid var(--mantine-color-brand-5)" }}
           >
             <Stack gap="xs" mb="md">
-              <ThemeIcon variant="light" color="indigo" size="md" radius="md">
+              <ThemeIcon variant="light" color="brand" size="md" radius="md">
                 <IconCalendarMonth size={16} />
               </ThemeIcon>
               <Text fw={600} size="sm">

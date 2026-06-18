@@ -81,8 +81,8 @@ export default function AddRdForm() {
 
       <Text size="xs" c="dimmed">
         Available cash{month ? ` at ${formatMonth(month)}` : ""}:{" "}
-        <Text span fw={600} c={exceedsCash ? "red" : "green"} style={{ fontVariantNumeric: "tabular-nums" }}>
-          ₹{availableCash.toLocaleString("en-IN")}
+        <Text span fw={600} c={exceedsCash ? "red" : "teal"} style={{ fontVariantNumeric: "tabular-nums" }}>
+          {money(availableCash)}
         </Text>
       </Text>
 
@@ -100,7 +100,7 @@ export default function AddRdForm() {
 
       <Button
         leftSection={<IconRefresh size={16} />}
-        color="violet"
+        color="grape"
         disabled={!month || !name.trim() || monthlyContribution <= 0 || rate <= 0 || durationMonths <= 0 || exceedsCash}
         onClick={() => {
           if (!month) return;

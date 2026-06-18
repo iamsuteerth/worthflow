@@ -23,6 +23,7 @@ import {
 } from "@tabler/icons-react";
 import { useMemo } from "react";
 import { builderToConfig } from "@/engine/builderToConfig";
+import { money } from "@/format/money";
 import { exportPlan } from "@/engine/exportPlan";
 import { formatMonth } from "@/engine/monthFormatting";
 import { useBuilderStore } from "@/store/builderStore";
@@ -47,7 +48,7 @@ function MetricCard({
         <ThemeIcon variant="light" color={color} size="sm" radius="md">
           {icon}
         </ThemeIcon>
-        <Text size="xs" c="dimmed" style={{ textAlign: "right" }}>
+        <Text size="xs" c="dimmed" fw={500} tt="uppercase" ta="right" style={{ letterSpacing: "0.04em" }}>
           {label}
         </Text>
       </Group>
@@ -89,7 +90,7 @@ export default function ReviewStep() {
 
       <Card withBorder radius="md" p="lg">
         <Group gap="xs" mb="md">
-          <ThemeIcon variant="light" color="indigo" size="md" radius="md">
+          <ThemeIcon variant="light" color="brand" size="md" radius="md">
             <IconChartLine size={16} />
           </ThemeIcon>
           <Text fw={600} size="sm">
@@ -104,7 +105,7 @@ export default function ReviewStep() {
               label="Start Month"
               value={formatMonth(state.startMonth)}
               icon={<IconCalendarMonth size={14} />}
-              color="blue"
+              color="brand"
             />
           </Grid.Col>
           <Grid.Col span={{ base: 6, md: 3 }}>
@@ -119,15 +120,15 @@ export default function ReviewStep() {
           <Grid.Col span={{ base: 6, md: 3 }}>
             <MetricCard
               label="Monthly Income"
-              value={`₹${state.monthlyIncome.toLocaleString()}`}
+              value={money(state.monthlyIncome)}
               icon={<IconCash size={14} />}
-              color="green"
+              color="teal"
             />
           </Grid.Col>
           <Grid.Col span={{ base: 6, md: 3 }}>
             <MetricCard
               label="Monthly Expenses"
-              value={`₹${state.defaultMonthlyExpense.toLocaleString()}`}
+              value={money(state.defaultMonthlyExpense)}
               icon={<IconBolt size={14} />}
               color="red"
             />
@@ -135,9 +136,9 @@ export default function ReviewStep() {
           <Grid.Col span={{ base: 6, md: 3 }}>
             <MetricCard
               label="Opening Cash"
-              value={`₹${state.openingCash.toLocaleString()}`}
+              value={money(state.openingCash)}
               icon={<IconWallet size={14} />}
-              color="cyan"
+              color="brand"
             />
           </Grid.Col>
           <Grid.Col span={{ base: 6, md: 3 }}>
@@ -145,7 +146,7 @@ export default function ReviewStep() {
               label="Investment Accounts"
               value={String(state.investmentAccounts.length)}
               icon={<IconCoins size={14} />}
-              color="indigo"
+              color="violet"
             />
           </Grid.Col>
           <Grid.Col span={{ base: 6, md: 3 }}>
@@ -153,16 +154,16 @@ export default function ReviewStep() {
               label="Events"
               value={String(totalEvents)}
               icon={<IconBolt size={14} />}
-              color="orange"
+              color="gray"
             />
           </Grid.Col>
         </Grid>
 
         {state.instruments.length > 0 && (
-          <Card withBorder radius="sm" p="sm" mt="sm" bg="gray.0">
+          <Card withBorder radius="sm" p="sm" mt="sm" style={{ background: "var(--mantine-color-default-hover)" }}>
             <Group justify="space-between">
               <Group gap="xs">
-                <ThemeIcon variant="light" color="teal" size="sm" radius="sm">
+                <ThemeIcon variant="light" color="gray" size="sm" radius="sm">
                   <IconBuildingBank size={14} />
                 </ThemeIcon>
                 <Text size="sm" fw={500}>
@@ -170,10 +171,10 @@ export default function ReviewStep() {
                 </Text>
               </Group>
               <Group gap="xs">
-                <Badge variant="light" color="teal" size="sm">
+                <Badge variant="light" color="cyan" size="sm">
                   {state.instruments.filter((i) => i.type === "FD").length} FD
                 </Badge>
-                <Badge variant="light" color="violet" size="sm">
+                <Badge variant="light" color="grape" size="sm">
                   {state.instruments.filter((i) => i.type === "RD").length} RD
                 </Badge>
               </Group>

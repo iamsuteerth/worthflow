@@ -1,5 +1,6 @@
 import { Button, NumberInput, Select, Stack, Text } from "@mantine/core";
 import { IconArrowUp } from "@tabler/icons-react";
+import { money } from "@/format/money";
 import { useState } from "react";
 import { useSimulation } from "@/hooks/useSimulation";
 import { usePlannerStore } from "@/store/plannerStore";
@@ -34,9 +35,7 @@ export default function AddInvestmentWithdrawalForm() {
     const snap = row?.assets.accountSnapshots.find((s) => s.accountId === a.id);
     return {
       value: a.id,
-      label: snap
-        ? `${a.name} (₹${Math.round(snap.value).toLocaleString("en-IN")})`
-        : a.name,
+      label: snap ? `${a.name} (${money(snap.value)})` : a.name,
     };
   });
 
@@ -85,13 +84,13 @@ export default function AddInvestmentWithdrawalForm() {
       <Text size="xs" c="dimmed">
         Account balance:{" "}
         <Text span fw={600} c="violet" style={{ fontVariantNumeric: "tabular-nums" }}>
-          ₹{maxWithdrawal.toLocaleString("en-IN")}
+          {money(maxWithdrawal)}
         </Text>
       </Text>
 
       <Button
         leftSection={<IconArrowUp size={16} />}
-        color="orange"
+        color="teal"
         disabled={!accountId || !validMonth || amount <= 0 || amount > maxWithdrawal}
         onClick={() => {
           if (!accountId || !month) return;

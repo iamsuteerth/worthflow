@@ -10,11 +10,11 @@ import {
   Title,
 } from "@mantine/core";
 import { useMemo } from "react";
-import { IconBuildingBank, IconRefresh } from "@tabler/icons-react";
+import { IconBuildingBank, IconPigMoney } from "@tabler/icons-react";
 import { addMonths } from "@/engine/dateUtils";
 import { formatMonth } from "@/engine/monthFormatting";
 import { usePlannerStore } from "@/store/plannerStore";
-import { money } from "@/components/tables/tableUtils";
+import { money, moneySigned } from "@/format/money";
 import type { Instrument } from "@/types/instrument";
 
 function calcMaturityValue(instrument: Instrument): {
@@ -54,10 +54,8 @@ export default function ActiveInstruments() {
 
   if (instruments.length === 0) {
     return (
-      <Card withBorder radius="md" p="lg">
-        <Text size="sm" c="dimmed" ta="center">
-          No active instruments
-        </Text>
+      <Card withBorder radius="lg" p="lg">
+        <Text size="sm" c="dimmed" ta="center">No active instruments</Text>
       </Card>
     );
   }
@@ -66,40 +64,34 @@ export default function ActiveInstruments() {
     <Stack gap="sm" mb="md">
       <Group justify="space-between">
         <Title order={5}>Active Instruments</Title>
-        <Badge size="lg" variant="light" color="gray">
-          {instruments.length}
-        </Badge>
+        <Badge size="sm" variant="light" color="gray">{instruments.length}</Badge>
       </Group>
 
       {rows.map(({ instrument, maturityMonth, principal, maturityValue, interest }) => {
         const isFD = instrument.type === "FD";
-        const color = isFD ? "teal" : "violet";
-        const accentColor = isFD
-          ? "var(--mantine-color-teal-5)"
-          : "var(--mantine-color-violet-5)";
+        const color = isFD ? "cyan" : "grape";
+        const accentVar = isFD
+          ? "var(--mantine-color-cyan-5)"
+          : "var(--mantine-color-grape-5)";
 
         return (
           <Card
             key={instrument.id}
             withBorder
-            radius="md"
+            radius="lg"
             p="md"
-            style={{ borderLeft: `3px solid ${accentColor}` }}
+            style={{ borderLeft: `3px solid ${accentVar}` }}
           >
             <Group justify="space-between" mb="sm">
               <Group gap="xs">
                 <ThemeIcon variant="light" color={color} size="md" radius="md">
-                  {isFD ? <IconBuildingBank size={16} /> : <IconRefresh size={16} />}
+                  {isFD ? <IconBuildingBank size={16} /> : <IconPigMoney size={16} />}
                 </ThemeIcon>
-                <Text fw={700}>{instrument.name}</Text>
+                <Text fw={700} size="sm">{instrument.name}</Text>
               </Group>
               <Group gap="xs">
-                <Badge color={color} variant="light" size="sm">
-                  {instrument.type}
-                </Badge>
-                <Badge variant="light" color="green" size="sm">
-                  {instrument.rate}%
-                </Badge>
+                <Badge color={color} variant="light" size="sm">{instrument.type}</Badge>
+                <Badge variant="light" color="teal" size="sm">{instrument.rate}%</Badge>
               </Group>
             </Group>
 
@@ -111,41 +103,31 @@ export default function ActiveInstruments() {
 
             <SimpleGrid cols={2} spacing="xs">
               <div>
-                <Text size="xs" c="dimmed">
-                  {isFD ? "Principal" : "Total Contribution"}
-                </Text>
+                <Text size="xs" c="dimmed">{isFD ? "Principal" : "Total Contribution"}</Text>
                 <Text fw={600} size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
                   {money(principal)}
                 </Text>
               </div>
               <div>
-                <Text size="xs" c="dimmed">
-                  Maturity Value
-                </Text>
+                <Text size="xs" c="dimmed">Maturity Value</Text>
                 <Text fw={700} size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
                   {money(maturityValue)}
                 </Text>
               </div>
               <div>
-                <Text size="xs" c="dimmed">
-                  Estimated Interest
-                </Text>
+                <Text size="xs" c="dimmed">Estimated Interest</Text>
                 <Text
                   fw={600}
                   size="sm"
-                  c={interest >= 0 ? "green" : "red"}
+                  c={interest >= 0 ? "teal" : "red"}
                   style={{ fontVariantNumeric: "tabular-nums" }}
                 >
-                  {interest >= 0 ? "+" : "-"}{money(Math.abs(interest))}
+                  {moneySigned(interest)}
                 </Text>
               </div>
               <div>
-                <Text size="xs" c="dimmed">
-                  Matures
-                </Text>
-                <Text fw={600} size="sm">
-                  {formatMonth(maturityMonth)}
-                </Text>
+                <Text size="xs" c="dimmed">Matures</Text>
+                <Text fw={600} size="sm">{formatMonth(maturityMonth)}</Text>
               </div>
             </SimpleGrid>
           </Card>

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
+    "@fontsource/plus-jakarta-sans": "^5.2.8",
     "@mantine/charts": "^9.3.1",
     "@mantine/core": "^9.3.1",
     "@mantine/hooks": "^9.3.1",

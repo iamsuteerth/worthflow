@@ -6,6 +6,7 @@ import {
 } from "@tabler/icons-react";
 import { useBuilderStore } from "@/store/builderStore";
 import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
+import { moneySigned } from "@/format/money";
 
 function FieldCard({
   icon,
@@ -67,10 +68,10 @@ export default function BaselineStep() {
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <FieldCard
             icon={<IconCash size={16} />}
-            color="green"
+            color="teal"
             title="Monthly Income"
             description="Take-home salary or primary income."
-            accentColor="var(--mantine-color-green-5)"
+            accentColor="var(--mantine-color-teal-5)"
           >
             <NumberInput
               label="Amount"
@@ -111,10 +112,10 @@ export default function BaselineStep() {
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <FieldCard
             icon={<IconWallet size={16} />}
-            color="blue"
+            color="brand"
             title="Opening Cash Balance"
             description="Cash or savings in bank accounts today."
-            accentColor="var(--mantine-color-blue-5)"
+            accentColor="var(--mantine-color-brand-5)"
           >
             <NumberInput
               label="Amount"
@@ -132,18 +133,11 @@ export default function BaselineStep() {
       </Grid>
 
       {state.monthlyIncome > 0 && state.defaultMonthlyExpense >= 0 && (
-        <Card withBorder radius="md" p="md" bg={monthlySurplus >= 0 ? "green.0" : "red.0"}>
+        <Card withBorder radius="md" p="md" bg={monthlySurplus >= 0 ? "teal.0" : "red.0"}>
           <Group justify="space-between">
-            <Text size="sm" c="dimmed">
-              Monthly surplus after expenses
-            </Text>
-            <Text
-              fw={700}
-              size="sm"
-              c={monthlySurplus >= 0 ? "green.7" : "red.7"}
-            >
-              {monthlySurplus >= 0 ? "+" : ""}₹
-              {monthlySurplus.toLocaleString()}
+            <Text size="sm" c="dimmed">Monthly surplus after expenses</Text>
+            <Text fw={700} size="sm" c={monthlySurplus >= 0 ? "teal.7" : "red.7"} style={{ fontVariantNumeric: "tabular-nums" }}>
+              {moneySigned(monthlySurplus)}
             </Text>
           </Group>
         </Card>

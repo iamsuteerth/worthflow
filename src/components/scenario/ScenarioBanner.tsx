@@ -9,23 +9,8 @@ import {
 import { IconAdjustments } from "@tabler/icons-react";
 import { usePlannerStore } from "@/store/plannerStore";
 import { useUiStore } from "@/store/uiStore";
+import { getEventVisual } from "@/theme/eventVisuals";
 import type { RuntimeEvent } from "@/types/runtimeEvent";
-
-const BADGE_CONFIG: Record<string, { label: string; color: string }> = {
-  ONE_OFF_EXPENSE:            { label: "Expense",          color: "red"    },
-  CREDIT_CARD_EXPENSE:        { label: "Credit Card",      color: "orange" },
-  RECURRING_EXPENSE:          { label: "Recurring",        color: "red"    },
-  SPENDING_OVERRIDE:          { label: "Spending Override", color: "pink"  },
-  BONUS_INCOME:               { label: "Bonus",            color: "green"  },
-  SALARY_CHANGE:              { label: "Salary",           color: "blue"   },
-  OPENING_CASH_OVERRIDE:      { label: "Opening Cash",     color: "yellow" },
-  FD:                         { label: "FD",               color: "teal"   },
-  RD:                         { label: "RD",               color: "violet" },
-  ACCOUNT_AMOUNT_OVERRIDE:    { label: "Amount Override",  color: "indigo" },
-  ACCOUNT_RETURN_OVERRIDE:    { label: "Return Override",  color: "grape"  },
-  INVESTMENT_DEPOSIT:         { label: "Deposit",          color: "cyan"   },
-  INVESTMENT_WITHDRAWAL:      { label: "Withdrawal",       color: "orange" },
-};
 
 export default function ScenarioBanner() {
   const events = usePlannerStore((s) => s.overrides.runtimeEvents) ?? [];
@@ -43,10 +28,10 @@ export default function ScenarioBanner() {
   }
 
   return (
-    <Card withBorder radius="md" p="sm" mt="md">
+    <Card withBorder radius="lg" p="sm" mt="md">
       <Group justify="space-between" wrap="nowrap" mb="xs">
         <Group gap="xs">
-          <IconAdjustments size={16} color="var(--mantine-color-indigo-5)" />
+          <IconAdjustments size={16} color="var(--mantine-color-brand-6)" />
           <Text fw={700} size="sm">Scenario Active</Text>
         </Group>
         {events.length > 0 && (
@@ -62,21 +47,20 @@ export default function ScenarioBanner() {
 
       <Group gap={6} style={{ flexWrap: "wrap" }}>
         {newAccountCount > 0 && (
-          <Badge color="green" variant="light" size="sm">
+          <Badge color="violet" variant="light" size="sm">
             New account ×{newAccountCount}
           </Badge>
         )}
         {Object.entries(counts).map(([type, count]) => {
-          const cfg = BADGE_CONFIG[type];
-          if (!cfg) return null;
+          const { label, color } = getEventVisual(type);
           return (
             <UnstyledButton
               key={type}
               onClick={() => navigateToEvents({ types: [type as RuntimeEvent["type"]] })}
               style={{ cursor: "pointer" }}
             >
-              <Badge color={cfg.color} variant="light" size="sm">
-                {cfg.label} ×{count}
+              <Badge color={color} variant="light" size="sm">
+                {label} ×{count}
               </Badge>
             </UnstyledButton>
           );

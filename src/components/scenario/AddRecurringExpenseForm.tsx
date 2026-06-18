@@ -147,7 +147,7 @@ export default function AddRecurringExpenseForm() {
             ? `Charged once a year, ${occurrences} time${occurrences !== 1 ? "s" : ""}${annualEndMonth ? ` (through ${formatMonth(annualEndMonth)})` : ""}, total: `
             : `Total over ${occurrences} month${occurrences !== 1 ? "s" : ""}: `}
           <Text span fw={600} c="red">
-            ₹{(amount * occurrences).toLocaleString()}
+            {money(amount * occurrences)}
           </Text>
         </Text>
       )}

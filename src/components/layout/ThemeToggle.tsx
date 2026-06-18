@@ -1,59 +1,13 @@
-import {
-  ActionIcon,
-} from "@mantine/core";
-
-import {
-  useLocalStorage,
-} from "@mantine/hooks";
-
-import {
-  IconMoon,
-  IconSun,
-} from "@tabler/icons-react";
+import { ActionIcon } from "@mantine/core";
+import { IconMoon, IconSun } from "@tabler/icons-react";
+import { useTheme } from "@/app/useTheme";
 
 export default function ThemeToggle() {
-  const [
-    colorScheme,
-    setColorScheme,
-  ] = useLocalStorage<
-    "light" | "dark"
-  >({
-    key:
-      "finance-planner-theme",
-
-    defaultValue:
-      "dark",
-  });
-
-  const toggleTheme =
-    () => {
-      setColorScheme(
-        colorScheme ===
-          "dark"
-          ? "light"
-          : "dark"
-      );
-    };
+  const { colorScheme, toggleTheme } = useTheme();
 
   return (
-    <ActionIcon
-      size="lg"
-      radius="xl"
-      variant="light"
-      onClick={
-        toggleTheme
-      }
-    >
-      {colorScheme ===
-      "dark" ? (
-        <IconSun
-          size={18}
-        />
-      ) : (
-        <IconMoon
-          size={18}
-        />
-      )}
+    <ActionIcon size="lg" radius="md" variant="subtle" onClick={toggleTheme} aria-label="Toggle color scheme">
+      {colorScheme === "dark" ? <IconSun size={18} /> : <IconMoon size={18} />}
     </ActionIcon>
   );
 }

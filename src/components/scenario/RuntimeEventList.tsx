@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Badge,
   Button,
   Card,
   Group,
@@ -15,47 +14,33 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
+import { getEventVisual } from "@/theme/eventVisuals";
 import type { RuntimeEvent } from "@/types/runtimeEvent";
 import type { MonthKey } from "@/types/simulation";
 import type { InvestmentAccount } from "@/types/investmentAccount";
 import { formatMonth } from "@/engine/monthFormatting";
+import { money } from "@/format/money";
 import MonthSelect from "@/components/common/MonthSelect";
-
-const TYPE_META: Record<string, { label: string; color: string }> = {
-  ONE_OFF_EXPENSE:            { label: "Expense",          color: "red"    },
-  CREDIT_CARD_EXPENSE:        { label: "Credit Card",      color: "orange" },
-  RECURRING_EXPENSE:          { label: "Recurring",        color: "red"    },
-  SPENDING_OVERRIDE:          { label: "Spending Override", color: "pink"  },
-  BONUS_INCOME:               { label: "Bonus",            color: "green"  },
-  SALARY_CHANGE:              { label: "Salary",           color: "blue"   },
-  OPENING_CASH_OVERRIDE:      { label: "Opening Cash",     color: "yellow" },
-  FD:                         { label: "FD",               color: "teal"   },
-  RD:                         { label: "RD",               color: "violet" },
-  ACCOUNT_AMOUNT_OVERRIDE:    { label: "Amount Override",  color: "indigo" },
-  ACCOUNT_RETURN_OVERRIDE:    { label: "Return Override",  color: "grape"  },
-  INVESTMENT_DEPOSIT:         { label: "Deposit",          color: "cyan"   },
-  INVESTMENT_WITHDRAWAL:      { label: "Withdrawal",       color: "orange" },
-};
 
 function eventSummary(event: RuntimeEvent, accounts: InvestmentAccount[]): string {
   switch (event.type) {
     case "ONE_OFF_EXPENSE":
-      return `${event.label} • ₹${event.amount.toLocaleString("en-IN")} in ${formatMonth(event.month)}`;
+      return `${event.label} • ${money(event.amount)} in ${formatMonth(event.month)}`;
     case "CREDIT_CARD_EXPENSE":
-      return `${event.label} • ₹${event.amount.toLocaleString("en-IN")} in ${formatMonth(event.month)}`;
+      return `${event.label} • ${money(event.amount)} in ${formatMonth(event.month)}`;
     case "RECURRING_EXPENSE":
-      return `${event.name} • ₹${event.amount.toLocaleString("en-IN")}${event.frequency === "ANNUAL" ? "/yr" : "/mo"} · ${formatMonth(event.startMonth)} → ${formatMonth(event.endMonth)}${event.frequency === "ANNUAL" ? " (Annual)" : ""}`;
+      return `${event.name} • ${money(event.amount)}${event.frequency === "ANNUAL" ? "/yr" : "/mo"} · ${formatMonth(event.startMonth)} → ${formatMonth(event.endMonth)}${event.frequency === "ANNUAL" ? " (Annual)" : ""}`;
     case "BONUS_INCOME":
-      return `${event.description} • ₹${event.amount.toLocaleString("en-IN")} in ${formatMonth(event.month)}`;
+      return `${event.description} • ${money(event.amount)} in ${formatMonth(event.month)}`;
     case "SALARY_CHANGE":
-      return `${event.description} • ₹${event.newMonthlyIncome.toLocaleString("en-IN")}/mo from ${formatMonth(event.effectiveMonth)}`;
+      return `${event.description} • ${money(event.newMonthlyIncome)}/mo from ${formatMonth(event.effectiveMonth)}`;
     case "FD":
-      return `${event.name} • ₹${event.principal.toLocaleString("en-IN")} @ ${event.rate}% from ${formatMonth(event.startMonth)}`;
+      return `${event.name} • ${money(event.principal)} @ ${event.rate}% from ${formatMonth(event.startMonth)}`;
     case "RD":
-      return `${event.name} • ₹${event.monthlyContribution.toLocaleString("en-IN")}/mo @ ${event.rate}% from ${formatMonth(event.startMonth)}`;
+      return `${event.name} • ${money(event.monthlyContribution)}/mo @ ${event.rate}% from ${formatMonth(event.startMonth)}`;
     case "ACCOUNT_AMOUNT_OVERRIDE": {
       const account = accounts.find((a) => a.id === event.accountId);
-      return `${account?.name ?? "Account"} • ₹${event.amount.toLocaleString("en-IN")}/mo · ${formatMonth(event.startMonth)} → ${formatMonth(event.endMonth)}`;
+      return `${account?.name ?? "Account"} • ${money(event.amount)}/mo · ${formatMonth(event.startMonth)} → ${formatMonth(event.endMonth)}`;
     }
     case "ACCOUNT_RETURN_OVERRIDE": {
       const account = accounts.find((a) => a.id === event.accountId);
@@ -63,16 +48,16 @@ function eventSummary(event: RuntimeEvent, accounts: InvestmentAccount[]): strin
     }
     case "INVESTMENT_DEPOSIT": {
       const account = accounts.find((a) => a.id === event.accountId);
-      return `${account?.name ?? "Account"} • ₹${event.amount.toLocaleString("en-IN")} in ${formatMonth(event.month)}`;
+      return `${account?.name ?? "Account"} • ${money(event.amount)} in ${formatMonth(event.month)}`;
     }
     case "INVESTMENT_WITHDRAWAL": {
       const account = accounts.find((a) => a.id === event.accountId);
-      return `${account?.name ?? "Account"} • ₹${event.amount.toLocaleString("en-IN")} in ${formatMonth(event.month)}`;
+      return `${account?.name ?? "Account"} • ${money(event.amount)} in ${formatMonth(event.month)}`;
     }
     case "SPENDING_OVERRIDE":
-      return `₹${event.amount.toLocaleString("en-IN")}/mo · ${formatMonth(event.startMonth)} → ${formatMonth(event.endMonth)} (replaces baseline)`;
+      return `${money(event.amount)}/mo · ${formatMonth(event.startMonth)} → ${formatMonth(event.endMonth)} (replaces baseline)`;
     case "OPENING_CASH_OVERRIDE":
-      return `Opening cash → ₹${event.amount.toLocaleString("en-IN")}`;
+      return `Opening cash → ${money(event.amount)}`;
     default:
       return "";
   }
@@ -89,7 +74,6 @@ export function EditEventModal({
 }) {
   const updateEvent = usePlannerStore((s) => s.updateRuntimeEvent);
 
-  // Extract initial values by switching on the discriminant
   function getInitialAmount(): number {
     switch (event.type) {
       case "ONE_OFF_EXPENSE":
@@ -104,6 +88,10 @@ export function EditEventModal({
         return event.amount;
       case "SALARY_CHANGE":
         return event.newMonthlyIncome;
+      case "FD":
+        return event.principal;
+      case "RD":
+        return event.monthlyContribution;
       default:
         return 0;
     }
@@ -118,6 +106,8 @@ export function EditEventModal({
       case "SALARY_CHANGE":
         return event.description;
       case "RECURRING_EXPENSE":
+      case "FD":
+      case "RD":
         return event.name;
       default:
         return "";
@@ -135,6 +125,8 @@ export function EditEventModal({
       case "SALARY_CHANGE":
         return event.effectiveMonth;
       case "RECURRING_EXPENSE":
+      case "FD":
+      case "RD":
         return event.startMonth;
       default:
         return null;
@@ -142,13 +134,26 @@ export function EditEventModal({
   }
 
   function getInitialReturn(): number {
-    return event.type === "ACCOUNT_RETURN_OVERRIDE" ? event.annualReturn : 0;
+    switch (event.type) {
+      case "ACCOUNT_RETURN_OVERRIDE": return event.annualReturn;
+      case "FD":
+      case "RD":
+        return event.rate;
+      default:
+        return 0;
+    }
+  }
+
+  function getInitialDuration(): number {
+    if (event.type === "FD" || event.type === "RD") return event.durationMonths;
+    return 12;
   }
 
   const [localAmount, setLocalAmount] = useState(getInitialAmount);
   const [localLabel, setLocalLabel] = useState(getInitialLabel);
   const [localMonth, setLocalMonth] = useState<MonthKey | null>(getInitialMonth);
   const [localReturn, setLocalReturn] = useState(getInitialReturn);
+  const [localDuration, setLocalDuration] = useState(getInitialDuration);
 
   function handleSave() {
     const changes: Partial<RuntimeEvent> = {};
@@ -180,6 +185,12 @@ export function EditEventModal({
       case "ACCOUNT_RETURN_OVERRIDE":
         Object.assign(changes, { annualReturn: localReturn });
         break;
+      case "FD":
+        Object.assign(changes, { name: localLabel, principal: localAmount, rate: localReturn, durationMonths: localDuration, startMonth: localMonth });
+        break;
+      case "RD":
+        Object.assign(changes, { name: localLabel, monthlyContribution: localAmount, rate: localReturn, durationMonths: localDuration, startMonth: localMonth });
+        break;
       default:
         break;
     }
@@ -189,10 +200,12 @@ export function EditEventModal({
 
   const showAmount = ["ONE_OFF_EXPENSE","CREDIT_CARD_EXPENSE","RECURRING_EXPENSE",
     "BONUS_INCOME","INVESTMENT_DEPOSIT","INVESTMENT_WITHDRAWAL","ACCOUNT_AMOUNT_OVERRIDE",
-    "SPENDING_OVERRIDE","OPENING_CASH_OVERRIDE"].includes(event.type);
+    "SPENDING_OVERRIDE","OPENING_CASH_OVERRIDE","FD","RD"].includes(event.type);
   const showReturn = event.type === "ACCOUNT_RETURN_OVERRIDE";
-  const showLabel = ["ONE_OFF_EXPENSE","CREDIT_CARD_EXPENSE","RECURRING_EXPENSE","BONUS_INCOME","SALARY_CHANGE"].includes(event.type);
-  const showMonth = ["ONE_OFF_EXPENSE","CREDIT_CARD_EXPENSE","BONUS_INCOME","SALARY_CHANGE","INVESTMENT_DEPOSIT","INVESTMENT_WITHDRAWAL"].includes(event.type);
+  const showRate   = event.type === "FD" || event.type === "RD";
+  const showLabel = ["ONE_OFF_EXPENSE","CREDIT_CARD_EXPENSE","RECURRING_EXPENSE","BONUS_INCOME","SALARY_CHANGE","FD","RD"].includes(event.type);
+  const showMonth = ["ONE_OFF_EXPENSE","CREDIT_CARD_EXPENSE","BONUS_INCOME","SALARY_CHANGE","INVESTMENT_DEPOSIT","INVESTMENT_WITHDRAWAL","FD","RD"].includes(event.type);
+  const showDuration = event.type === "FD" || event.type === "RD";
   const allowNegativeAmount = event.type === "OPENING_CASH_OVERRIDE";
 
   return (
@@ -215,7 +228,12 @@ export function EditEventModal({
         )}
         {showAmount && (
           <NumberInput
-            label={event.type === "SALARY_CHANGE" ? "New Monthly Salary" : "Amount"}
+            label={
+              event.type === "SALARY_CHANGE" ? "New Monthly Salary" :
+              event.type === "FD" ? "Principal" :
+              event.type === "RD" ? "Monthly Contribution" :
+              "Amount"
+            }
             value={localAmount}
             min={allowNegativeAmount ? undefined : 0}
             allowNegative={allowNegativeAmount}
@@ -235,6 +253,26 @@ export function EditEventModal({
             onChange={(v) => setLocalReturn(Number(v))}
           />
         )}
+        {showRate && (
+          <NumberInput
+            label="Interest Rate (% p.a.)"
+            value={localReturn}
+            min={0}
+            max={50}
+            decimalScale={2}
+            suffix="%"
+            onChange={(v) => setLocalReturn(Number(v))}
+          />
+        )}
+        {showDuration && (
+          <NumberInput
+            label="Duration (months)"
+            value={localDuration}
+            min={1}
+            max={600}
+            onChange={(v) => setLocalDuration(Number(v))}
+          />
+        )}
         <Group justify="flex-end" gap="xs" mt="xs">
           <Button variant="default" size="xs" onClick={onClose}>Cancel</Button>
           <Button size="xs" onClick={handleSave}>Save</Button>
@@ -251,8 +289,8 @@ interface Props {
 }
 
 export default function RuntimeEventList({ filterTypes, filterAccountId, filterIds }: Props) {
-  const events     = usePlannerStore((s) => s.overrides.runtimeEvents) ?? [];
-  const accounts   = usePlannerStore((s) => s.config.investments.accounts);
+  const events      = usePlannerStore((s) => s.overrides.runtimeEvents) ?? [];
+  const accounts    = usePlannerStore((s) => s.config.investments.accounts);
   const deleteEvent = usePlannerStore((s) => s.deleteRuntimeEvent);
 
   const [editingEvent, setEditingEvent] = useState<RuntimeEvent | null>(null);
@@ -265,13 +303,9 @@ export default function RuntimeEventList({ filterTypes, filterAccountId, filterI
 
   if (displayed.length === 0) {
     return (
-      <Text size="sm" c="dimmed" ta="center" py="md">
-        No events.
-      </Text>
+      <Text size="sm" c="dimmed" ta="center" py="md">No events.</Text>
     );
   }
-
-  const deleteOnlyTypes = new Set(["FD", "RD"]);
 
   return (
     <>
@@ -285,34 +319,35 @@ export default function RuntimeEventList({ filterTypes, filterAccountId, filterI
 
       <Stack gap="xs">
         {displayed.map((event) => {
-          const meta = TYPE_META[event.type] ?? { label: event.type, color: "gray" };
-          const canEdit = !deleteOnlyTypes.has(event.type);
+          const { label, color } = getEventVisual(event.type);
 
           return (
-            <Card key={event.id} withBorder radius="sm" p="sm">
+            <Card
+              key={event.id}
+              withBorder
+              radius="md"
+              p="sm"
+              style={{ borderLeft: `3px solid var(--mantine-color-${color}-5)` }}
+            >
               <Group justify="space-between" wrap="nowrap" gap="xs">
                 <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                  <Badge color={meta.color} variant="light" size="xs">
-                    {meta.label}
-                  </Badge>
+                  <Text size="sm" style={{ wordBreak: "break-word" }}>{label}</Text>
                   <Text size="xs" c="dimmed" style={{ wordBreak: "break-word" }}>
                     {eventSummary(event, accounts)}
                   </Text>
                 </Stack>
 
                 <Group gap={4} style={{ flexShrink: 0 }}>
-                  {canEdit && (
-                    <Tooltip label="Edit">
-                      <ActionIcon
-                        size="sm"
-                        variant="light"
-                        color="blue"
-                        onClick={() => { setEditingEvent(event); openModal(); }}
-                      >
-                        <IconEdit size={14} />
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
+                  <Tooltip label="Edit">
+                    <ActionIcon
+                      size="sm"
+                      variant="light"
+                      color="brand"
+                      onClick={() => { setEditingEvent(event); openModal(); }}
+                    >
+                      <IconEdit size={14} />
+                    </ActionIcon>
+                  </Tooltip>
                   <Tooltip label="Delete">
                     <ActionIcon
                       size="sm"

@@ -1,27 +1,60 @@
 import { Badge, Group, ScrollArea, Stack, Table, Text } from "@mantine/core";
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { formatMonth } from "@/engine/monthFormatting";
-import { Emptystate } from "@/components/tables/Emptystate";
+import { EmptyState, RecordCard } from "@/components/ui";
+import { Money } from "@/components/ui";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { money } from "@/components/tables/tableUtils";
 
 export default function ForecastTable() {
   const result = useFilteredSimulation();
+  const isMobile = useIsMobile();
 
   if (result.rows.length === 0) {
     return (
-      <Emptystate
+      <EmptyState
         title="No Forecast Data"
         description="Forecast projections will appear here."
       />
     );
   }
 
+  if (isMobile) {
+    return (
+      <Stack gap="sm">
+        <Group justify="center">
+          <Badge size="sm" variant="light" color="brand">{result.rows.length} Months</Badge>
+        </Group>
+        {result.rows.map((row) => (
+          <RecordCard
+            key={row.month}
+            header={<Text fw={700} size="sm">{formatMonth(row.month)}</Text>}
+            fields={[
+              {
+                label: "Cash",
+                value: <Money value={row.assets.cash} compact />,
+                valueColor: row.assets.cash < 0 ? "red" : undefined,
+              },
+              {
+                label: "Net Worth",
+                value: <Money value={row.assets.netWorth} compact />,
+                valueColor: row.assets.netWorth < 0 ? "red" : undefined,
+                emphasis: true,
+              },
+              { label: "FD",     value: <Money value={row.assets.fdValue} compact />,  valueColor: row.assets.fdValue > 0 ? "cyan" : undefined },
+              { label: "RD",     value: <Money value={row.assets.rdValue} compact />,  valueColor: row.assets.rdValue > 0 ? "grape" : undefined },
+              { label: "Events", value: String(row.events.length) },
+            ]}
+          />
+        ))}
+      </Stack>
+    );
+  }
+
   return (
     <Stack gap="md">
       <Group justify="center">
-        <Badge size="lg" variant="light">
-          {result.rows.length} Months
-        </Badge>
+        <Badge size="sm" variant="light" color="brand">{result.rows.length} Months</Badge>
       </Group>
 
       <ScrollArea viewportProps={{ style: { overscrollBehaviorX: "contain" } }}>
@@ -55,21 +88,21 @@ export default function ForecastTable() {
                 </Table.Td>
 
                 <Table.Td>
-                  <Badge color="cyan" variant="light">
+                  <Text c={row.assets.fdValue > 0 ? "cyan" : undefined}>
                     {money(row.assets.fdValue)}
-                  </Badge>
+                  </Text>
                 </Table.Td>
 
                 <Table.Td>
-                  <Badge color="grape" variant="light">
+                  <Text c={row.assets.rdValue > 0 ? "grape" : undefined}>
                     {money(row.assets.rdValue)}
-                  </Badge>
+                  </Text>
                 </Table.Td>
 
                 <Table.Td>
-                  <Badge color="blue" variant="light">
+                  <Text size="sm" c="dimmed" ta="right">
                     {row.events.length}
-                  </Badge>
+                  </Text>
                 </Table.Td>
               </Table.Tr>
             ))}

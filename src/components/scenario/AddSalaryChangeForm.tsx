@@ -38,7 +38,7 @@ export default function AddSalaryChangeForm() {
 
       <Button
         leftSection={<IconTrendingUp size={16} />}
-        color="blue"
+        color="brand"
         disabled={!month || newSalary < 0 || !description.trim()}
         onClick={() => {
           if (!month) return;

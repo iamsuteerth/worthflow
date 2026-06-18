@@ -1,6 +1,3 @@
-/* 
-src/components/dashboard/DashboardTabs.module.css
-*/
 .strip {
   display: flex;
   align-items: stretch;
@@ -16,13 +13,14 @@ src/components/dashboard/DashboardTabs.module.css
 .tab {
   flex-shrink: 0;
   border-radius: 0;
-  padding: 12px 20px;
+  padding: 12px 18px;
   font-size: var(--mantine-font-size-sm);
   font-weight: 500;
   color: var(--mantine-color-dimmed);
   border-bottom: 2px solid transparent;
-  transition: color 120ms ease, border-color 120ms ease;
+  transition: color 150ms ease, border-color 150ms ease;
   background: transparent;
+  white-space: nowrap;
 }
 
 .tab:hover {
@@ -31,6 +29,7 @@ src/components/dashboard/DashboardTabs.module.css
 }
 
 .tab[data-active] {
-  color: var(--mantine-color-text);
-  border-bottom-color: var(--mantine-color-blue-filled);
+  color: var(--mantine-color-brand-6);
+  border-bottom-color: var(--mantine-color-brand-6);
+  font-weight: 600;
 }

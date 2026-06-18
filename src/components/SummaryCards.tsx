@@ -1,4 +1,4 @@
-import { Card, Grid, Group, Text, ThemeIcon, Title } from "@mantine/core";
+import { Grid } from "@mantine/core";
 import {
   IconChartLine,
   IconCoins,
@@ -7,49 +7,10 @@ import {
 } from "@tabler/icons-react";
 import { useSimulation } from "@/hooks/useSimulation";
 import { formatMonth } from "@/engine/monthFormatting";
-import type { ReactNode } from "react";
-
-function MetricCard({
-  title,
-  value,
-  sub,
-  icon,
-  iconColor,
-  negative = false,
-}: {
-  title: string;
-  value: string;
-  sub?: string;
-  icon: ReactNode;
-  iconColor: string;
-  negative?: boolean;
-}) {
-  return (
-    <Card radius="24px" withBorder p="lg" shadow="xs">
-      <Group justify="space-between" mb="md">
-        <Text size="sm" c="dimmed" fw={500}>
-          {title}
-        </Text>
-        <ThemeIcon size="lg" radius="xl" variant="light" color={iconColor}>
-          {icon}
-        </ThemeIcon>
-      </Group>
-
-      <Title order={2} fw={700} c={negative ? "red.6" : undefined}>
-        {value}
-      </Title>
-
-      {sub && (
-        <Text size="xs" c="dimmed" mt={4}>
-          {sub}
-        </Text>
-      )}
-    </Card>
-  );
-}
+import { money } from "@/format/money";
+import { StatCard } from "@/components/ui";
 
 export default function SummaryCards() {
-  // Summary always uses the FULL simulation (not filtered) per spec
   const result = useSimulation();
 
   if (result.rows.length === 0) return null;
@@ -59,48 +20,56 @@ export default function SummaryCards() {
 
   return (
     <Grid>
-      <Grid.Col span={{ base: 12, md: 3 }}>
-        <MetricCard
+      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+        <StatCard
           title="Net Worth"
-          value={`₹${Math.round(finalRow.assets.netWorth).toLocaleString("en-IN")}`}
+          value={money(finalRow.assets.netWorth)}
           sub="End of forecast"
           negative={finalRow.assets.netWorth < 0}
           icon={<IconChartLine size={18} />}
-          iconColor="green"
+          iconColor="teal"
         />
       </Grid.Col>
 
-      <Grid.Col span={{ base: 12, md: 3 }}>
-        <MetricCard
+      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+        <StatCard
           title="Cash"
-          value={`₹${Math.round(finalRow.assets.cash).toLocaleString("en-IN")}`}
-          sub={`Lowest: ₹${Math.round(summary.lowestBalance).toLocaleString("en-IN")} (${formatMonth(summary.lowestBalanceMonth)})`}
+          value={money(finalRow.assets.cash)}
+          sub={`Lowest: ${money(summary.lowestBalance)} (${formatMonth(summary.lowestBalanceMonth)})`}
           negative={finalRow.assets.cash < 0}
           icon={<IconWallet size={18} />}
-          iconColor="blue"
+          iconColor="brand"
         />
       </Grid.Col>
 
-      <Grid.Col span={{ base: 12, md: 3 }}>
-        <MetricCard
+      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+        <StatCard
           title="Investments"
-          value={`₹${Math.round(finalRow.assets.investmentCorpus).toLocaleString("en-IN")}`}
+          value={money(finalRow.assets.investmentCorpus)}
           sub="End of forecast"
           negative={finalRow.assets.investmentCorpus < 0}
           icon={<IconCoins size={18} />}
-          iconColor="grape"
+          iconColor="violet"
         />
       </Grid.Col>
 
-      <Grid.Col span={{ base: 12, md: 3 }}>
-        <MetricCard
-          title="XIRR"
-          value={summary.xirr === null ? "N/A" : `${summary.xirr.toFixed(2)}%`}
-          sub="Portfolio return"
-          negative={summary.xirr !== null && summary.xirr < 0}
-          icon={<IconTrendingDown size={18} />}
-          iconColor="orange"
-        />
+      <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+        {(() => {
+          const raw = summary.xirr;
+          const xirrVal = raw !== null ? parseFloat(raw.toFixed(2)) : null;
+          const xirrDisplay = xirrVal === null ? "N/A" : `${xirrVal.toFixed(2)}%`;
+          return (
+            <StatCard
+              title="XIRR"
+              value={xirrDisplay}
+              sub="Portfolio return"
+              negative={xirrVal !== null && xirrVal < 0}
+              valueColor={xirrVal !== null && xirrVal > 0 ? "teal.6" : undefined}
+              icon={<IconTrendingDown size={18} />}
+              iconColor="orange"
+            />
+          );
+        })()}
       </Grid.Col>
     </Grid>
   );

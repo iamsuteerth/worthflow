@@ -8,38 +8,21 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
+import type { ReactNode } from "react";
 
-import type {
-  ReactNode,
-} from "react";
-
-import ThemeToggle
-  from "@/components/layout/ThemeToggle";
-
-import ScenarioPanel
-  from "@/components/scenario/ScenarioPanel";
-
-import {
-  usePlannerStore,
-} from "@/store/plannerStore";
-
-import {
-  useUiStore,
-} from "@/store/uiStore";
-
-import {
-  IconLogout,
-} from "@tabler/icons-react";
+import ThemeToggle from "@/components/layout/ThemeToggle";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import ScenarioPanel from "@/components/scenario/ScenarioPanel";
+import { usePlannerStore } from "@/store/plannerStore";
+import { useUiStore } from "@/store/uiStore";
 import { useAuthStore } from "@/store/authStore";
+import { IconLogout } from "@tabler/icons-react";
 
 interface Props {
   children: ReactNode;
 }
 
-export default function PlannerShell({
-  children,
-}: Props) {
+export default function PlannerShell({ children }: Props) {
   const opened = useUiStore((state) => state.scenarioDrawerOpened);
   const open = useUiStore((state) => state.openScenarioDrawer);
   const close = useUiStore((state) => state.closeScenarioDrawer);
@@ -47,12 +30,7 @@ export default function PlannerShell({
   const activeView = usePlannerStore((state) => state.activeView);
   const logout = useAuthStore((state) => state.logout);
 
-  // Gate the mobile Drawer so it can never be `opened` on desktop.
-  // hiddenFrom="sm" only applies CSS display:none — react-remove-scroll still
-  // locks <body> when opened=true even if the overlay is invisible. Using
-  // useMediaQuery prevents the lock from firing on desktop entirely (RC-1 fix).
-  // Default to false (not mobile) on first paint to avoid an accidental open.
-  const isMobile = useMediaQuery("(max-width: 48em)") ?? false;
+  const isMobile = useIsMobile();
 
   return (
     <>
@@ -61,10 +39,14 @@ export default function PlannerShell({
           opened={isMobile && opened}
           onClose={close}
           title={
-            <div>
-              <Text fw={600}>Scenario Lab</Text>
-              <Text size="sm" c="dimmed">Explore financial what-if scenarios.</Text>
-            </div>
+            <Stack gap={2}>
+              <Text fw={700} size="sm">
+                Scenario Lab
+              </Text>
+              <Text size="xs" c="dimmed">
+                Explore financial what-if scenarios.
+              </Text>
+            </Stack>
           }
           styles={{ body: { paddingBottom: 40 } }}
           size="100%"
@@ -100,15 +82,24 @@ export default function PlannerShell({
                 />
               )}
 
-              <Stack gap={0}>
-                <Title order={4} fw={700}>Finance Planner</Title>
-                <Text size="xs" c="dimmed">Personal Wealth Forecast</Text>
+              <Stack gap={2}>
+                <Title order={4} fw={700} style={{ lineHeight: 1.1 }}>
+                  Finance Planner
+                </Title>
+                <Text size="xs" c="dimmed" style={{ lineHeight: 1 }}>
+                  Personal Wealth Forecast
+                </Text>
               </Stack>
             </Group>
 
             <Group gap="xs">
               <ThemeToggle />
-              <ActionIcon variant="light" onClick={logout}>
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                onClick={logout}
+                aria-label="Log out"
+              >
                 <IconLogout size={18} />
               </ActionIcon>
             </Group>
@@ -121,17 +112,19 @@ export default function PlannerShell({
             p="md"
             style={{ overflowY: "auto", overflowX: "hidden" }}
           >
-            <Stack gap={4} mb="md">
-              <Text fw={600}>Scenario Lab</Text>
-              <Text size="sm" c="dimmed">Explore financial what-if scenarios.</Text>
+            <Stack gap={2} mb="md">
+              <Text fw={700} size="sm">
+                Scenario Lab
+              </Text>
+              <Text size="xs" c="dimmed">
+                Explore financial what-if scenarios.
+              </Text>
             </Stack>
             <ScenarioPanel />
           </AppShell.Navbar>
         )}
 
-        <AppShell.Main>
-          {children}
-        </AppShell.Main>
+        <AppShell.Main>{children}</AppShell.Main>
       </AppShell>
     </>
   );

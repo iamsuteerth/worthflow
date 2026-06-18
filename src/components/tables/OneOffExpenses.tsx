@@ -1,18 +1,37 @@
-import { Badge, ScrollArea, Table } from "@mantine/core";
+import { ScrollArea, Stack, Table, Text } from "@mantine/core";
 import { usePlannerStore } from "@/store/plannerStore";
 import { formatMonth } from "@/engine/monthFormatting";
-import { Emptystate } from "@/components/tables/Emptystate";
+import { EmptyState, RecordCard, Money } from "@/components/ui";
 import { money } from "@/components/tables/tableUtils";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 export default function OneOffExpensesTable() {
   const config = usePlannerStore((state) => state.config);
+  const isMobile = useIsMobile();
 
   if (config.oneOffExpenses.length === 0) {
     return (
-      <Emptystate
+      <EmptyState
         title="No One-Off Expenses"
         description="Planned expenses will appear here."
       />
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <Stack gap="sm">
+        {config.oneOffExpenses.map((expense) => (
+          <RecordCard
+            key={expense.id}
+            header={<Text fw={700} size="sm">{expense.label}</Text>}
+            fields={[
+              { label: "Month",  value: formatMonth(expense.month) },
+              { label: "Amount", value: <Money value={expense.amount} compact />, valueColor: "red", emphasis: true },
+            ]}
+          />
+        ))}
+      </Stack>
     );
   }
 
@@ -33,9 +52,7 @@ export default function OneOffExpensesTable() {
               <Table.Td>{formatMonth(expense.month)}</Table.Td>
               <Table.Td>{expense.label}</Table.Td>
               <Table.Td>
-                <Badge color="red" variant="light">
-                  {money(expense.amount)}
-                </Badge>
+                <Text c="red">{money(expense.amount)}</Text>
               </Table.Td>
             </Table.Tr>
           ))}

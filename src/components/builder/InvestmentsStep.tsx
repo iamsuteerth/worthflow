@@ -14,6 +14,7 @@ import {
 import { IconChartLine, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
+import { money } from "@/format/money";
 import { useBuilderStore } from "@/store/builderStore";
 import type { MonthKey } from "@/types/simulation";
 import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
@@ -47,7 +48,7 @@ export default function InvestmentsStep() {
       <Card withBorder radius="md" p="lg">
         <Stack gap="md">
           <Group gap="xs">
-            <ThemeIcon variant="light" color="indigo" size="md" radius="md">
+            <ThemeIcon variant="light" color="brand" size="md" radius="md">
               <IconChartLine size={16} />
             </ThemeIcon>
             <Text fw={600} size="sm">
@@ -137,13 +138,13 @@ export default function InvestmentsStep() {
         <Card withBorder radius="md" p="lg">
           <Stack gap="md">
             <Group gap="xs">
-              <ThemeIcon variant="light" color="green" size="md" radius="md">
+              <ThemeIcon variant="light" color="violet" size="md" radius="md">
                 <IconChartLine size={16} />
               </ThemeIcon>
               <Text fw={600} size="sm">
                 Investment Accounts
               </Text>
-              <Badge variant="light" color="green" size="sm">
+              <Badge variant="light" color="violet" size="sm">
                 {state.investmentAccounts.length} account
                 {state.investmentAccounts.length !== 1 ? "s" : ""}
               </Badge>
@@ -153,16 +154,16 @@ export default function InvestmentsStep() {
 
             <Stack gap="xs">
               {state.investmentAccounts.map((account) => (
-                <Card key={account.id} withBorder radius="sm" p="sm" bg="gray.0">
+                <Card key={account.id} withBorder radius="sm" p="sm" style={{ background: "var(--mantine-color-default-hover)" }}>
                   <Group justify="space-between" align="center">
                     <Stack gap={2}>
                       <Text size="sm" fw={600}>
                         {account.name}
                       </Text>
                       <Text size="xs" c="dimmed">
-                        Starts {formatMonth(account.startMonth)} · Opening ₹
-                        {account.openingBalance.toLocaleString()} · Contribution ₹
-                        {account.defaultMonthlyContribution.toLocaleString()}/mo · Return{" "}
+                        Starts {formatMonth(account.startMonth)} · Opening{" "}
+                        {money(account.openingBalance)} · Contribution{" "}
+                        {money(account.defaultMonthlyContribution)}/mo · Return{" "}
                         {account.defaultAnnualReturn}%
                       </Text>
                     </Stack>

@@ -114,7 +114,7 @@ export default function AddInvestmentReturnOverrideForm() {
 
       <Button
         leftSection={<IconTrendingUp size={16} />}
-        color="indigo"
+        color="brand"
         disabled={
           !accountId ||
           !validRange ||

@@ -80,15 +80,15 @@ export default function AddFdForm() {
 
       <Text size="xs" c="dimmed">
         Available cash{month ? ` at ${formatMonth(month)}` : ""}:{" "}
-        <Text span fw={600} c={exceedsCash ? "red" : "green"} style={{ fontVariantNumeric: "tabular-nums" }}>
-          ₹{availableCash.toLocaleString("en-IN")}
+        <Text span fw={600} c={exceedsCash ? "red" : "teal"} style={{ fontVariantNumeric: "tabular-nums" }}>
+          {money(availableCash)}
         </Text>
       </Text>
 
       {principal > 0 && rate > 0 && maturityMonth && (
         <InstrumentPreview
           title="Fixed Deposit Forecast"
-          subtitle={`₹${principal.toLocaleString()} @ ${rate}%`}
+          subtitle={`${money(principal)} @ ${rate}%`}
           maturityValue={money(maturityValue)}
           interest={money(interest)}
           maturityMonth={formatMonth(maturityMonth)}
@@ -99,7 +99,7 @@ export default function AddFdForm() {
 
       <Button
         leftSection={<IconBuildingBank size={16} />}
-        color="teal"
+        color="cyan"
         disabled={!month || !name.trim() || principal <= 0 || rate <= 0 || durationMonths <= 0 || exceedsCash}
         onClick={() => {
           if (!month) return;

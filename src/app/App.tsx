@@ -1,127 +1,63 @@
-import {
-  useEffect,
-} from "react";
+import { useEffect } from "react";
+import { Group, SegmentedControl } from "@mantine/core";
+import { IconChartLine, IconSettings } from "@tabler/icons-react";
 
-import {
-  Tabs,
-} from "@mantine/core";
+import PlannerShell from "@/components/layout/AppShell";
+import LoginPage from "@/components/auth/LoginPage";
+import ForecastPage from "@/pages/ForecastPage";
+import ConfigBuilderPage from "@/pages/ConfigBuilderPage";
 
-import {
-  IconChartLine,
-  IconSettings,
-} from "@tabler/icons-react";
+import { usePlannerStore, type AppView } from "@/store/plannerStore";
+import { useAuthStore } from "@/store/authStore";
 
-import PlannerShell
-  from "@/components/layout/AppShell";
-
-import LoginPage
-  from "@/components/auth/LoginPage";
-
-import ForecastPage
-  from "@/pages/ForecastPage";
-
-import ConfigBuilderPage
-  from "@/pages/ConfigBuilderPage";
-
-import {
-  usePlannerStore,
-  type AppView,
-} from "@/store/plannerStore";
-
-import {
-  useAuthStore,
-} from "@/store/authStore";
+const NAV_DATA = [
+  {
+    value: "builder",
+    label: (
+      <Group gap={6} wrap="nowrap">
+        <IconSettings size={14} />
+        <span>Build Plan</span>
+      </Group>
+    ),
+  },
+  {
+    value: "forecast",
+    label: (
+      <Group gap={6} wrap="nowrap">
+        <IconChartLine size={14} />
+        <span>Forecast</span>
+      </Group>
+    ),
+  },
+];
 
 export default function App() {
-  const activeView =
-    usePlannerStore(
-      (state) =>
-        state.activeView
-    );
-
-  const setActiveView =
-    usePlannerStore(
-      (state) =>
-        state.setActiveView
-    );
-
-  const authenticated =
-    useAuthStore(
-      (state) =>
-        state.authenticated
-    );
-
-  const restore =
-    useAuthStore(
-      (state) =>
-        state.restore
-    );
+  const activeView = usePlannerStore((state) => state.activeView);
+  const setActiveView = usePlannerStore((state) => state.setActiveView);
+  const authenticated = useAuthStore((state) => state.authenticated);
+  const restore = useAuthStore((state) => state.restore);
 
   useEffect(() => {
     restore();
-
-    const interval =
-      setInterval(
-        restore,
-        60_000
-      );
-
-    return () =>
-      clearInterval(
-        interval
-      );
+    const interval = setInterval(restore, 60_000);
+    return () => clearInterval(interval);
   }, [restore]);
 
-  if (
-    !authenticated
-  ) {
-    return (
-      <LoginPage />
-    );
+  if (!authenticated) {
+    return <LoginPage />;
   }
 
   return (
     <PlannerShell>
-      <Tabs
+      <SegmentedControl
         value={activeView}
-        onChange={(value) =>
-          setActiveView(
-            value as AppView
-          )
-        }
+        onChange={(value) => setActiveView(value as AppView)}
+        data={NAV_DATA}
         mb="lg"
-      >
-        <Tabs.List>
-          <Tabs.Tab
-            value="builder"
-            leftSection={
-              <IconSettings
-                size={14}
-              />
-            }
-          >
-            Build Plan
-          </Tabs.Tab>
+        radius="md"
+      />
 
-          <Tabs.Tab
-            value="forecast"
-            leftSection={
-              <IconChartLine
-                size={14}
-              />
-            }
-          >
-            Forecast
-          </Tabs.Tab>
-        </Tabs.List>
-      </Tabs>
-
-      {activeView ===
-      "builder" ? (
-        <ConfigBuilderPage />
-      ) : (
-        <ForecastPage />
-      )}
+      {activeView === "builder" ? <ConfigBuilderPage /> : <ForecastPage />}
     </PlannerShell>
   );
 }

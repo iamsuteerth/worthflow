@@ -1,18 +1,52 @@
-import { Badge, ScrollArea, Stack, Table, Text } from "@mantine/core";
+import { ScrollArea, Stack, Table, Text } from "@mantine/core";
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money, sumEvents, netInstrumentFlow } from "@/components/tables/tableUtils";
-import { Emptystate } from "@/components/tables/Emptystate";
+import { EmptyState, RecordCard, Money } from "@/components/ui";
+import { useIsMobile } from "@/hooks/useIsMobile";
+
 
 export default function CashflowTable() {
   const result = useFilteredSimulation();
+  const isMobile = useIsMobile();
 
   if (result.rows.length === 0) {
     return (
-      <Emptystate
+      <EmptyState
         title="No Cashflow Data"
         description="Cashflow projections will appear here."
       />
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <Stack gap="sm">
+        {result.rows.map((row) => {
+          const bonus = sumEvents(row.events, "BONUS_INCOME");
+          const instrumentFlow = netInstrumentFlow(row.events);
+          const investWithdrawal = sumEvents(row.events, "INVESTMENT_WITHDRAWAL");
+          const netInvest = row.cashflow.investmentAmount - investWithdrawal;
+          return (
+            <RecordCard
+              key={row.month}
+              header={<Text fw={700} size="sm">{formatMonth(row.month)}</Text>}
+              fields={[
+                { label: "Open",        value: <Money value={row.openingBalance} compact />,  valueColor: row.openingBalance < 0 ? "red.6" : undefined },
+                { label: "Income",      value: <Money value={row.cashflow.income} compact />,  valueColor: row.cashflow.income > 0 ? "teal" : row.cashflow.income < 0 ? "red" : undefined },
+                { label: "Bonus",       value: <Money value={bonus} compact />,                valueColor: bonus > 0 ? "teal" : bonus < 0 ? "red" : undefined },
+                { label: "Expenses",    value: <Money value={row.cashflow.flatExpense} compact />, valueColor: row.cashflow.flatExpense > 0 ? "red" : undefined },
+                { label: "CC",          value: <Money value={row.cashflow.creditCardExpense} compact />, valueColor: row.cashflow.creditCardExpense > 0 ? "orange" : undefined },
+                { label: "One-Off",     value: <Money value={row.cashflow.oneOffExpense} compact />, valueColor: row.cashflow.oneOffExpense > 0 ? "red" : undefined },
+                { label: "Recurring",   value: <Money value={row.cashflow.recurringExpense} compact />, valueColor: row.cashflow.recurringExpense > 0 ? "red" : undefined },
+                { label: "Invest",      value: <Money value={netInvest} compact />,           valueColor: netInvest > 0 ? "violet" : netInvest < 0 ? "teal" : undefined },
+                { label: "Instruments", value: <Money value={instrumentFlow} compact />,       valueColor: instrumentFlow > 0 ? "teal" : instrumentFlow < 0 ? "red" : undefined },
+                { label: "Close",       value: <Money value={row.closingBalance} compact />,   emphasis: true, valueColor: row.closingBalance < 0 ? "red.6" : undefined },
+              ]}
+            />
+          );
+        })}
+      </Stack>
     );
   }
 
@@ -40,6 +74,8 @@ export default function CashflowTable() {
             {result.rows.map((row) => {
               const bonus = sumEvents(row.events, "BONUS_INCOME");
               const instrumentFlow = netInstrumentFlow(row.events);
+              const investWithdrawal = sumEvents(row.events, "INVESTMENT_WITHDRAWAL");
+              const netInvest = row.cashflow.investmentAmount - investWithdrawal;
 
               return (
                 <Table.Tr key={row.month}>
@@ -52,51 +88,51 @@ export default function CashflowTable() {
                   </Table.Td>
 
                   <Table.Td>
-                    <Badge color="green" variant="light">
+                    <Text c={row.cashflow.income > 0 ? "teal" : row.cashflow.income < 0 ? "red" : undefined} fw={500}>
                       {money(row.cashflow.income)}
-                    </Badge>
+                    </Text>
                   </Table.Td>
 
                   <Table.Td>
-                    <Badge color="green" variant="light">
+                    <Text c={bonus > 0 ? "teal" : bonus < 0 ? "red" : undefined} fw={500}>
                       {money(bonus)}
-                    </Badge>
+                    </Text>
                   </Table.Td>
 
                   <Table.Td>
-                    <Badge color="red" variant="light">
+                    <Text c={row.cashflow.flatExpense > 0 ? "red" : undefined}>
                       {money(row.cashflow.flatExpense)}
-                    </Badge>
+                    </Text>
                   </Table.Td>
 
                   <Table.Td>
-                    <Badge color="orange" variant="light">
+                    <Text c={row.cashflow.creditCardExpense > 0 ? "orange" : undefined}>
                       {money(row.cashflow.creditCardExpense)}
-                    </Badge>
+                    </Text>
                   </Table.Td>
 
                   <Table.Td>
-                    <Badge color="red" variant="outline">
+                    <Text c={row.cashflow.oneOffExpense > 0 ? "red" : undefined}>
                       {money(row.cashflow.oneOffExpense)}
-                    </Badge>
+                    </Text>
                   </Table.Td>
 
                   <Table.Td>
-                    <Badge color="red" variant="dot">
+                    <Text c={row.cashflow.recurringExpense > 0 ? "red" : undefined}>
                       {money(row.cashflow.recurringExpense)}
-                    </Badge>
+                    </Text>
                   </Table.Td>
 
                   <Table.Td>
-                    <Badge color="grape" variant="light">
-                      {money(row.cashflow.investmentAmount)}
-                    </Badge>
+                    <Text c={netInvest > 0 ? "violet" : netInvest < 0 ? "teal" : undefined}>
+                      {money(netInvest)}
+                    </Text>
                   </Table.Td>
 
                   <Table.Td>
-                    <Badge color="grape" variant="light">
+                    <Text c={instrumentFlow > 0 ? "teal" : instrumentFlow < 0 ? "red" : undefined}>
                       {money(instrumentFlow)}
-                    </Badge>
+                    </Text>
                   </Table.Td>
 
                   <Table.Td>

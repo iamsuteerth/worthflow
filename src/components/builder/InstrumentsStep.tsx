@@ -15,6 +15,7 @@ import {
 import { IconBuildingBank, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
+import { money } from "@/format/money";
 import { useBuilderStore } from "@/store/builderStore";
 import type { MonthKey } from "@/types/simulation";
 import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
@@ -58,10 +59,10 @@ export default function InstrumentsStep() {
             radius="md"
             p="lg"
             h="100%"
-            style={{ borderLeft: "3px solid var(--mantine-color-teal-5)" }}
+            style={{ borderLeft: "3px solid var(--mantine-color-cyan-5)" }}
           >
             <Group gap="xs" mb="md">
-              <ThemeIcon variant="light" color="teal" size="md" radius="md">
+              <ThemeIcon variant="light" color="cyan" size="md" radius="md">
                 <IconBuildingBank size={16} />
               </ThemeIcon>
               <Text fw={600} size="sm">
@@ -116,7 +117,7 @@ export default function InstrumentsStep() {
               />
               <Button
                 leftSection={<IconPlus size={16} />}
-                color="teal"
+                color="cyan"
                 disabled={!fdName.trim() || fdPrincipal <= 0 || fdRate <= 0 || fdDurationMonths <= 0}
                 onClick={() => {
                   addInstrument({
@@ -145,10 +146,10 @@ export default function InstrumentsStep() {
             radius="md"
             p="lg"
             h="100%"
-            style={{ borderLeft: "3px solid var(--mantine-color-violet-5)" }}
+            style={{ borderLeft: "3px solid var(--mantine-color-grape-5)" }}
           >
             <Group gap="xs" mb="md">
-              <ThemeIcon variant="light" color="violet" size="md" radius="md">
+              <ThemeIcon variant="light" color="grape" size="md" radius="md">
                 <IconRefresh size={16} />
               </ThemeIcon>
               <Text fw={600} size="sm">
@@ -203,7 +204,7 @@ export default function InstrumentsStep() {
               />
               <Button
                 leftSection={<IconPlus size={16} />}
-                color="violet"
+                color="grape"
                 disabled={!rdName.trim() || rdContribution <= 0 || rdRate <= 0 || rdDurationMonths <= 0}
                 onClick={() => {
                   addInstrument({
@@ -234,10 +235,10 @@ export default function InstrumentsStep() {
           </Text>
           {state.instruments.length > 0 && (
             <Group gap="xs">
-              <Badge variant="light" color="teal" size="sm">
+              <Badge variant="light" color="cyan" size="sm">
                 {fds.length} FD{fds.length !== 1 ? "s" : ""}
               </Badge>
-              <Badge variant="light" color="violet" size="sm">
+              <Badge variant="light" color="grape" size="sm">
                 {rds.length} RD{rds.length !== 1 ? "s" : ""}
               </Badge>
             </Group>
@@ -267,7 +268,7 @@ export default function InstrumentsStep() {
                   <Table.Td>
                     <Badge
                       variant="light"
-                      color={instrument.type === "FD" ? "teal" : "violet"}
+                      color={instrument.type === "FD" ? "cyan" : "grape"}
                       size="sm"
                     >
                       {instrument.type}
@@ -279,8 +280,8 @@ export default function InstrumentsStep() {
                   <Table.Td style={{ textAlign: "right" }}>
                     <Text size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
                       {instrument.type === "FD"
-                        ? `₹${instrument.principal.toLocaleString()}`
-                        : `₹${instrument.monthlyContribution.toLocaleString()}/mo`}
+                        ? money(instrument.principal)
+                        : `${money(instrument.monthlyContribution)}/mo`}
                     </Text>
                   </Table.Td>
                   <Table.Td style={{ textAlign: "right" }}>

@@ -69,9 +69,11 @@ function Chip({ label, active, onClick }: {
         padding: "5px 14px",
         borderRadius: 999,
         fontSize: 13,
-        border: active ? "1px solid #185FA5" : "0.5px solid var(--mantine-color-default-border)",
-        background: active ? "#E6F1FB" : "transparent",
-        color: active ? "#185FA5" : "var(--mantine-color-dimmed)",
+        border: active
+          ? "1px solid var(--mantine-color-brand-5)"
+          : "1px solid var(--mantine-color-default-border)",
+        background: active ? "var(--mantine-color-brand-light)" : "transparent",
+        color: active ? "var(--mantine-color-brand-6)" : "var(--mantine-color-dimmed)",
         fontWeight: active ? 500 : 400,
         transition: "all 120ms ease",
         whiteSpace: "nowrap",
@@ -96,14 +98,18 @@ function SectionButton({ icon: Icon, label, active, onClick }: {
         padding: "8px 4px",
         borderRadius: "var(--mantine-radius-md)",
         border: active
-          ? "0.5px solid var(--mantine-color-default-border)"
-          : "0.5px solid transparent",
+          ? "1px solid var(--mantine-color-default-border)"
+          : "1px solid transparent",
         background: active ? "var(--mantine-color-body)" : "transparent",
         color: active ? "var(--mantine-color-text)" : "var(--mantine-color-dimmed)",
         transition: "all 120ms ease",
       }}
     >
-      <Icon size={16} style={{ color: active ? "#185FA5" : "inherit" }} stroke={1.8} />
+      <Icon
+        size={16}
+        style={{ color: active ? "var(--mantine-color-brand-6)" : "inherit" }}
+        stroke={1.8}
+      />
       <Text size="xs" fw={active ? 500 : 400} style={{ color: "inherit", lineHeight: 1.2 }}>
         {label}
       </Text>
@@ -116,7 +122,7 @@ function FormBox({ children }: { children: React.ReactNode }) {
     <Box
       style={{
         background: "var(--mantine-color-body)",
-        border: "0.5px solid var(--mantine-color-default-border)",
+        border: "1px solid var(--mantine-color-default-border)",
         borderRadius: "var(--mantine-radius-lg)",
         padding: "1rem 1.25rem",
       }}
@@ -133,15 +139,15 @@ export default function ScenarioPanel() {
   const reset          = usePlannerStore((s) => s.resetOverrides);
   const loadPlan       = usePlannerStore((s) => s.loadPlan);
 
-  const section          = useUiStore((s) => s.scenarioSection);
-  const setSection       = useUiStore((s) => s.setScenarioSection);
-  const eventsFilterTypes      = useUiStore((s) => s.eventsFilterTypes);
-  const eventsFilterAccountId  = useUiStore((s) => s.eventsFilterAccountId);
-  const navigateToEvents       = useUiStore((s) => s.navigateToEvents);
+  const section               = useUiStore((s) => s.scenarioSection);
+  const setSection            = useUiStore((s) => s.setScenarioSection);
+  const eventsFilterTypes     = useUiStore((s) => s.eventsFilterTypes);
+  const eventsFilterAccountId = useUiStore((s) => s.eventsFilterAccountId);
+  const navigateToEvents      = useUiStore((s) => s.navigateToEvents);
 
-  const [expenseSub, setExpenseSub]         = useState<ExpenseSub>("expense");
-  const [cashEventsSub, setCashEventsSub]   = useState<CashEventsSub>("salary");
-  const [investmentSub, setInvestmentSub]   = useState<InvestmentSub>("account");
+  const [expenseSub, setExpenseSub]       = useState<ExpenseSub>("expense");
+  const [cashEventsSub, setCashEventsSub] = useState<CashEventsSub>("salary");
+  const [investmentSub, setInvestmentSub] = useState<InvestmentSub>("account");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -149,7 +155,7 @@ export default function ScenarioPanel() {
     try {
       const plan = await importPlan(file);
       loadPlan(plan.baseConfig, plan.overrides, plan.savedScenarios);
-      notifications.show({ color: "green", title: "Plan imported", message: "Scenario restored successfully" });
+      notifications.show({ color: "teal", title: "Plan imported", message: "Scenario restored successfully" });
     } catch {
       notifications.show({ color: "red", title: "Import failed", message: "Invalid plan file" });
     }
@@ -158,7 +164,7 @@ export default function ScenarioPanel() {
   return (
     <Stack gap="lg">
 
-      {/* ── Section switcher (2 rows × 3 columns) ── */}
+      {/* ── Section switcher ── */}
       <Box style={{
         padding: 4,
         borderRadius: "var(--mantine-radius-lg)",
@@ -178,9 +184,9 @@ export default function ScenarioPanel() {
       {section === "expenses" && (
         <Stack gap="md">
           <Group gap={6} wrap="wrap">
-            <Chip label="Expense"          active={expenseSub === "expense"}         onClick={() => setExpenseSub("expense")} />
-            <Chip label="Recurring"        active={expenseSub === "recurring"}       onClick={() => setExpenseSub("recurring")} />
-            <Chip label="Credit card"      active={expenseSub === "card"}            onClick={() => setExpenseSub("card")} />
+            <Chip label="Expense"           active={expenseSub === "expense"}          onClick={() => setExpenseSub("expense")} />
+            <Chip label="Recurring"         active={expenseSub === "recurring"}        onClick={() => setExpenseSub("recurring")} />
+            <Chip label="Credit card"       active={expenseSub === "card"}             onClick={() => setExpenseSub("card")} />
             <Chip label="Spending Override" active={expenseSub === "spendingOverride"} onClick={() => setExpenseSub("spendingOverride")} />
           </Group>
           <FormBox>
@@ -196,9 +202,9 @@ export default function ScenarioPanel() {
       {section === "cashEvents" && (
         <Stack gap="md">
           <Group gap={6} wrap="wrap">
-            <Chip label="Salary change"       active={cashEventsSub === "salary"}      onClick={() => setCashEventsSub("salary")} />
-            <Chip label="Bonus"               active={cashEventsSub === "bonus"}       onClick={() => setCashEventsSub("bonus")} />
-            <Chip label="Opening Cash"        active={cashEventsSub === "openingCash"} onClick={() => setCashEventsSub("openingCash")} />
+            <Chip label="Salary change" active={cashEventsSub === "salary"}      onClick={() => setCashEventsSub("salary")} />
+            <Chip label="Bonus"         active={cashEventsSub === "bonus"}       onClick={() => setCashEventsSub("bonus")} />
+            <Chip label="Opening Cash"  active={cashEventsSub === "openingCash"} onClick={() => setCashEventsSub("openingCash")} />
           </Group>
           <FormBox>
             {cashEventsSub === "salary"      && <AddSalaryChangeForm />}
@@ -229,15 +235,11 @@ export default function ScenarioPanel() {
       )}
 
       {section === "fd" && (
-        <FormBox>
-          <AddFdForm />
-        </FormBox>
+        <FormBox><AddFdForm /></FormBox>
       )}
 
       {section === "rd" && (
-        <FormBox>
-          <AddRdForm />
-        </FormBox>
+        <FormBox><AddRdForm /></FormBox>
       )}
 
       {section === "events" && (
@@ -263,9 +265,7 @@ export default function ScenarioPanel() {
 
             return (
               <Stack key={label} gap="xs">
-                <Text size="xs" fw={600} c="dimmed" tt="uppercase">
-                  {label}
-                </Text>
+                <Text size="sm" fw={900} tt="uppercase">{label}</Text>
                 {label === "Investments" ? (
                   <InvestmentEventGroups
                     defaultAccountId={eventsFilterAccountId}
@@ -281,9 +281,7 @@ export default function ScenarioPanel() {
       )}
 
       <Divider />
-      <Text size="xs" c="dimmed">
-        Import or export complete planner snapshots.
-      </Text>
+      <Text size="xs" c="dimmed">Import or export complete planner snapshots.</Text>
       <input
         ref={fileInputRef}
         type="file"

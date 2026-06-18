@@ -38,7 +38,7 @@ export default function AddBonusForm() {
 
       <Button
         leftSection={<IconPlus size={16} />}
-        color="green"
+        color="teal"
         disabled={!month || amount <= 0 || !description.trim()}
         onClick={() => {
           if (!month) return;

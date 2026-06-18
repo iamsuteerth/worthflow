@@ -26,6 +26,7 @@ import {
 } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
+import { money } from "@/format/money";
 import { getMaxAnnualYears, deriveAnnualEndMonth } from "@/engine/annualExpense";
 import { useBuilderStore } from "@/store/builderStore";
 import type { MonthKey } from "@/types/simulation";
@@ -52,13 +53,13 @@ const TYPE_CONFIG: Record<
     icon: <IconCreditCard size={16} />,
   },
   Bonus: {
-    color: "green",
-    accentColor: "var(--mantine-color-green-5)",
+    color: "teal",
+    accentColor: "var(--mantine-color-teal-5)",
     icon: <IconCash size={16} />,
   },
   "Salary Change": {
-    color: "blue",
-    accentColor: "var(--mantine-color-blue-5)",
+    color: "brand",
+    accentColor: "var(--mantine-color-brand-5)",
     icon: <IconTrendingUp size={16} />,
   },
 };
@@ -141,35 +142,35 @@ export default function EventsStep() {
         month: e.month,
         type: "Expense",
         description: e.label,
-        value: `₹${e.amount.toLocaleString()}`,
+        value: money(e.amount),
       })),
       ...state.creditCardBills.map((e) => ({
         id: e.id,
         month: e.month,
         type: "Credit Card",
         description: e.label,
-        value: `₹${e.amount.toLocaleString()}`,
+        value: money(e.amount),
       })),
       ...(state.recurringExpenses ?? []).map((e) => ({
         id: e.id,
         month: e.startMonth,
         type: "Recurring",
         description: `${e.name} (→ ${formatMonth(e.endMonth)})${e.frequency === "ANNUAL" ? " · Annual" : ""}`,
-        value: e.frequency === "ANNUAL" ? `₹${e.amount.toLocaleString()}/yr` : `₹${e.amount.toLocaleString()}/mo`,
+        value: e.frequency === "ANNUAL" ? `${money(e.amount)}/yr` : `${money(e.amount)}/mo`,
       })),
       ...state.bonusIncome.map((e) => ({
         id: e.id,
         month: e.month,
         type: "Bonus",
         description: e.description,
-        value: `₹${e.amount.toLocaleString()}`,
+        value: money(e.amount),
       })),
       ...state.salaryChanges.map((e) => ({
         id: e.id,
         month: e.effectiveMonth,
         type: "Salary Change",
         description: e.description,
-        value: `₹${e.newMonthlyIncome.toLocaleString()}/month`,
+        value: `${money(e.newMonthlyIncome)}/month`,
       })),
     ];
     return events.sort((a, b) => a.month.localeCompare(b.month));

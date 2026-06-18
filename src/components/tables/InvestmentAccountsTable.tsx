@@ -21,7 +21,7 @@ import { generateMonths, getMonthIndex } from "@/engine/dateUtils";
 import { buildAccountSchedule, type ScheduleRange } from "@/engine/accountSchedule";
 import type { MonthKey } from "@/types/simulation";
 import { money } from "@/components/tables/tableUtils";
-import { Emptystate } from "@/components/tables/Emptystate";
+import { EmptyState } from "@/components/ui";
 import { EditEventModal } from "@/components/scenario/RuntimeEventList";
 
 function rangeLabel(range: ScheduleRange, kind: "contribution" | "return"): string {
@@ -33,7 +33,7 @@ function rangeLabel(range: ScheduleRange, kind: "contribution" | "return"): stri
 
 function rangeColor(range: ScheduleRange, kind: "contribution" | "return"): string {
   if (range.source === "DEFAULT") return "gray";
-  return kind === "contribution" ? "indigo" : "grape";
+  return kind === "contribution" ? "brand" : "grape";
 }
 
 function rangeSpan(range: ScheduleRange, months: MonthKey[]): number {
@@ -54,7 +54,7 @@ function OverrideActions({ overrideId }: { overrideId: string }) {
     <>
       <EditEventModal event={event} opened={modalOpened} onClose={close} />
       <Group gap={4} wrap="nowrap">
-        <ActionIcon size="sm" variant="light" color="blue" onClick={open} aria-label="Edit override">
+        <ActionIcon size="sm" variant="light" color="brand" onClick={open} aria-label="Edit override">
           <IconEdit size={14} />
         </ActionIcon>
         <ActionIcon size="sm" variant="light" color="red" onClick={() => deleteEvent(event.id)} aria-label="Delete override">
@@ -122,9 +122,7 @@ function ScheduleTimeline({
 
   return (
     <Stack gap={6} style={{ flex: 1, minWidth: 260 }}>
-      <Text size="xs" fw={700} c="dimmed" tt="uppercase">
-        {title}
-      </Text>
+      <Text size="xs" fw={700} c="dimmed" tt="uppercase">{title}</Text>
       <ScheduleBar ranges={ranges} months={months} kind={kind} />
       <Stack gap={4}>
         {ranges.map((range, i) => (
@@ -135,9 +133,6 @@ function ScheduleTimeline({
   );
 }
 
-// Account deletion (with confirmation) cascades to its overrides, deposits,
-// and withdrawals via plannerStore.deleteInvestmentAccount. No new event type
-// or audit trail; baselineAccountIds is intentionally left unchanged.
 function DeleteAccountAction({ accountId, accountName }: { accountId: string; accountName: string }) {
   const deleteAccount = usePlannerStore((s) => s.deleteInvestmentAccount);
   const [opened, { open, close }] = useDisclosure(false);
@@ -193,7 +188,7 @@ export default function InvestmentAccountsTable() {
 
   if (accounts.length === 0) {
     return (
-      <Emptystate
+      <EmptyState
         title="No Investment Accounts"
         description="Add an account from the Scenario Lab → Investments → New Account."
       />
@@ -201,8 +196,6 @@ export default function InvestmentAccountsTable() {
   }
 
   const forecastMonths = generateMonths(config.forecast.startMonth, config.forecast.totalMonths);
-
-  // Get final row for closing values
   const finalRow = result.rows[result.rows.length - 1];
 
   function toggleExpanded(accountId: string) {
@@ -234,10 +227,8 @@ export default function InvestmentAccountsTable() {
                 (snap) => snap.accountId === account.id
               );
               const currentValue = finalSnapshot?.value ?? account.openingBalance;
-
               const totalContributions = result.summary.accountContributions[account.id] ?? 0;
               const xirr = result.summary.accountXirr[account.id] ?? null;
-
               const isExpanded = expanded.has(account.id);
               const schedule = buildAccountSchedule(config, account.id);
               const isNew = !baselineAccountIds.includes(account.id);
@@ -246,7 +237,7 @@ export default function InvestmentAccountsTable() {
               return (
                 <Fragment key={account.id}>
                   <Table.Tr
-                    style={isHighlighted ? { backgroundColor: "var(--mantine-color-green-light)" } : undefined}
+                    style={isHighlighted ? { backgroundColor: "var(--mantine-color-teal-light)" } : undefined}
                   >
                     <Table.Td>
                       <ActionIcon
@@ -262,13 +253,9 @@ export default function InvestmentAccountsTable() {
 
                     <Table.Td>
                       <Group gap={6} wrap="nowrap">
-                        <Text fw={600} size="sm">
-                          {account.name}
-                        </Text>
+                        <Text fw={600} size="sm">{account.name}</Text>
                         {isNew && (
-                          <Badge size="xs" variant="light" color="green">
-                            Added
-                          </Badge>
+                          <Badge size="xs" variant="light" color="violet">Added</Badge>
                         )}
                       </Group>
                       {account.openingBalance > 0 && (
@@ -307,7 +294,7 @@ export default function InvestmentAccountsTable() {
                                 <Stat label="Monthly Contribution" value={`${money(account.defaultMonthlyContribution)}/mo`} />
                                 <Stat label="Return %" value={`${account.defaultAnnualReturn}%`} />
                                 <Stat label="Total Contributions" value={money(totalContributions)} />
-                                <Stat label="XIRR" value={xirr === null ? "-" : `${xirr.toFixed(2)}%`} />
+                                <Stat label="XIRR" value={xirr === null ? "-" : `${parseFloat(xirr.toFixed(2)).toFixed(2)}%`} />
                               </SimpleGrid>
 
                               <Group align="flex-start" gap="xl" wrap="wrap">

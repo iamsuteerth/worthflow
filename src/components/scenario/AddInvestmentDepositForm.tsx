@@ -1,5 +1,6 @@
 import { Button, NumberInput, Select, Stack, Text } from "@mantine/core";
 import { IconArrowDown } from "@tabler/icons-react";
+import { money } from "@/format/money";
 import { useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
 import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
@@ -69,14 +70,14 @@ export default function AddInvestmentDepositForm() {
 
       <Text size="xs" c="dimmed">
         Available cash{month ? ` at ${formatMonth(month)}` : ""}:{" "}
-        <Text span fw={600} c={amount > availableCash ? "red" : "green"} style={{ fontVariantNumeric: "tabular-nums" }}>
-          ₹{availableCash.toLocaleString("en-IN")}
+        <Text span fw={600} c={amount > availableCash ? "red" : "teal"} style={{ fontVariantNumeric: "tabular-nums" }}>
+          {money(availableCash)}
         </Text>
       </Text>
 
       <Button
         leftSection={<IconArrowDown size={16} />}
-        color="indigo"
+        color="brand"
         disabled={!accountId || !validMonth || amount <= 0 || amount > availableCash}
         onClick={() => {
           if (!accountId || !month) return;

@@ -25,13 +25,15 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
       onClick={onClick}
       size="xs"
       fw={active ? 600 : 400}
-      c={active ? "indigo" : "dimmed"}
+      c={active ? "brand" : "dimmed"}
       style={{
         cursor: "pointer",
         padding: "4px 10px",
         borderRadius: 999,
-        border: active ? "1px solid var(--mantine-color-indigo-5)" : "1px solid var(--mantine-color-default-border)",
-        background: active ? "var(--mantine-color-indigo-light)" : "transparent",
+        border: active
+          ? "1px solid var(--mantine-color-brand-5)"
+          : "1px solid var(--mantine-color-default-border)",
+        background: active ? "var(--mantine-color-brand-light)" : "transparent",
         whiteSpace: "nowrap",
       }}
     >
@@ -39,6 +41,7 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
     </Text>
   );
 }
+
 function eventMonthRange(event: RuntimeEvent): [MonthKey, MonthKey] | null {
   if ("startMonth" in event && "endMonth" in event) return [event.startMonth, event.endMonth];
   if ("month" in event) return [event.month, event.month];
@@ -51,9 +54,6 @@ interface Props {
   monthRange?: { start: MonthKey | null; end: MonthKey | null } | null;
 }
 
-// Canonical investment-events presentation: grouped by account, then event
-// type, with a single optional account selector. Reused by the Events
-// tab, the Investment Timeline, and as the Banner's navigation target.
 export default function InvestmentEventGroups({ defaultAccountId = null, typeFilter = null, monthRange = null }: Props) {
   const events   = usePlannerStore((s) => s.overrides.runtimeEvents) ?? [];
   const accounts = usePlannerStore((s) => s.config.investments.accounts);
@@ -61,8 +61,6 @@ export default function InvestmentEventGroups({ defaultAccountId = null, typeFil
   const [accountFilter, setAccountFilter] = useState<string | null>(defaultAccountId);
   const [appliedDefault, setAppliedDefault] = useState(defaultAccountId);
 
-  // Re-derive the selection when navigation supplies a new default,
-  // without overriding the user's own subsequent selection.
   if (defaultAccountId !== appliedDefault) {
     setAppliedDefault(defaultAccountId);
     setAccountFilter(defaultAccountId);
@@ -82,9 +80,7 @@ export default function InvestmentEventGroups({ defaultAccountId = null, typeFil
 
   if (investmentEvents.length === 0) {
     return (
-      <Text size="sm" c="dimmed" ta="center" py="md">
-        No events.
-      </Text>
+      <Text size="sm" c="dimmed" ta="center" py="md">No events.</Text>
     );
   }
 
@@ -115,13 +111,11 @@ export default function InvestmentEventGroups({ defaultAccountId = null, typeFil
       </Group>
 
       {visibleAccounts.length === 0 ? (
-        <Text size="sm" c="dimmed" ta="center" py="md">
-          No events for this account.
-        </Text>
+        <Text size="sm" c="dimmed" ta="center" py="md">No events for this account.</Text>
       ) : (
         visibleAccounts.map((account) => (
           <Stack key={account.id} gap="xs">
-            <Text size="sm" fw={700}>{account.name}</Text>
+            <Text size="sm" fw={700} c="dimmed">{account.name}</Text>
             {visibleTypes.map(({ type, label }) => {
               const matching = investmentEvents.filter(
                 (e) => e.type === type && "accountId" in e && e.accountId === account.id

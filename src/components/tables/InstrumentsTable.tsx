@@ -1,10 +1,11 @@
-import { Badge, ScrollArea, Table, Text } from "@mantine/core";
+import { Badge, ScrollArea, Stack, Table, Text } from "@mantine/core";
 import { useMemo } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 import { addMonths } from "@/engine/dateUtils";
 import { formatMonth } from "@/engine/monthFormatting";
-import { Emptystate } from "@/components/tables/Emptystate";
+import { EmptyState, RecordCard, Money } from "@/components/ui";
 import { money } from "@/components/tables/tableUtils";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import type { Instrument } from "@/types/instrument";
 
 function calcMaturityValue(instrument: Instrument): {
@@ -18,7 +19,6 @@ function calcMaturityValue(instrument: Instrument): {
       p * Math.pow(1 + instrument.rate / 100, instrument.durationMonths / 12);
     return { principal: p, maturityValue, interest: maturityValue - p };
   } else {
-    // RD: each monthly contribution earns compound interest for a different duration
     const { monthlyContribution, rate, durationMonths } = instrument;
     let maturityValue = 0;
     for (let i = 1; i <= durationMonths; i++) {
@@ -31,6 +31,7 @@ function calcMaturityValue(instrument: Instrument): {
 
 export default function InstrumentsTable() {
   const config = usePlannerStore((state) => state.config);
+  const isMobile = useIsMobile();
 
   const instrumentRows = useMemo(
     () =>
@@ -44,10 +45,39 @@ export default function InstrumentsTable() {
 
   if (config.instruments.length === 0) {
     return (
-      <Emptystate
+      <EmptyState
         title="No Instruments Yet"
         description="Create an FD or RD from the Scenario Lab."
       />
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <Stack gap="sm">
+        {instrumentRows.map(({ instrument, maturity, principal, maturityValue, interest }) => (
+          <RecordCard
+            key={instrument.id}
+            header={
+              <Text fw={700} size="sm">
+                {instrument.name}{" "}
+                <Badge color={instrument.type === "FD" ? "cyan" : "grape"} variant="light" size="xs">
+                  {instrument.type}
+                </Badge>
+              </Text>
+            }
+            fields={[
+              { label: "Rate",      value: `${instrument.rate}%` },
+              { label: "Duration",  value: `${instrument.durationMonths} months` },
+              { label: "Start",     value: formatMonth(instrument.startMonth) },
+              { label: "Matures",   value: formatMonth(maturity) },
+              { label: "Principal", value: <Money value={principal} compact /> },
+              { label: "Interest",  value: <Money value={interest} compact />, valueColor: "teal" },
+              { label: "Value",     value: <Money value={maturityValue} compact />, emphasis: true },
+            ]}
+          />
+        ))}
+      </Stack>
     );
   }
 
@@ -83,17 +113,13 @@ export default function InstrumentsTable() {
               </Table.Td>
 
               <Table.Td>{instrument.rate}%</Table.Td>
-
               <Table.Td>{instrument.durationMonths} months</Table.Td>
-
               <Table.Td>{formatMonth(instrument.startMonth)}</Table.Td>
-
               <Table.Td>{formatMonth(maturity)}</Table.Td>
-
               <Table.Td>{money(principal)}</Table.Td>
 
               <Table.Td>
-                <Text c="green">{money(interest)}</Text>
+                <Text c="teal">{money(interest)}</Text>
               </Table.Td>
 
               <Table.Td>

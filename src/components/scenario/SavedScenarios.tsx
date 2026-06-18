@@ -17,22 +17,15 @@ import { IconDeviceFloppy, IconFolderOpen, IconTrash } from "@tabler/icons-react
 import { useMemo, useState } from "react";
 import { compareScenario } from "@/engine/scenarioComparison";
 import { usePlannerStore } from "@/store/plannerStore";
+import { moneySigned } from "@/format/money";
 
 function DeltaStat({ label, value }: { label: string; value: number }) {
-  const color = value > 0 ? "green" : value < 0 ? "red" : "gray";
-  const sign = value >= 0 ? "+" : "-";
+  const color = value > 0 ? "teal" : value < 0 ? "red" : "dimmed";
   return (
     <div>
-      <Text size="xs" c="dimmed">
-        {label}
-      </Text>
-      <Text
-        fw={600}
-        size="sm"
-        c={color}
-        style={{ fontVariantNumeric: "tabular-nums" }}
-      >
-        {sign}₹{Math.abs(Math.round(value)).toLocaleString()}
+      <Text size="xs" c="dimmed">{label}</Text>
+      <Text fw={600} size="sm" c={color} style={{ fontVariantNumeric: "tabular-nums" }}>
+        {moneySigned(value)}
       </Text>
     </div>
   );
@@ -69,10 +62,7 @@ export default function SavedScenarios() {
     <>
       <Modal
         opened={opened}
-        onClose={() => {
-          setScenarioName("");
-          close();
-        }}
+        onClose={() => { setScenarioName(""); close(); }}
         title="Save Scenario"
         centered
         size="sm"
@@ -87,13 +77,7 @@ export default function SavedScenarios() {
             autoFocus
           />
           <Group justify="flex-end" gap="xs">
-            <Button
-              variant="default"
-              onClick={() => {
-                setScenarioName("");
-                close();
-              }}
-            >
+            <Button variant="default" onClick={() => { setScenarioName(""); close(); }}>
               Cancel
             </Button>
             <Button
@@ -109,9 +93,7 @@ export default function SavedScenarios() {
 
       <Stack gap="sm">
         <Group justify="space-between">
-          <Text fw={600} size="sm">
-            Saved Scenarios
-          </Text>
+          <Text fw={600} size="sm">Saved Scenarios</Text>
           <Button
             size="xs"
             variant="light"
@@ -123,10 +105,8 @@ export default function SavedScenarios() {
         </Group>
 
         {scenarios.length === 0 ? (
-          <Card withBorder radius="md" p="md">
-            <Text size="sm" c="dimmed" ta="center">
-              No saved scenarios yet.
-            </Text>
+          <Card withBorder radius="lg" p="md">
+            <Text size="sm" c="dimmed" ta="center">No saved scenarios yet.</Text>
           </Card>
         ) : (
           scenarios.map((scenario) => {
@@ -134,12 +114,10 @@ export default function SavedScenarios() {
             const changeCount = scenario.overrides.runtimeEvents?.length ?? 0;
 
             return (
-              <Card key={scenario.id} withBorder radius="md" p="md">
+              <Card key={scenario.id} withBorder radius="lg" p="md">
                 <Group justify="space-between" align="flex-start" mb="xs">
                   <Group gap="xs">
-                    <Text fw={700} size="sm">
-                      {scenario.name}
-                    </Text>
+                    <Text fw={700} size="sm">{scenario.name}</Text>
                     <Badge size="sm" variant="light" color="gray">
                       {changeCount} change{changeCount !== 1 ? "s" : ""}
                     </Badge>
@@ -148,7 +126,7 @@ export default function SavedScenarios() {
                     <Tooltip label="Load scenario">
                       <ActionIcon
                         variant="light"
-                        color="blue"
+                        color="brand"
                         size="sm"
                         onClick={() => loadScenario(scenario.id)}
                       >

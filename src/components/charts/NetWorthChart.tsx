@@ -1,27 +1,14 @@
-import { Card, Stack, Text, Badge, Group, Divider, Paper } from "@mantine/core";
-import { LineChart } from "@mantine/charts";
+import { Card, Stack, Text, Group, Divider, Box } from "@mantine/core";
+import MonthRangeFilter from "@/components/common/MonthRangeFilter";
+import { AreaChart } from "@mantine/charts";
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { formatMonth } from "@/engine/monthFormatting";
+import { moneyCompact, moneySigned } from "@/format/money";
+import { EmptyState } from "@/components/ui";
 import type { FinancialEvent } from "@/types/events";
 
-function formatMoney(value: number) {
-  return "₹" + Math.round(value).toLocaleString("en-IN");
-}
-
-function formatMoneyCompact(value: number) {
-  if (value >= 10_000_000) return `₹${(value / 10_000_000).toFixed(2)} Cr`;
-  if (value >= 100_000) return `₹${(value / 100_000).toFixed(2)} L`;
-  if (value >= 1_000) return `₹${(value / 1_000).toFixed(1)} K`;
-  return `₹${Math.round(value)}`;
-}
-
-function formatDelta(value: number) {
-  const sign = value >= 0 ? "+" : "";
-  return `${sign}${formatMoney(value)}`;
-}
-
 function deltaColor(value: number): string {
-  if (value > 0) return "green";
+  if (value > 0) return "teal";
   if (value < 0) return "red";
   return "gray";
 }
@@ -35,63 +22,54 @@ type EventSummary = {
 
 function getEventSummary(events: FinancialEvent[]): EventSummary[] {
   const totals = {
-    bonus: 0,
-    expenses: 0,
-    recurringExpenses: 0,
-    creditCard: 0,
-    fdCreated: 0,
-    fdMatured: 0,
-    rdCreated: 0,
-    rdMatured: 0,
-    investmentDeposit: 0,
-    investmentWithdrawal: 0,
-    amountOverride: 0,
-    returnOverride: 0,
+    bonus: 0, expenses: 0, recurringExpenses: 0, creditCard: 0,
+    fdCreated: 0, fdMatured: 0, rdCreated: 0, rdMatured: 0,
+    investmentDeposit: 0, investmentWithdrawal: 0,
+    amountOverride: 0, returnOverride: 0,
   };
 
   for (const event of events) {
     switch (event.type) {
-      case "BONUS_INCOME":               totals.bonus += event.amount; break;
-      case "ONE_OFF_EXPENSE":            totals.expenses += event.amount; break;
-      case "RECURRING_EXPENSE":          totals.recurringExpenses += event.amount; break;
-      case "CREDIT_CARD_EXPENSE":        totals.creditCard += event.amount; break;
-      case "FD_CREATED":                 totals.fdCreated += event.amount; break;
-      case "FD_MATURED":                 totals.fdMatured += event.amount; break;
-      case "RD_CREATED":                 totals.rdCreated += event.amount; break;
-      case "RD_MATURED":                 totals.rdMatured += event.amount; break;
-      case "INVESTMENT_DEPOSIT":         totals.investmentDeposit += event.amount; break;
-      case "INVESTMENT_WITHDRAWAL":      totals.investmentWithdrawal += event.amount; break;
-      case "ACCOUNT_AMOUNT_OVERRIDE":    totals.amountOverride += 1; break;
-      case "ACCOUNT_RETURN_OVERRIDE":    totals.returnOverride += 1; break;
+      case "BONUS_INCOME":            totals.bonus += event.amount; break;
+      case "ONE_OFF_EXPENSE":         totals.expenses += event.amount; break;
+      case "RECURRING_EXPENSE":       totals.recurringExpenses += event.amount; break;
+      case "CREDIT_CARD_EXPENSE":     totals.creditCard += event.amount; break;
+      case "FD_CREATED":              totals.fdCreated += event.amount; break;
+      case "FD_MATURED":              totals.fdMatured += event.amount; break;
+      case "RD_CREATED":              totals.rdCreated += event.amount; break;
+      case "RD_MATURED":              totals.rdMatured += event.amount; break;
+      case "INVESTMENT_DEPOSIT":      totals.investmentDeposit += event.amount; break;
+      case "INVESTMENT_WITHDRAWAL":   totals.investmentWithdrawal += event.amount; break;
+      case "ACCOUNT_AMOUNT_OVERRIDE": totals.amountOverride += 1; break;
+      case "ACCOUNT_RETURN_OVERRIDE": totals.returnOverride += 1; break;
     }
   }
 
   const results: EventSummary[] = [];
-
   if (totals.bonus > 0)
-    results.push({ label: "Bonus",               amount: totals.bonus,              sign: "+", color: "green"  });
+    results.push({ label: "Bonus",               amount: totals.bonus,             sign: "+", color: "teal"   });
   if (totals.expenses > 0)
-    results.push({ label: "Expenses",             amount: totals.expenses,           sign: "-", color: "red"    });
+    results.push({ label: "Expenses",             amount: totals.expenses,          sign: "-", color: "red"    });
   if (totals.recurringExpenses > 0)
-    results.push({ label: "Recurring",            amount: totals.recurringExpenses,  sign: "-", color: "red"    });
+    results.push({ label: "Recurring",            amount: totals.recurringExpenses, sign: "-", color: "red"    });
   if (totals.creditCard > 0)
-    results.push({ label: "Credit Card",          amount: totals.creditCard,         sign: "-", color: "orange" });
+    results.push({ label: "Credit Card",          amount: totals.creditCard,        sign: "-", color: "orange" });
   if (totals.fdCreated > 0)
-    results.push({ label: "FD Created",           amount: totals.fdCreated,          sign: "-", color: "orange" });
+    results.push({ label: "FD Created",           amount: totals.fdCreated,         sign: "-", color: "cyan"   });
   if (totals.fdMatured > 0)
-    results.push({ label: "FD Matured",           amount: totals.fdMatured,          sign: "+", color: "green"  });
+    results.push({ label: "FD Matured",           amount: totals.fdMatured,         sign: "+", color: "teal"   });
   if (totals.rdCreated > 0)
-    results.push({ label: "RD Contributions",     amount: totals.rdCreated,          sign: "-", color: "orange" });
+    results.push({ label: "RD Contributions",     amount: totals.rdCreated,         sign: "-", color: "grape"  });
   if (totals.rdMatured > 0)
-    results.push({ label: "RD Matured",           amount: totals.rdMatured,          sign: "+", color: "green"  });
+    results.push({ label: "RD Matured",           amount: totals.rdMatured,         sign: "+", color: "teal"   });
   if (totals.investmentDeposit > 0)
-    results.push({ label: "Portfolio Deposit",    amount: totals.investmentDeposit,  sign: "-", color: "orange" });
+    results.push({ label: "Portfolio Deposit",    amount: totals.investmentDeposit,    sign: "-", color: "violet" });
   if (totals.investmentWithdrawal > 0)
-    results.push({ label: "Portfolio Withdrawal", amount: totals.investmentWithdrawal, sign: "+", color: "green" });
+    results.push({ label: "Portfolio Withdrawal", amount: totals.investmentWithdrawal, sign: "+", color: "teal"   });
   if (totals.amountOverride > 0)
-    results.push({ label: "Amount Override",      amount: 0,                         sign: null, color: "gray"  });
+    results.push({ label: "Amount Override",      amount: 0, sign: null, color: "gray" });
   if (totals.returnOverride > 0)
-    results.push({ label: "Return Override",      amount: 0,                         sign: null, color: "gray"  });
+    results.push({ label: "Return Override",      amount: 0, sign: null, color: "gray" });
 
   return results;
 }
@@ -135,16 +113,18 @@ function ChartTooltip({
           <Group key={rowLabel} justify="space-between" gap="xs" wrap="nowrap">
             <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>{rowLabel}</Text>
             <Group gap={6} wrap="nowrap">
-              <Text size="xs" fw={500}>{formatMoneyCompact(value)}</Text>
+              <Text size="xs" fw={500} style={{ fontVariantNumeric: "tabular-nums" }}>
+                {moneyCompact(value)}
+              </Text>
               {delta !== null && (
-                <Badge
+                <Text
                   size="xs"
-                  variant="light"
-                  color={deltaColor(delta)}
+                  fw={500}
+                  c={deltaColor(delta)}
                   style={{ fontVariantNumeric: "tabular-nums" }}
                 >
-                  {formatDelta(delta)}
-                </Badge>
+                  {moneySigned(delta)}
+                </Text>
               )}
             </Group>
           </Group>
@@ -160,8 +140,8 @@ function ChartTooltip({
               <Group key={evtLabel} justify="space-between" gap="xs" wrap="nowrap">
                 <Text size="xs" c={color}>{evtLabel}</Text>
                 {amount > 0 && sign && (
-                  <Text size="xs" c={color} fw={500}>
-                    {sign}{formatMoneyCompact(amount)}
+                  <Text size="xs" c={color} fw={500} style={{ fontVariantNumeric: "tabular-nums" }}>
+                    {sign}{moneyCompact(amount)}
                   </Text>
                 )}
               </Group>
@@ -174,9 +154,9 @@ function ChartTooltip({
 }
 
 const SERIES = [
-  { name: "cash",             label: "Cash",        color: "blue"   },
-  { name: "investmentCorpus", label: "Investments", color: "green"  },
-  { name: "netWorth",         label: "Net Worth",   color: "violet" },
+  { name: "cash",             label: "Cash",        color: "brand.6"  },
+  { name: "investmentCorpus", label: "Investments", color: "violet.6" },
+  { name: "netWorth",         label: "Net Worth",   color: "teal.6"   },
 ];
 
 export default function NetWorthChart() {
@@ -203,31 +183,30 @@ export default function NetWorthChart() {
   });
 
   return (
-    <Card mt="lg" radius="xl" shadow="xs" withBorder p="lg" style={{ minWidth: 0 }}>
+    <Card mt="lg" radius="lg" shadow="sm" withBorder p="lg" style={{ minWidth: 0 }}>
       <Stack gap="md" style={{ minWidth: 0 }}>
-        <Stack gap={2}>
-          <Text fw={700}>Wealth Projection</Text>
-          <Text size="sm" c="dimmed">Cash, investments, and total net worth over time</Text>
-        </Stack>
+        <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
+          <Stack gap={2}>
+            <Text fw={700} size="lg">Wealth Projection</Text>
+            <Text size="sm" c="dimmed">Cash, investments, and net worth over time</Text>
+          </Stack>
+          <Box><MonthRangeFilter /></Box>
+        </Group>
 
         {data.length === 0 ? (
-          <Paper withBorder radius="xl" p="xl">
-            <Stack gap={4} align="center">
-              <Text fw={600}>No Data In Range</Text>
-              <Text size="sm" c="dimmed">
-                Adjust the month range filter to see the wealth projection.
-              </Text>
-            </Stack>
-          </Paper>
+          <EmptyState
+            title="No Data In Range"
+            description="Adjust the month range filter to see the wealth projection."
+          />
         ) : (
-          <LineChart
+          <AreaChart
             h={360}
             w="100%"
             data={data}
             dataKey="month"
             withLegend
             curveType="monotone"
-            valueFormatter={(value) => formatMoneyCompact(Number(value))}
+            valueFormatter={(value) => moneyCompact(Number(value))}
             series={SERIES}
             tooltipProps={{
               content: ({ label, payload }) => (
@@ -243,3 +222,4 @@ export default function NetWorthChart() {
     </Card>
   );
 }
+

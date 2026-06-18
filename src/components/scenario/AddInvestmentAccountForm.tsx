@@ -86,7 +86,7 @@ export default function AddInvestmentAccountForm() {
 
       <Button
         leftSection={<IconPlus size={16} />}
-        color="grape"
+        color="violet"
         disabled={!canAdd}
         onClick={() => {
           if (!startMonth) return;
@@ -99,7 +99,7 @@ export default function AddInvestmentAccountForm() {
           });
           if (newId) {
             notifications.show({
-              color: "green",
+              color: "teal",
               title: "Account created",
               message: `${name.trim()} was added to your investment accounts`,
             });
