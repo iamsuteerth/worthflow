@@ -7,7 +7,7 @@ import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
 import type { MonthKey } from "@/types/simulation";
 import MonthSelect from "@/components/common/MonthSelect";
 import InstrumentPreview from "@/components/scenario/InstrumentPreview";
-import { money } from "@/components/scenario/moneyFormat";
+import { money } from "@/format/money";
 
 export default function AddFdForm() {
   const addFd = usePlannerStore((state) => state.addTransientFd);
