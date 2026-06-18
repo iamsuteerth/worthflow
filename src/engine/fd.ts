@@ -36,39 +36,6 @@ export function isFdActive(
   );
 }
 
-export function getFdValue(
-  fd: FixedDeposit,
-  month: MonthKey
-): number {
-  if (!isFdActive(fd, month)) {
-    return 0;
-  }
-
-  const startDate =
-    new Date(`${fd.startMonth}-01`);
-
-  const currentDate =
-    new Date(`${month}-01`);
-
-  const elapsedMonths =
-    (currentDate.getFullYear() -
-      startDate.getFullYear()) *
-      12 +
-    (currentDate.getMonth() -
-      startDate.getMonth());
-
-  const years =
-    elapsedMonths / 12;
-
-  return (
-    fd.principal *
-    Math.pow(
-      1 + fd.rate / 100,
-      years
-    )
-  );
-}
-
 export function createFdPosition(
   fd: FixedDeposit
 ): FdPosition {

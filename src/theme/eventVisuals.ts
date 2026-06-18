@@ -137,9 +137,3 @@ const FALLBACK: EventVisual = {
 export function getEventVisual(type: string): EventVisual {
   return VISUALS[type] ?? FALLBACK;
 }
-
-export function polarityColor(polarity: EventPolarity): string {
-  if (polarity === "positive") return "teal";
-  if (polarity === "negative") return "red";
-  return "gray";
-}

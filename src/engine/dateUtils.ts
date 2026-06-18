@@ -1,20 +1,5 @@
 import type { MonthKey } from "@/types/simulation";
 
-const MONTH_NAMES = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
 export function generateMonths(
   startMonth: MonthKey,
   totalMonths: number
@@ -41,17 +26,6 @@ export function generateMonths(
   }
 
   return months;
-}
-
-export function formatMonthLabel(
-  monthKey: MonthKey
-): string {
-  const [yearStr, monthStr] = monthKey.split("-");
-
-  const year = Number(yearStr);
-  const month = Number(monthStr);
-
-  return `${MONTH_NAMES[month - 1]} ${String(year).slice(2)}`;
 }
 
 export function getMonthIndex(
@@ -88,32 +62,3 @@ export function addMonths(
   )}` as MonthKey;
 }
 
-export function nextMonth(
-  month: string
-) {
-  const [
-    year,
-    monthNumber,
-  ] =
-    month
-      .split("-")
-      .map(Number);
-
-  const date =
-    new Date(
-      year,
-      monthNumber - 1,
-      1
-    );
-
-  date.setMonth(
-    date.getMonth() + 1
-  );
-
-  return `${date.getFullYear()}-${String(
-    date.getMonth() + 1
-  ).padStart(
-    2,
-    "0"
-  )}`;
-}
