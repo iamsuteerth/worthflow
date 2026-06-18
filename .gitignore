@@ -23,5 +23,20 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.production
 *.dev*
 .claude
+
+# Personal financial data
+src/data/config.json
+
+# Local dev / testing only
+docker-compose-local.yml
+scripts
+
+# Terraform state and secrets
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/terraform.tfvars
+terraform/.terraform.lock.hcl

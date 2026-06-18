@@ -1,5 +1,5 @@
 {
-  "name": "finance-planner",
+  "name": "worth-flow",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,12 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1071.0",
     "@fontsource/plus-jakarta-sans": "^5.2.8",
     "@mantine/charts": "^9.3.1",
     "@mantine/core": "^9.3.1",
     "@mantine/hooks": "^9.3.1",
     "@mantine/notifications": "^9.3.1",
     "@tabler/icons-react": "^3.44.0",
+    "aws-amplify": "^6.18.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "recharts": "^3.8.1",

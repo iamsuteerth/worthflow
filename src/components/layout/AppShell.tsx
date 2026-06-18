@@ -1,13 +1,15 @@
 import {
-  ActionIcon,
   AppShell,
+  Avatar,
   Burger,
   Drawer,
   Group,
   Stack,
   Text,
   Title,
+  UnstyledButton,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import type { ReactNode } from "react";
 
 import ThemeToggle from "@/components/layout/ThemeToggle";
@@ -16,21 +18,27 @@ import ScenarioPanel from "@/components/scenario/ScenarioPanel";
 import { usePlannerStore } from "@/store/plannerStore";
 import { useUiStore } from "@/store/uiStore";
 import { useAuthStore } from "@/store/authStore";
-import { IconLogout } from "@tabler/icons-react";
+import { UserProfileModal } from "@/components/profile/UserProfileModal";
 
 interface Props {
   children: ReactNode;
+}
+
+function getInitials(email: string): string {
+  return (email.split("@")[0]?.[0] ?? "?").toUpperCase();
 }
 
 export default function PlannerShell({ children }: Props) {
   const opened = useUiStore((state) => state.scenarioDrawerOpened);
   const open = useUiStore((state) => state.openScenarioDrawer);
   const close = useUiStore((state) => state.closeScenarioDrawer);
-
   const activeView = usePlannerStore((state) => state.activeView);
-  const logout = useAuthStore((state) => state.logout);
-
+  const user = useAuthStore((state) => state.user);
   const isMobile = useIsMobile();
+
+  const [profileOpened, { open: openProfile, close: closeProfile }] = useDisclosure(false);
+
+  const initials = user ? getInitials(user.email) : "?";
 
   return (
     <>
@@ -57,6 +65,8 @@ export default function PlannerShell({ children }: Props) {
         </Drawer>
       )}
 
+      <UserProfileModal opened={profileOpened} onClose={closeProfile} />
+
       <AppShell
         header={{ height: 60 }}
         navbar={
@@ -81,27 +91,18 @@ export default function PlannerShell({ children }: Props) {
                   size="sm"
                 />
               )}
-
-              <Stack gap={2}>
-                <Title order={4} fw={700} style={{ lineHeight: 1.1 }}>
-                  Finance Planner
-                </Title>
-                <Text size="xs" c="dimmed" style={{ lineHeight: 1 }}>
-                  Personal Wealth Forecast
-                </Text>
-              </Stack>
+              <Title order={4} fw={700}>
+                Worth Flow
+              </Title>
             </Group>
 
             <Group gap="xs">
               <ThemeToggle />
-              <ActionIcon
-                variant="subtle"
-                radius="md"
-                onClick={logout}
-                aria-label="Log out"
-              >
-                <IconLogout size={18} />
-              </ActionIcon>
+              <UnstyledButton onClick={openProfile} aria-label="Profile">
+                <Avatar radius="xl" size="sm" color="brand" style={{ cursor: "pointer" }}>
+                  {initials}
+                </Avatar>
+              </UnstyledButton>
             </Group>
           </Group>
         </AppShell.Header>

@@ -8,7 +8,7 @@ import { theme } from "@/theme/theme";
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [colorScheme, setColorScheme] = useLocalStorage<ColorScheme>({
-    key: "finance-planner-theme",
+    key: "worth-flow-theme",
     defaultValue: "light",
   });
 

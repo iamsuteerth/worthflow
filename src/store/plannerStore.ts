@@ -1,9 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import configJson from "@/data/config.json";
-
 import type { PlannerConfig } from "@/types/config";
+type MonthKey = PlannerConfig['forecast']['startMonth']
 import type { PlannerOverrides } from "@/types/overrides";
 import type { RuntimeEvent } from "@/types/runtimeEvent";
 import type {
@@ -15,7 +14,6 @@ import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 import { simulate } from "@/engine/simulate";
 import { isValidAnnualRange } from "@/engine/annualExpense";
 import { generateMonths } from "@/engine/dateUtils";
-import type { MonthKey } from "@/types/simulation";
 import type { SavedScenario } from "@/types/scenario";
 import type { InvestmentAccount } from "@/types/investmentAccount";
 import { uniquifyAccountName } from "@/utils/uniquifyAccountName";
@@ -105,7 +103,24 @@ interface PlannerStore {
   deleteScenario: (id: string) => void;
 }
 
-const initialConfig = configJson as PlannerConfig;
+function currentMonthKey(): PlannerConfig['forecast']['startMonth'] {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}` as PlannerConfig['forecast']['startMonth']
+}
+
+const initialConfig: PlannerConfig = {
+  forecast: { startMonth: currentMonthKey(), totalMonths: 36 },
+  income: { monthly: 0 },
+  cash: { openingBalance: 0 },
+  expenses: { defaultMonthly: 0, overrides: {} },
+  investments: { accounts: [], amountOverrides: [], returnOverrides: [] },
+  oneOffExpenses: [],
+  creditCardBills: [],
+  recurringExpenses: [],
+  instruments: [],
+  salaryChanges: [],
+  bonusIncome: [],
+};
 
 function captureBaselineAccountIds(config: PlannerConfig): string[] {
   return config.investments.accounts.map((a) => a.id);
@@ -142,7 +157,7 @@ export const usePlannerStore = create<PlannerStore>()(
       overrides: {},
       config: initialConfig,
       savedScenarios: [],
-      activeView: "forecast",
+      activeView: "builder",
       baselineAccountIds: captureBaselineAccountIds(initialConfig),
 
       setActiveView: (activeView) => set({ activeView }),
@@ -444,7 +459,7 @@ export const usePlannerStore = create<PlannerStore>()(
         })),
     }),
     {
-      name: "finance-planner-state-v3",
+      name: "worth-flow-state-v3",
       partialize: (s) => ({
         baseConfig: s.baseConfig,
         overrides: s.overrides,

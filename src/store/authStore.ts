@@ -1,64 +1,48 @@
-import { create } from "zustand";
-
-const SESSION_KEY = "finance-planner-session";
-
-const SESSION_DURATION = 60 * 60 * 1000;
+import { create } from 'zustand'
+import { authService, type AuthUser } from '@/lib/auth'
 
 interface AuthStore {
-  authenticated: boolean;
-  login: (password: string) => boolean;
-  logout: () => void;
-  restore: () => void;
+  user: AuthUser | null
+  authenticated: boolean
+  loading: boolean
+  hydrate: () => Promise<void>
+  signIn: (email: string, password: string) => Promise<void>
+  signUp: (email: string, password: string) => Promise<void>
+  confirmSignUp: (email: string, code: string) => Promise<void>
+  resendSignUpCode: (email: string) => Promise<void>
+  signOut: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthStore>((set) => ({
+  user: null,
   authenticated: false,
+  loading: true,
 
-  login: (password) => {
-    const expected = import.meta.env.VITE_APP_PASSWORD;
-
-    if (password !== expected) {
-      return false;
-    }
-
-    localStorage.setItem(
-      SESSION_KEY,
-      JSON.stringify({
-        expiresAt: Date.now() + SESSION_DURATION,
-      })
-    );
-
-    set({ authenticated: true });
-
-    return true;
+  hydrate: async () => {
+    const user = await authService.currentUser()
+    set({ user, authenticated: user !== null, loading: false })
   },
 
-  logout: () => {
-    localStorage.removeItem(SESSION_KEY);
-    set({ authenticated: false });
+  signIn: async (email, password) => {
+    await authService.signIn(email, password)
+    const user = await authService.currentUser()
+    set({ user, authenticated: user !== null })
   },
 
-  restore: () => {
-    const raw = localStorage.getItem(SESSION_KEY);
-
-    if (!raw) {
-      set({ authenticated: false });
-      return;
-    }
-
-    try {
-      const session = JSON.parse(raw);
-
-      if (Date.now() >= session.expiresAt) {
-        localStorage.removeItem(SESSION_KEY);
-        set({ authenticated: false });
-        return;
-      }
-
-      set({ authenticated: true });
-    } catch {
-      localStorage.removeItem(SESSION_KEY);
-      set({ authenticated: false });
-    }
+  signUp: async (email, password) => {
+    await authService.signUp(email, password)
   },
-}));
+
+  confirmSignUp: async (email, code) => {
+    await authService.confirmSignUp(email, code)
+  },
+
+  resendSignUpCode: async (email) => {
+    await authService.resendSignUpCode(email)
+  },
+
+  signOut: async () => {
+    await authService.signOut()
+    set({ user: null, authenticated: false })
+  },
+}))

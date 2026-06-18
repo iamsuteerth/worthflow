@@ -1,5 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { bootstrapAmplify } from "@/lib/amplify";
+
+bootstrapAmplify();
 
 import "@mantine/core/styles.css";
 import "@mantine/charts/styles.css";
