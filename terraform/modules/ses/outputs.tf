@@ -1,5 +1,4 @@
-# NOTE: After terraform apply, check your Gmail inbox for the SES verification email
-# and click the link before Cognito email delivery will work.
 output "sender_arn" {
-  value = aws_ses_email_identity.sender.arn
+  description = "ARN of the verified SES domain identity — passed to Cognito email_configuration."
+  value       = data.aws_ses_domain_identity.main.arn
 }

@@ -12,27 +12,7 @@ paths locally.
 
 ## Architecture at a glance
 
-```
-                    ┌─────────────────────────────────────────────┐
-   Browser (SPA)    │                    AWS (ap-south-1)         │
-   ─────────────    │                                             │
-   aws-amplify  ───────►  Cognito User Pool   ────┐               │
-   (email + pwd)    │     (email/password,        │ PostConfirm.  │
-                    │      OTP verification)      ▼               │
-                    │                          Lambda (sets       │
-                    │                        custom:member_since) │
-                    │                                             │
-   @aws-sdk/s3  ───────►  Cognito Identity Pool ──► temporary IAM │
-   (cloud saves)    │     (JWT → AWS creds)        credentials    │
-                    │                                  │          │
-                    │                                  ▼          │
-                    │                     S3 bucket (worth-flow-  │
-                    │                     saves), per-user prefix │
-                    │                                             │
-   verification  ◄──────  Amazon SES (sends Cognito emails)       │
-   emails           │                                             │
-                    └─────────────────────────────────────────────┘
-```
+![Worth Flow AWS Architecture](./architecture_diagram.png)
 
 **Flow:**
 1. A user signs up / signs in with email + password via **Cognito User Pool** (handled by `aws-amplify`).
@@ -50,7 +30,7 @@ All infrastructure lives in [`/terraform`](./terraform), split into five modules
 
 | Module | Resources | Notes |
 | --- | --- | --- |
-| `ses` | `aws_ses_email_identity` | Sender `worthflow.app@gmail.com`, display name "Worth Flow". |
+| `ses` | `aws_ses_domain_identity` (data source) | Reads the verified `worthflow.in` domain identity; Cognito sends as `noreply@worthflow.in`. The identity is verified out-of-band via DNS (DKIM/SPF), so Terraform only references it, never manages its lifecycle. |
 | `cognito` | User Pool, User Pool Client, Lambda invoke permission | Email login, password policy (8+ chars, upper/lower/number), `custom:member_since` attribute, HTML verification email template, `prevent_user_existence_errors = ENABLED`, no client secret, SRP auth. |
 | `post_confirmation` | Lambda, IAM role + policies, CloudWatch log group | Node.js 22 function that sets `custom:member_since`; logs retained 14 days. |
 | `storage` | S3 bucket + public-access block, versioning, lifecycle, SSE, CORS | Bucket `worth-flow-saves`. Versioning on; non-current versions expire after 90 days; SSE-S3 (AES256); CORS limited to the app origins. |
@@ -87,7 +67,8 @@ downloading every `.wfplan`. Save files are capped at **5 per user** (enforced i
 - Terraform ≥ 1.6
 - AWS CLI configured with a profile named `worth-flow` (an IAM user/role with rights to create
   the resources above)
-- A dedicated sender mailbox you control (currently `worthflow.app@gmail.com`)
+- A domain you control (`worthflow.in`), verified as an **SES domain identity** with DKIM enabled
+  (see step 2). Sending from `noreply@worthflow.in` needs only domain verification — no mailbox.
 
 ### 1. Bootstrap the Terraform state backend (one time)
 
@@ -116,30 +97,34 @@ aws s3api put-bucket-encryption \
 
 > No DynamoDB table is needed — locking uses the S3 backend's `use_lockfile` option.
 
-### 2. Configure variables
+### 2. Verify the SES domain identity (manual, one time)
 
-Create `terraform/terraform.tfvars` (gitignored):
+In the AWS Console → SES → **Create identity → Domain** → enter `worthflow.in`, enable **Easy DKIM**.
+SES gives you a set of DNS records (one verification TXT, three DKIM CNAMEs); add them at your DNS
+provider. Add an SPF (`v=spf1 include:amazonses.com ~all`) and optional DMARC record too. Wait until
+the identity shows **Verified** and DKIM **enabled**.
 
-```hcl
-sender_email = "worthflow.app@gmail.com"
-```
+> Terraform does **not** create this identity — it reads it via a `data "aws_ses_domain_identity"`
+> source, so the domain must already be verified before `terraform plan`.
 
-Other variables (`aws_region`, `app_name`) have sensible defaults in
-[`terraform/variables.tf`](./terraform/variables.tf).
+### 3. Configure variables (optional)
 
-### 3. Init & apply
+All variables (`aws_region`, `app_name`, `domain`) have sensible defaults in
+[`terraform/variables.tf`](./terraform/variables.tf) — `domain` defaults to `worthflow.in`. No
+`terraform.tfvars` is required for the primary deployment; create one only to override a default
+(e.g. a `staging.worthflow.in` environment).
+
+### 4. Init & apply
 
 ```bash
 cd terraform
 terraform init       # connects to the S3 backend
-terraform plan        # review — expect creates only, 0 to destroy
+terraform plan        # review the changes
 terraform apply
 ```
 
-### 4. Verify the SES sender (manual, one time)
-
-After apply, SES sends a verification email to the sender address. **Click the link** —
-Cognito cannot send any emails until the sender identity is verified.
+The Cognito `from_email_address` is derived automatically from `domain` as
+`Worth Flow <noreply@${domain}>`, and the S3 CORS origins include `https://${domain}`.
 
 ### 5. Lift the SES sandbox (for real users)
 
@@ -209,8 +194,8 @@ VITE_S3_ENDPOINT=http://localhost:4566
 1. Set the six production `VITE_*` variables in **Project → Settings → Environment Variables**
    (Production scope).
 2. **Redeploy** — Vercel only picks up env-var changes on a new deployment.
-3. The production origin (`https://worthflow.vercel.app`) must be in the S3 bucket's CORS
-   `allowed_origins` (it is, via the `storage` module's `allowed_origins` input).
+3. The production origin (`https://worthflow.in`) must be in the S3 bucket's CORS
+   `allowed_origins` (it is, via the `storage` module's `allowed_origins` input, derived from `domain`).
 
 Build locally to sanity-check before pushing:
 
@@ -242,11 +227,10 @@ isolation of the real Identity Pool.
 
 ## Operations notes
 
-- **Destroying infra:** `terraform destroy` deletes the SES *email identity* (you'd re-click a
-  verification email on the next apply) but **not** your SES production access, which is an
-  account-level setting that persists. The `worth-flow-saves` bucket has `force_destroy = false`,
-  so a destroy will fail until the bucket is manually emptied — an intentional guard against
-  deleting user data.
+- **Destroying infra:** the SES domain identity is **not** Terraform-managed (it's a data source),
+  so `terraform destroy` leaves it — and your SES production access, an account-level setting —
+  untouched. The `worth-flow-saves` bucket has `force_destroy = false`, so a destroy will fail until
+  the bucket is manually emptied — an intentional guard against deleting user data.
 - **Lambda logs:** retained 14 days in `/aws/lambda/worth-flow-post-confirmation`.
 - **`member_since` is best-effort:** the PostConfirmation Lambda swallows its own errors and
   always returns, so a transient failure can never block a user from confirming their account.

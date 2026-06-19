@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Security - Worth Flow</title>
+  <meta name="description" content="Worth Flow security overview - per-user data isolation, encryption at rest and in transit, Cognito auth, and responsible disclosure." />
+  <link rel="canonical" href="https://worthflow.in/security" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.7; }
+    a { color: #6366f1; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+    .back { font-size: 0.875rem; color: #64748b; display: inline-flex; align-items: center; gap: 0.25rem; margin-bottom: 2rem; }
+    h1 { font-size: 2rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; }
+    .meta { font-size: 0.85rem; color: #94a3b8; margin-bottom: 2.5rem; }
+    h2 { font-size: 1.125rem; font-weight: 600; color: #0f172a; margin: 2rem 0 0.75rem; }
+    p { margin-bottom: 1rem; color: #334155; }
+    ul { padding-left: 1.5rem; margin-bottom: 1rem; color: #334155; }
+    li { margin-bottom: 0.35rem; }
+    .callout { background: #eef2ff; border-left: 3px solid #6366f1; border-radius: 6px; padding: 0.85rem 1rem; margin-bottom: 1.25rem; font-size: 0.9rem; color: #3730a3; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.1rem; }
+    .card strong { display: block; color: #0f172a; margin-bottom: 0.25rem; }
+    .card span { font-size: 0.875rem; color: #64748b; }
+    footer { font-size: 0.8rem; color: #94a3b8; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+    footer a { color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="/">&#8592; Back to Worth Flow</a>
+    <h1>Security</h1>
+    <p class="meta">Worth Flow is a personal hobby project. Here is how your data is protected.</p>
+
+    <div class="callout">
+      All financial calculations run <strong>in your browser</strong>. Worth Flow has no application server, and no third party ever sees the contents of your financial plan.
+    </div>
+
+    <h2>Security properties at a glance</h2>
+    <div class="grid">
+      <div class="card">
+        <strong>Client-side compute</strong>
+        <span>All projections run locally in your browser - nothing is sent to a server.</span>
+      </div>
+      <div class="card">
+        <strong>Per-user data isolation</strong>
+        <span>Cloud saves are stored in a private S3 prefix scoped exclusively to your account via IAM policy.</span>
+      </div>
+      <div class="card">
+        <strong>Encryption at rest</strong>
+        <span>S3 storage uses AES-256 server-side encryption (SSE-S3) for all saved plans.</span>
+      </div>
+      <div class="card">
+        <strong>Encryption in transit</strong>
+        <span>All connections use TLS. Non-TLS requests to S3 are denied by bucket policy.</span>
+      </div>
+      <div class="card">
+        <strong>No static credentials</strong>
+        <span>The app uses short-lived IAM credentials from Cognito Identity Pool - no long-lived AWS keys anywhere.</span>
+      </div>
+      <div class="card">
+        <strong>No secrets in source</strong>
+        <span>Only public identifiers (region, pool IDs) ship in the client bundle. No passwords, keys, or secrets.</span>
+      </div>
+    </div>
+
+    <h2>Authentication</h2>
+    <p>
+      Accounts use <strong>email + password</strong> via Amazon Cognito. Worth Flow never handles or stores
+      your password directly - Cognito manages credentials with Secure Remote Password (SRP) protocol.
+    </p>
+    <p>
+      Password reset is via an emailed code sent from <code>noreply@worthflow.in</code>, delivered through
+      Amazon SES with DKIM and SPF authentication.
+    </p>
+
+    <h2>Per-user data isolation</h2>
+    <p>
+      When you sign in, the Cognito Identity Pool exchanges your JWT for temporary IAM credentials.
+      These credentials are restricted by policy to your own S3 prefix:
+    </p>
+    <pre style="background:#f1f5f9;border-radius:8px;padding:0.85rem 1rem;font-size:0.8rem;overflow-x:auto;margin-bottom:1rem;color:#334155;">
+arn:aws:s3:::worth-flow-saves/users/&lt;your-identity-id&gt;/*</pre>
+    <p>
+      Attempting to read or write another user's prefix is denied by AWS at the IAM level -
+      the application layer cannot override this.
+    </p>
+
+    <h2>Browser security headers</h2>
+    <p>
+      The app is served with the following security headers on every response:
+    </p>
+    <ul>
+      <li><strong>Strict-Transport-Security</strong> - HSTS with preload, 2-year max-age.</li>
+      <li><strong>Content-Security-Policy</strong> - restricts script, style, and connection sources.</li>
+      <li><strong>X-Frame-Options: DENY</strong> - prevents clickjacking.</li>
+      <li><strong>X-Content-Type-Options: nosniff</strong> - prevents MIME sniffing.</li>
+      <li><strong>Referrer-Policy: strict-origin-when-cross-origin</strong>.</li>
+      <li><strong>Permissions-Policy</strong> - camera, microphone, geolocation all disabled.</li>
+    </ul>
+
+    <h2>Source code</h2>
+    <p>
+      Worth Flow is open source. You can review the code, infrastructure definitions (Terraform), and
+      security model on <a href="https://github.com/iamsuteerth" target="_blank" rel="noopener noreferrer">GitHub</a>.
+    </p>
+
+    <h2>Responsible disclosure</h2>
+    <p>
+      Found a security issue? Please report it <strong>privately</strong> - do not open a public issue for
+      vulnerabilities. Use GitHub's private vulnerability reporting at
+      <a href="https://github.com/iamsuteerth/worthflow/security/advisories/new" target="_blank" rel="noopener noreferrer">Security &rarr; Report a vulnerability</a>.
+      I'll acknowledge within 48 hours and work on a fix promptly.
+    </p>
+    <p>
+      Worth Flow is a one-person hobby project. There is no bug bounty programme. Reports are appreciated
+      and will be credited (with your permission) once fixed.
+    </p>
+
+    <footer>
+      <span>&copy; <script>document.write(new Date().getFullYear())</script> Worth Flow &mdash; a personal hobby project</span>
+      <span>
+        <a href="/about">About</a> &middot;
+        <a href="/privacy">Privacy</a> &middot;
+        <a href="/terms">Terms</a>
+      </span>
+    </footer>
+  </div>
+</body>
+</html>

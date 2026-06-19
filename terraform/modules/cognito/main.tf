@@ -33,7 +33,7 @@ resource "aws_cognito_user_pool" "main" {
   email_configuration {
     email_sending_account = "DEVELOPER"
     source_arn            = var.ses_sender_arn
-    from_email_address    = "Worth Flow <${var.sender_email}>"
+    from_email_address    = var.from_email_address
   }
 
   verification_message_template {

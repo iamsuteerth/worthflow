@@ -13,6 +13,7 @@ import { useDisclosure } from "@mantine/hooks";
 import type { ReactNode } from "react";
 
 import ThemeToggle from "@/components/layout/ThemeToggle";
+import AppFooter from "@/components/layout/AppFooter";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import ScenarioPanel from "@/components/scenario/ScenarioPanel";
 import { usePlannerStore } from "@/store/plannerStore";
@@ -115,7 +116,10 @@ export default function PlannerShell({ children }: Props) {
           </AppShell.Navbar>
         )}
 
-        <AppShell.Main>{children}</AppShell.Main>
+        <AppShell.Main>
+          {children}
+          <AppFooter />
+        </AppShell.Main>
       </AppShell>
     </>
   );

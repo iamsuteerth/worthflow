@@ -20,6 +20,7 @@ import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { authService } from "@/lib/auth";
 import ThemeToggle from "@/components/layout/ThemeToggle";
+import AppFooter from "@/components/layout/AppFooter";
 
 type AuthView = "signIn" | "signUp" | "confirmSignUp" | "forgotPassword" | "resetPassword";
 
@@ -412,11 +413,14 @@ export default function LoginPage() {
       <Box pos="fixed" top={16} right={16} style={{ zIndex: 100 }}>
         <ThemeToggle />
       </Box>
-      <Center h="100vh" p="md">
-        <Card shadow="md" radius="lg" withBorder maw={400} w="100%">
-          {renderView()}
-        </Card>
-      </Center>
+      <Stack h="100vh" justify="space-between" p="md">
+        <Center style={{ flex: 1 }}>
+          <Card shadow="md" radius="lg" withBorder maw={400} w="100%">
+            {renderView()}
+          </Card>
+        </Center>
+        <AppFooter />
+      </Stack>
     </>
   );
 }

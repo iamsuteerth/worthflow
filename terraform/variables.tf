@@ -6,8 +6,7 @@ variable "app_name" {
   default = "worth-flow"
 }
 
-variable "sender_email" {
-  description = "Verified SES sender email (dedicated Gmail). Must be verified manually after apply."
-  type        = string
+variable "domain" {
+  default     = "worthflow.in"
+  description = "Primary domain. Drives the SES domain identity lookup and Cognito sender address. Override in tfvars for a staging environment."
 }
-

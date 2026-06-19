@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About - Worth Flow</title>
+  <meta name="description" content="Worth Flow is a free personal finance forecasting tool built as a hobby project. Learn what it is, why it was built, and who made it." />
+  <link rel="canonical" href="https://worthflow.in/about" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.7; }
+    a { color: #6366f1; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+    .back { font-size: 0.875rem; color: #64748b; display: inline-flex; align-items: center; gap: 0.25rem; margin-bottom: 2rem; }
+    h1 { font-size: 2rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; }
+    .subtitle { color: #64748b; margin-bottom: 2.5rem; }
+    h2 { font-size: 1.125rem; font-weight: 600; color: #0f172a; margin: 2rem 0 0.75rem; }
+    p { margin-bottom: 1rem; color: #334155; }
+    ul { padding-left: 1.5rem; margin-bottom: 1rem; color: #334155; }
+    li { margin-bottom: 0.35rem; }
+    .accent { color: #6366f1; font-weight: 600; }
+    .chip { display: inline-block; background: #eef2ff; color: #4338ca; border-radius: 6px; padding: 0.15rem 0.55rem; font-size: 0.8rem; margin: 0.15rem; }
+    .divider { border: none; border-top: 1px solid #e2e8f0; margin: 2.5rem 0; }
+    footer { font-size: 0.8rem; color: #94a3b8; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+    footer a { color: #94a3b8; }
+    .faq dt { font-weight: 600; color: #0f172a; margin-top: 1.25rem; }
+    .faq dd { margin-left: 0; margin-top: 0.35rem; color: #334155; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is Worth Flow free?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Worth Flow is a free personal hobby project. There is no pricing, subscription, or charge of any kind." }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Worth Flow give financial advice?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. Worth Flow produces forecasting projections based on the numbers you enter. These are estimates, not guarantees, and not financial or investment advice." }
+      },
+      {
+        "@type": "Question",
+        "name": "Where is my financial data stored?",
+        "acceptedAnswer": { "@type": "Answer", "text": "All calculations run entirely in your browser. If you sign in and save, your plan is stored in a private cloud storage prefix that only you can access. The application itself never reads your data." }
+      },
+      {
+        "@type": "Question",
+        "name": "Who built Worth Flow?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Worth Flow was built by Suteerth Subramaniam as a personal learning and utility project. The source code is open on GitHub." }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="/">&#8592; Back to Worth Flow</a>
+    <h1>About Worth Flow</h1>
+    <p class="subtitle">A free personal finance forecasting tool, built as a hobby project.</p>
+
+    <h2>What is it?</h2>
+    <p>
+      Worth Flow lets you build a month-by-month financial plan, run "what if" scenarios on top of it, and
+      see how your cash balance, investments, fixed deposits, recurring deposits, and net worth may evolve
+      over time - all computed entirely in your browser.
+    </p>
+    <p>
+      It is <strong>not</strong> financial advice. Projections are estimates based on the numbers you provide.
+      Use it to explore possibilities and build intuition, not to make investment decisions.
+    </p>
+
+    <h2>Why was it built?</h2>
+    <p>
+      I built Worth Flow for my own use: I wanted a tool to model Indian investment instruments (FDs, RDs)
+      alongside equity investments and see cash flow month by month, without relying on spreadsheets.
+      It grew into a project I'm proud of, so I made it public.
+    </p>
+
+    <h2>Who built it?</h2>
+    <p>
+      <span class="accent">Suteerth Subramaniam</span> - developer, India.
+      Find me on <a href="https://github.com/iamsuteerth" target="_blank" rel="noopener noreferrer me">GitHub</a>
+      and <a href="https://www.linkedin.com/in/suteerth-subramaniam/" target="_blank" rel="noopener noreferrer me">LinkedIn</a>.
+      The source code is open at <a href="https://github.com/iamsuteerth" target="_blank" rel="noopener noreferrer">github.com/iamsuteerth</a>.
+    </p>
+
+    <h2>Tech stack</h2>
+    <p>
+      <span class="chip">React 19</span>
+      <span class="chip">TypeScript</span>
+      <span class="chip">Vite 8</span>
+      <span class="chip">Mantine v9</span>
+      <span class="chip">Zustand</span>
+      <span class="chip">Recharts</span>
+      <span class="chip">AWS Cognito</span>
+      <span class="chip">Amazon S3</span>
+      <span class="chip">Terraform</span>
+      <span class="chip">Vercel</span>
+    </p>
+
+    <hr class="divider" />
+
+    <h2>Frequently asked questions</h2>
+    <dl class="faq">
+      <dt>Is Worth Flow free?</dt>
+      <dd>Yes. There is no pricing, subscription, or charge of any kind.</dd>
+
+      <dt>Does Worth Flow give financial advice?</dt>
+      <dd>No. Projections are estimates based on the numbers you enter - not financial or investment advice.</dd>
+
+      <dt>Where is my financial data stored?</dt>
+      <dd>Calculations run in your browser. If you sign in and save, your plan is stored in a private cloud prefix only you can access. See the <a href="/privacy">Privacy Policy</a> and <a href="/security">Security</a> pages for details.</dd>
+
+      <dt>Can I use it without an account?</dt>
+      <dd>You can explore the tool in mock mode (local dev), but cloud saves require a free account.</dd>
+
+      <dt>How do RD calculations work?</dt>
+      <dd>Interest is compounded quarterly - the standard method used by Indian banks such as HDFC.</dd>
+    </dl>
+
+    <footer>
+      <span>&copy; <script>document.write(new Date().getFullYear())</script> Worth Flow &mdash; a personal hobby project</span>
+      <span>
+        <a href="/privacy">Privacy</a> &middot;
+        <a href="/terms">Terms</a> &middot;
+        <a href="/security">Security</a>
+      </span>
+    </footer>
+  </div>
+</body>
+</html>

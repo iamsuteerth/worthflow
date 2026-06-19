@@ -303,6 +303,10 @@ This README is the product overview and feature tour. Each companion guide has o
 * Amazon SES, AWS Lambda
 * Terraform (infrastructure as code)
 
+![Cloud Architecture](./architecture_diagram.png)
+
+> Full infrastructure detail in [INFRA.md](./INFRA.md).
+
 ## 🎯 Questions Worth Flow Can Help Answer
 
 * Can I afford a major purchase?

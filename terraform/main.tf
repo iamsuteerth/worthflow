@@ -26,9 +26,13 @@ provider "aws" {
   profile = "worth-flow"
 }
 
+locals {
+  from_email_address = "Worth Flow <noreply@${var.domain}>"
+}
+
 module "ses" {
-  source       = "./modules/ses"
-  sender_email = var.sender_email
+  source = "./modules/ses"
+  domain = var.domain
 }
 
 module "post_confirmation" {
@@ -40,7 +44,7 @@ module "cognito" {
   source                        = "./modules/cognito"
   app_name                      = var.app_name
   ses_sender_arn                = module.ses.sender_arn
-  sender_email                  = var.sender_email
+  from_email_address            = local.from_email_address
   post_confirmation_lambda_arn  = module.post_confirmation.lambda_arn
   post_confirmation_lambda_name = module.post_confirmation.lambda_name
 }
@@ -48,14 +52,14 @@ module "cognito" {
 module "storage" {
   source          = "./modules/storage"
   app_name        = var.app_name
-  allowed_origins = ["https://worthflow.vercel.app", "http://localhost:5173"]
+  allowed_origins = ["https://${var.domain}", "https://worthflow.vercel.app", "http://localhost:5173"]
 }
 
 module "identity_pool" {
-  source          = "./modules/identity_pool"
-  app_name        = var.app_name
-  user_pool_id    = module.cognito.user_pool_id
-  user_pool_arn   = module.cognito.user_pool_arn
-  client_id       = module.cognito.client_id
-  bucket_name     = module.storage.bucket_name
+  source        = "./modules/identity_pool"
+  app_name      = var.app_name
+  user_pool_id  = module.cognito.user_pool_id
+  user_pool_arn = module.cognito.user_pool_arn
+  client_id     = module.cognito.client_id
+  bucket_name   = module.storage.bucket_name
 }
