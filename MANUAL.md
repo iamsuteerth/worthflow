@@ -300,6 +300,8 @@ At maturity:
 * Interest is applied
 * Funds return to cash automatically
 
+Interest is **compounded quarterly** — the standard method Indian banks (e.g. HDFC) use — so an RD's projected maturity value lines up with what a bank's RD calculator shows.
+
 RD creation requires sufficient available cash to sustain the first monthly contribution.
 
 # 7. The Scenario Lab
@@ -705,7 +707,5 @@ Yes. A negative opening cash balance models starting the scenario in debt or ove
 ## What happens if I add a second Opening Cash Override?
 
 Only one Opening Cash Override can be active at a time. Adding a new value silently replaces the previous one (you'll see a yellow warning in the form when an existing override is present). The old value is removed; the new value takes effect immediately.
-
----
 
 **Tip:** Start with a simple plan first. Add scenarios gradually and compare results to understand which decisions have the biggest impact on your future finances.

@@ -7,6 +7,7 @@ import {
   IconBuildingBank,
   IconChartLine,
   IconCoins,
+  IconCurrencyRupee,
   IconPigMoney,
   IconRepeat,
   IconTrendingUp,
@@ -64,6 +65,12 @@ const VISUALS: Record<string, EventVisual> = {
     color: "pink",
     polarity: "negative",
     Icon: IconAdjustments,
+  },
+  OPENING_CASH_OVERRIDE: {
+    label: "Opening Cash",
+    color: "indigo",
+    polarity: "neutral",
+    Icon: IconCurrencyRupee,
   },
   FD_CREATED: {
     label: "FD Created",

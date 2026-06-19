@@ -7,6 +7,7 @@ import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
 import type { MonthKey } from "@/types/simulation";
 import MonthSelect from "@/components/common/MonthSelect";
 import InstrumentPreview from "@/components/scenario/InstrumentPreview";
+import { rdMaturityValue } from "@/engine/instrumentProjection";
 import { money } from "@/format/money";
 
 export default function AddRdForm() {
@@ -21,7 +22,7 @@ export default function AddRdForm() {
   const [durationMonths, setDurationMonths] = useState(24);
 
   const totalContribution = monthlyContribution * durationMonths;
-  const maturityValue = totalContribution * Math.pow(1 + rate / 100, durationMonths / 12);
+  const maturityValue = rdMaturityValue(monthlyContribution, rate, durationMonths);
   const interest = maturityValue - totalContribution;
   const maturityMonth = month ? addMonths(month, durationMonths) : null;
 

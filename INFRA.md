@@ -8,8 +8,6 @@ cloud saves, how to provision it with Terraform, and how to run the app in local
 > gitignored env files, or in Terraform state — never in the bundle. The `VITE_*` values
 > shipped to the browser are all public identifiers (see [Environment Variables](#environment-variables)).
 
----
-
 ## Architecture at a glance
 
 ```
@@ -42,8 +40,6 @@ cloud saves, how to provision it with Terraform, and how to run the app in local
    credentials scoped to *that user's* S3 prefix.
 5. The browser reads/writes save files directly to **S3** using those credentials — there is
    no application server.
-
----
 
 ## AWS resources (Terraform-managed)
 
@@ -81,8 +77,6 @@ worth-flow-saves/
 
 `manifest.json` is a lightweight index so the profile screen can list saves without
 downloading every `.wfplan`. Save files are capped at **5 per user** (enforced in the UI).
-
----
 
 ## Provisioning from scratch
 
@@ -165,8 +159,6 @@ terraform output
 # cognito_user_pool_id, s3_bucket_name
 ```
 
----
-
 ## Environment variables
 
 Two modes, selected by `VITE_AUTH_MODE`.
@@ -196,6 +188,10 @@ A committed template lives at [`.env.production.example`](./.env.production.exam
 No AWS account required. Auth is emulated in `localStorage`; cloud saves can optionally hit a
 local [LocalStack](#local-development-with-localstack) S3.
 
+These values are **public, non-secret**, so they're committed in [`.env.mock`](./.env.mock) and
+loaded automatically by `npm run dev:mock` (`vite --mode mock`) — your real `.env` (cognito) is
+never touched:
+
 ```
 VITE_AUTH_MODE=mock
 VITE_AWS_REGION=ap-south-1
@@ -203,7 +199,8 @@ VITE_S3_BUCKET_NAME=worth-flow-saves
 VITE_S3_ENDPOINT=http://localhost:4566
 ```
 
----
+> New to the repo? Start with **[QUICKSTART.md](./QUICKSTART.md)** — it covers mock sign-in and the
+> day-to-day local workflow.
 
 ## Deploying the frontend (Vercel)
 
@@ -219,8 +216,6 @@ Build locally to sanity-check before pushing:
 npm run build
 ```
 
----
-
 ## Local development with LocalStack
 
 For exercising the cloud-save code paths without AWS, the repo includes a LocalStack S3 setup
@@ -229,18 +224,19 @@ For exercising the cloud-save code paths without AWS, the repo includes a LocalS
 - `docker-compose-local.yml` — runs `localstack/localstack:3` (v4+ requires a paid license, so
   the image is pinned to v3).
 - `scripts/localstack-init.sh` — creates the `worth-flow-saves` bucket with CORS for
-  `http://localhost:5173`.
+  `http://localhost:5173`. It's mounted into the container's `init/ready.d`, so LocalStack runs
+  it **automatically** on startup — no manual step needed.
 
 ```bash
-docker compose -f docker-compose-local.yml up -d
-bash scripts/localstack-init.sh
-npm run dev          # with VITE_AUTH_MODE=mock and VITE_S3_ENDPOINT set
+npm run localstack:up    # = docker compose -f docker-compose-local.yml up -d
+npm run dev:mock         # loads .env.mock (VITE_AUTH_MODE=mock, VITE_S3_ENDPOINT set)
+# ...
+npm run localstack:down  # stop it when finished
 ```
 
-In mock mode, each emulated user gets an S3 prefix derived from their email, mirroring the
-per-user isolation of the real Identity Pool.
-
----
+Auth and the rest of the UI work without LocalStack — only save/load needs the S3 endpoint. In
+mock mode, each emulated user gets an S3 prefix derived from their email, mirroring the per-user
+isolation of the real Identity Pool.
 
 ## Operations notes
 
@@ -255,9 +251,8 @@ per-user isolation of the real Identity Pool.
 - **Bucket recovery:** S3 versioning is enabled, so an accidental overwrite/delete of a save can
   be recovered from a prior version (non-current versions are pruned after 90 days).
 
----
-
 ## Related docs
 
+- [QUICKSTART.md](./QUICKSTART.md) — run the app locally in mock mode (no AWS)
 - [README.md](./README.md) — product overview and features
 - [MANUAL.md](./MANUAL.md) — end-user guide (accounts, cloud saves, forecasting)

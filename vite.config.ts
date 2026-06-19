@@ -1,10 +1,25 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
     react(),
-    tsconfigPaths(),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("aws-amplify") || id.includes("@aws-sdk")) {
+            return "aws-vendor";
+          }
+          if (id.includes("recharts")) {
+            return "recharts";
+          }
+        },
+      },
+    },
+  },
 });

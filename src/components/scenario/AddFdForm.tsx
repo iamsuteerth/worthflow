@@ -7,6 +7,7 @@ import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
 import type { MonthKey } from "@/types/simulation";
 import MonthSelect from "@/components/common/MonthSelect";
 import InstrumentPreview from "@/components/scenario/InstrumentPreview";
+import { fdMaturityValue } from "@/engine/instrumentProjection";
 import { money } from "@/format/money";
 
 export default function AddFdForm() {
@@ -20,7 +21,7 @@ export default function AddFdForm() {
   const [rate, setRate] = useState(7.2);
   const [durationMonths, setDurationMonths] = useState(12);
 
-  const maturityValue = principal * Math.pow(1 + rate / 100, durationMonths / 12);
+  const maturityValue = fdMaturityValue(principal, rate, durationMonths);
   const interest = maturityValue - principal;
   const maturityMonth = month ? addMonths(month, durationMonths) : null;
 

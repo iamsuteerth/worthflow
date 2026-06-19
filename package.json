@@ -5,9 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:mock": "vite --mode mock",
+    "localstack:up": "docker compose -f docker-compose-local.yml up -d",
+    "localstack:down": "docker compose -f docker-compose-local.yml down",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1071.0",
@@ -41,6 +46,6 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12",
-    "vite-tsconfig-paths": "^6.1.1"
+    "vitest": "^3.0.0"
   }
 }

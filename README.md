@@ -248,53 +248,33 @@ Theme preference is saved automatically.
 
 ## 🚀 Getting Started
 
-### Install Dependencies
+### Local development (no AWS needed)
 
 ```bash
 npm install
+npm run dev:mock
 ```
 
-### Configure Environment
+This runs in **mock mode** — authentication is emulated in your browser and no cloud account is required. For the full walkthrough (mock sign-in, optional local cloud saves, tests), see **[QUICKSTART.md](./QUICKSTART.md)**.
 
-Worth Flow runs in one of two modes, selected by `VITE_AUTH_MODE`.
+### Production
 
-**Local development** — no cloud account needed. Create a `.env` file:
+Backed by AWS Cognito + S3. See **[INFRA.md](./INFRA.md)** for the full setup, the production env variables, and deployment.
 
-```bash
-VITE_AUTH_MODE=mock
-VITE_AWS_REGION=ap-south-1
-VITE_S3_BUCKET_NAME=worth-flow-saves
-VITE_S3_ENDPOINT=http://localhost:4566   # optional: LocalStack S3
-```
+### Common scripts
 
-**Production** — backed by AWS Cognito + S3. See [INFRA.md](./INFRA.md) for the full setup, the production env variables, and deployment.
-
-### Run Development Server
-
-```bash
-npm run dev
-```
-
-### Create Production Build
-
-```bash
-npm run build
-```
-
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
-### Run Lint Checks
-
-```bash
-npm run lint
-```
+| Script | Purpose |
+| --- | --- |
+| `npm run dev:mock` | Local dev server (mock auth, no AWS) |
+| `npm run dev` | Dev server in cognito mode (needs live AWS) |
+| `npm test` / `npm run test:watch` | Run the engine test suite ([Vitest](https://vitest.dev)) |
+| `npm run build` | Type-check + production build |
+| `npm run preview` | Preview the production build |
+| `npm run lint` | Run ESLint |
 
 ## 📚 Documentation
 
+* ⚡ [QUICKSTART.md](./QUICKSTART.md) — get running locally in a couple of minutes (no AWS)
 * 👉 [MANUAL.md](./MANUAL.md) — complete end-user walkthrough of every feature
 * 🏗️ [INFRA.md](./INFRA.md) — cloud infrastructure, Terraform provisioning, and deployment
 
@@ -310,6 +290,7 @@ npm run lint
 * Zod
 * Recharts
 * Tabler Icons
+* Vitest (engine test suite)
 
 **Cloud (accounts & saves)**
 

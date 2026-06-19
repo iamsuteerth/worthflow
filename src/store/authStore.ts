@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { authService, type AuthUser } from '@/lib/auth'
+import { usePlannerStore } from '@/store/plannerStore'
+import { useCloudStore } from '@/store/cloudStore'
 
 interface AuthStore {
   user: AuthUser | null
@@ -44,9 +46,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   signOut: async () => {
     await authService.signOut()
     set({ user: null, authenticated: false })
-    const { usePlannerStore } = await import('@/store/plannerStore')
     usePlannerStore.getState().resetForSignOut()
-    const { useCloudStore } = await import('@/store/cloudStore')
     useCloudStore.setState({ saves: [], savesError: null, initialLoadFailed: false })
   },
 }))

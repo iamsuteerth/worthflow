@@ -15,28 +15,7 @@ import { addMonths } from "@/engine/dateUtils";
 import { formatMonth } from "@/engine/monthFormatting";
 import { usePlannerStore } from "@/store/plannerStore";
 import { money, moneySigned } from "@/format/money";
-import type { Instrument } from "@/types/instrument";
-
-function calcMaturityValue(instrument: Instrument): {
-  principal: number;
-  maturityValue: number;
-  interest: number;
-} {
-  if (instrument.type === "FD") {
-    const p = instrument.principal;
-    const maturityValue =
-      p * Math.pow(1 + instrument.rate / 100, instrument.durationMonths / 12);
-    return { principal: p, maturityValue, interest: maturityValue - p };
-  } else {
-    const { monthlyContribution, rate, durationMonths } = instrument;
-    let maturityValue = 0;
-    for (let i = 1; i <= durationMonths; i++) {
-      maturityValue += monthlyContribution * Math.pow(1 + rate / 100, i / 12);
-    }
-    const principal = monthlyContribution * durationMonths;
-    return { principal, maturityValue, interest: maturityValue - principal };
-  }
-}
+import { projectInstrument } from "@/engine/instrumentProjection";
 
 export default function ActiveInstruments() {
   const config = usePlannerStore((state) => state.config);
@@ -47,7 +26,7 @@ export default function ActiveInstruments() {
       instruments.map((instrument) => ({
         instrument,
         maturityMonth: addMonths(instrument.startMonth, instrument.durationMonths),
-        ...calcMaturityValue(instrument),
+        ...projectInstrument(instrument),
       })),
     [instruments]
   );
