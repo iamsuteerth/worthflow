@@ -232,10 +232,10 @@ export default function LoginPage() {
             Sign In
           </Button>
           <Group justify="space-between">
-            <Anchor size="sm" onClick={() => navigate("forgotPassword")} style={{ cursor: "pointer" }}>
+            <Anchor component="button" type="button" size="sm" onClick={() => navigate("forgotPassword")}>
               Forgot password?
             </Anchor>
-            <Anchor size="sm" onClick={() => navigate("signUp")} style={{ cursor: "pointer" }}>
+            <Anchor component="button" type="button" size="sm" onClick={() => navigate("signUp")}>
               Create account
             </Anchor>
           </Group>
@@ -279,7 +279,7 @@ export default function LoginPage() {
             Create Account
           </Button>
           <Group justify="center">
-            <Anchor size="sm" onClick={() => navigate("signIn")} style={{ cursor: "pointer" }}>
+            <Anchor component="button" type="button" size="sm" onClick={() => navigate("signIn")}>
               Already have an account? Sign in
             </Anchor>
           </Group>
@@ -314,7 +314,7 @@ export default function LoginPage() {
             Verify
           </Button>
           <Group justify="center">
-            <Anchor size="sm" onClick={handleResendCode} style={{ cursor: "pointer" }}>
+            <Anchor component="button" type="button" size="sm" onClick={handleResendCode}>
               Resend code
             </Anchor>
           </Group>
@@ -349,7 +349,7 @@ export default function LoginPage() {
             Send Reset Code
           </Button>
           <Group justify="center">
-            <Anchor size="sm" onClick={() => navigate("signIn")} style={{ cursor: "pointer" }}>
+            <Anchor component="button" type="button" size="sm" onClick={() => navigate("signIn")}>
               Back to sign in
             </Anchor>
           </Group>
@@ -396,7 +396,7 @@ export default function LoginPage() {
             Reset Password
           </Button>
           <Group justify="center">
-            <Anchor size="sm" onClick={() => navigate("signIn")} style={{ cursor: "pointer" }}>
+            <Anchor component="button" type="button" size="sm" onClick={() => navigate("signIn")}>
               Back to sign in
             </Anchor>
           </Group>

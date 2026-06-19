@@ -3,6 +3,7 @@ import {
   IconChartLine,
   IconCoins,
   IconTrendingDown,
+  IconTrendingUp,
   IconWallet,
 } from "@tabler/icons-react";
 import { useSimulation } from "@/hooks/useSimulation";
@@ -65,7 +66,7 @@ export default function SummaryCards() {
               sub="Portfolio return"
               negative={xirrVal !== null && xirrVal < 0}
               valueColor={xirrVal !== null && xirrVal > 0 ? "teal.6" : undefined}
-              icon={<IconTrendingDown size={18} />}
+              icon={xirrVal !== null && xirrVal > 0 ? <IconTrendingUp size={18} /> : <IconTrendingDown size={18} />}
               iconColor="orange"
             />
           );

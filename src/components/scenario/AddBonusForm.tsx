@@ -7,8 +7,9 @@ import type { MonthKey } from "@/types/simulation";
 
 export default function AddBonusForm() {
   const addBonus = usePlannerStore((state) => state.addTransientBonusIncome);
+  const config = usePlannerStore((state) => state.config);
 
-  const [month, setMonth] = useState<MonthKey | null>("2028-01");
+  const [month, setMonth] = useState<MonthKey | null>(config.forecast.startMonth);
   const [amount, setAmount] = useState(50000);
   const [description, setDescription] = useState("");
 

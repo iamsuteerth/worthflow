@@ -13,6 +13,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import { IconDeviceFloppy, IconFolderOpen, IconTrash } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { compareScenario } from "@/engine/scenarioComparison";
@@ -37,9 +38,11 @@ export default function SavedScenarios() {
   const saveScenario = usePlannerStore((state) => state.saveScenario);
   const loadScenario = usePlannerStore((state) => state.loadScenario);
   const deleteScenario = usePlannerStore((state) => state.deleteScenario);
+  const isPlanDirty = usePlannerStore((state) => state.isPlanDirty);
 
   const [opened, { open, close }] = useDisclosure(false);
   const [scenarioName, setScenarioName] = useState("");
+  const [pendingLoadId, setPendingLoadId] = useState<string | null>(null);
 
   const handleSave = () => {
     const trimmed = scenarioName.trim();
@@ -48,6 +51,19 @@ export default function SavedScenarios() {
     setScenarioName("");
     close();
   };
+
+  function doLoad(id: string) {
+    loadScenario(id);
+    notifications.show({ message: "Scenario loaded.", color: "teal" });
+  }
+
+  function handleLoad(id: string) {
+    if (isPlanDirty()) {
+      setPendingLoadId(id);
+    } else {
+      doLoad(id);
+    }
+  }
 
   const scenarioComparisons = useMemo(() => {
     return Object.fromEntries(
@@ -60,6 +76,25 @@ export default function SavedScenarios() {
 
   return (
     <>
+      <Modal
+        opened={pendingLoadId !== null}
+        onClose={() => setPendingLoadId(null)}
+        title="Replace current scenario?"
+        size="sm"
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            Loading this scenario will replace your current overrides. Any unsaved changes will be lost.
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="subtle" onClick={() => setPendingLoadId(null)}>Cancel</Button>
+            <Button color="brand" onClick={() => { if (pendingLoadId) { doLoad(pendingLoadId); } setPendingLoadId(null); }}>
+              Load anyway
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
       <Modal
         opened={opened}
         onClose={() => { setScenarioName(""); close(); }}
@@ -128,7 +163,7 @@ export default function SavedScenarios() {
                         variant="light"
                         color="brand"
                         size="sm"
-                        onClick={() => loadScenario(scenario.id)}
+                        onClick={() => handleLoad(scenario.id)}
                       >
                         <IconFolderOpen size={14} />
                       </ActionIcon>

@@ -7,8 +7,9 @@ import type { MonthKey } from "@/types/simulation";
 
 export default function AddExpenseForm() {
   const addExpense = usePlannerStore((state) => state.addTransientOneOffExpense);
+  const config = usePlannerStore((state) => state.config);
 
-  const [month, setMonth] = useState<MonthKey | null>("2027-01");
+  const [month, setMonth] = useState<MonthKey | null>(config.forecast.startMonth);
   const [amount, setAmount] = useState<number>(10000);
   const [label, setLabel] = useState("");
 

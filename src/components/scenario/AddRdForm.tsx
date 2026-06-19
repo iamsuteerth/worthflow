@@ -14,7 +14,7 @@ export default function AddRdForm() {
   const config = usePlannerStore((state) => state.config);
   const overrides = usePlannerStore((state) => state.overrides);
 
-  const [month, setMonth] = useState<MonthKey | null>("2028-01");
+  const [month, setMonth] = useState<MonthKey | null>(config.forecast.startMonth);
   const [name, setName] = useState("");
   const [monthlyContribution, setMonthlyContribution] = useState(10000);
   const [rate, setRate] = useState(6.8);

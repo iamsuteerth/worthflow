@@ -3,6 +3,7 @@ import {
   Button,
   Divider,
   Group,
+  Modal,
   SimpleGrid,
   Stack,
   Text,
@@ -148,6 +149,7 @@ export default function ScenarioPanel() {
   const [expenseSub, setExpenseSub]       = useState<ExpenseSub>("expense");
   const [cashEventsSub, setCashEventsSub] = useState<CashEventsSub>("salary");
   const [investmentSub, setInvestmentSub] = useState<InvestmentSub>("account");
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -162,6 +164,21 @@ export default function ScenarioPanel() {
   };
 
   return (
+    <>
+    <Modal
+      opened={resetConfirmOpen}
+      onClose={() => setResetConfirmOpen(false)}
+      title="Reset scenario?"
+      size="sm"
+    >
+      <Stack gap="md">
+        <Text size="sm">This will clear all scenario modifications. This cannot be undone.</Text>
+        <Group justify="flex-end">
+          <Button variant="subtle" onClick={() => setResetConfirmOpen(false)}>Cancel</Button>
+          <Button color="red" onClick={() => { reset(); setResetConfirmOpen(false); }}>Reset</Button>
+        </Group>
+      </Stack>
+    </Modal>
     <Stack gap="lg">
 
       {/* ── Section switcher ── */}
@@ -301,7 +318,7 @@ export default function ScenarioPanel() {
         <Button variant="default" leftSection={<IconDownload size={14} />} onClick={() => exportPlan({ baseConfig, overrides, savedScenarios })}>
           Export
         </Button>
-        <Button color="red" variant="light" leftSection={<IconRefresh size={14} />} onClick={reset}>
+        <Button color="red" variant="light" leftSection={<IconRefresh size={14} />} onClick={() => setResetConfirmOpen(true)}>
           Reset
         </Button>
       </Group>
@@ -314,5 +331,6 @@ export default function ScenarioPanel() {
 
       <Divider />
     </Stack>
+    </>
   );
 }

@@ -7,8 +7,9 @@ import MonthSelect from "@/components/common/MonthSelect";
 
 export default function AddSalaryChangeForm() {
   const addSalaryChange = usePlannerStore((state) => state.addTransientSalaryChange);
+  const config = usePlannerStore((state) => state.config);
 
-  const [month, setMonth] = useState<MonthKey | null>("2028-01");
+  const [month, setMonth] = useState<MonthKey | null>(config.forecast.startMonth);
   const [newSalary, setNewSalary] = useState(150000);
   const [description, setDescription] = useState("");
 
