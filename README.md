@@ -274,9 +274,13 @@ Backed by AWS Cognito + S3. See **[INFRA.md](./INFRA.md)** for the full setup, t
 
 ## 📚 Documentation
 
-* ⚡ [QUICKSTART.md](./QUICKSTART.md) — get running locally in a couple of minutes (no AWS)
-* 👉 [MANUAL.md](./MANUAL.md) — complete end-user walkthrough of every feature
-* 🏗️ [INFRA.md](./INFRA.md) — cloud infrastructure, Terraform provisioning, and deployment
+This README is the product overview and feature tour. Each companion guide has one focused job:
+
+| Doc | For | What it covers |
+| --- | --- | --- |
+| ⚡ **[QUICKSTART.md](./QUICKSTART.md)** | Developers | Run the app locally in mock mode (no AWS) — setup, tests, scripts |
+| 👉 **[MANUAL.md](./MANUAL.md)** | End users | Every feature — accounts, plans, scenarios, saves, reports |
+| 🏗️ **[INFRA.md](./INFRA.md)** | Operators | Cloud architecture, Terraform provisioning, and deployment |
 
 ## 🛠️ Built With
 

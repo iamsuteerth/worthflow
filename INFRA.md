@@ -1,8 +1,10 @@
 # 🏗️ Worth Flow — Infrastructure & Deployment
 
-This document describes the cloud infrastructure that powers Worth Flow's accounts and
-cloud saves, how to provision it with Terraform, and how to run the app in local
-(no-cloud) mode for development.
+This document describes the cloud infrastructure behind Worth Flow's accounts and cloud
+saves: its architecture, how to provision it with Terraform, and how to deploy. To simply
+run the app locally without AWS, start with **[QUICKSTART.md](./QUICKSTART.md)** — this doc
+covers the cloud side, plus the optional LocalStack setup for exercising cloud-save code
+paths locally.
 
 > The application code never contains secrets. Everything sensitive lives in AWS, in
 > gitignored env files, or in Terraform state — never in the bundle. The `VITE_*` values
@@ -219,7 +221,7 @@ npm run build
 ## Local development with LocalStack
 
 For exercising the cloud-save code paths without AWS, the repo includes a LocalStack S3 setup
-(both files are gitignored / local-only):
+(`docker-compose-local.yml` and `scripts/localstack-init.sh`, both committed):
 
 - `docker-compose-local.yml` — runs `localstack/localstack:3` (v4+ requires a paid license, so
   the image is pinned to v3).
