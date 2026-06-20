@@ -62,3 +62,11 @@ export function addMonths(
   )}` as MonthKey;
 }
 
+// Last month included in a forecast that begins at `startMonth` and spans `totalMonths`.
+export function forecastEndMonth(
+  startMonth: MonthKey,
+  totalMonths: number
+): MonthKey {
+  return addMonths(startMonth, totalMonths - 1);
+}
+

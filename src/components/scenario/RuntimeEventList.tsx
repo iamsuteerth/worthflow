@@ -16,6 +16,7 @@ import { useMemo, useState } from "react";
 import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
 import { simulate } from "@/engine/simulate";
 import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
+import { forecastEndMonth } from "@/engine/dateUtils";
 import { getEventVisual } from "@/theme/eventVisuals";
 import type { RuntimeEvent } from "@/types/runtimeEvent";
 import type { MonthKey } from "@/types/simulation";
@@ -211,11 +212,14 @@ export function EditEventModal({
   const exceedsCap = cap !== null && localAmount > cap;
   const capLabel = event.type === "INVESTMENT_WITHDRAWAL" ? "Account balance" : "Available cash";
 
-  // Deposits/withdrawals can't precede their account's start month (mirrors creation).
+  // Every scenario event must stay inside the forecast window (mirrors creation);
+  // deposits/withdrawals additionally can't precede their account's start month.
+  const forecastStart = baseConfig.forecast.startMonth;
+  const forecastEnd = forecastEndMonth(baseConfig.forecast.startMonth, baseConfig.forecast.totalMonths);
   const monthMin =
     (event.type === "INVESTMENT_DEPOSIT" || event.type === "INVESTMENT_WITHDRAWAL") && eventAccount
       ? eventAccount.startMonth
-      : undefined;
+      : forecastStart;
 
   function handleSave() {
     const changes: Partial<RuntimeEvent> = {};
@@ -286,6 +290,7 @@ export function EditEventModal({
             label={event.type === "SALARY_CHANGE" ? "Effective Month" : "Month"}
             value={localMonth}
             minMonth={monthMin}
+            maxMonth={forecastEnd}
             onChange={(v) => setLocalMonth(v as MonthKey | null)}
           />
         )}

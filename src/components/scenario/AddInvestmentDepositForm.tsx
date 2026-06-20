@@ -6,6 +6,7 @@ import { formatMonth } from "@/engine/monthFormatting";
 import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
 import type { MonthKey } from "@/types/simulation";
 import MonthSelect from "@/components/common/MonthSelect";
+import { forecastEndMonth } from "@/engine/dateUtils";
 
 export default function AddInvestmentDepositForm() {
   const addDeposit = usePlannerStore((s) => s.addTransientInvestmentDeposit);
@@ -13,6 +14,7 @@ export default function AddInvestmentDepositForm() {
   const overrides = usePlannerStore((s) => s.overrides);
 
   const forecastStart = config.forecast.startMonth;
+  const forecastEnd = forecastEndMonth(config.forecast.startMonth, config.forecast.totalMonths);
   const accounts = config.investments.accounts;
   const accountOptions = accounts.map((a) => ({ value: a.id, label: a.name }));
 
@@ -55,6 +57,7 @@ export default function AddInvestmentDepositForm() {
         label="Month"
         value={month}
         minMonth={minMonth}
+        maxMonth={forecastEnd}
         onChange={(v) => setMonth(v as MonthKey | null)}
       />
 

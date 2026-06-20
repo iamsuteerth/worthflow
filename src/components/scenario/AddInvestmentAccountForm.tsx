@@ -6,6 +6,7 @@ import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
 import { useUiStore } from "@/store/uiStore";
 import { money } from "@/format/money";
 import { formatMonth } from "@/engine/monthFormatting";
+import { forecastEndMonth } from "@/engine/dateUtils";
 import type { MonthKey } from "@/types/simulation";
 import MonthSelect from "@/components/common/MonthSelect";
 
@@ -17,6 +18,7 @@ export default function AddInvestmentAccountForm() {
   const setHighlightAccountId = useUiStore((s) => s.setHighlightAccountId);
 
   const forecastStart = config.forecast.startMonth;
+  const forecastEnd = forecastEndMonth(config.forecast.startMonth, config.forecast.totalMonths);
 
   const [name, setName] = useState("");
   const [startMonth, setStartMonth] = useState<MonthKey | null>(forecastStart);
@@ -60,6 +62,7 @@ export default function AddInvestmentAccountForm() {
             label="Start Month"
             value={startMonth}
             minMonth={forecastStart}
+            maxMonth={forecastEnd}
             onChange={(v) => setStartMonth(v as MonthKey | null)}
           />
         </Grid.Col>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateMonths, addMonths } from "@/engine/dateUtils";
+import { generateMonths, addMonths, forecastEndMonth } from "@/engine/dateUtils";
 
 describe("generateMonths", () => {
   it("generates the correct number of months", () => {
@@ -53,5 +53,24 @@ describe("addMonths", () => {
   it("pads single-digit months with a leading zero", () => {
     expect(addMonths("2025-08", 1)).toBe("2025-09");
     expect(addMonths("2025-09", 1)).toBe("2025-10");
+  });
+});
+
+describe("forecastEndMonth", () => {
+  it("returns the last month of the forecast window", () => {
+    expect(forecastEndMonth("2025-01", 12)).toBe("2025-12");
+  });
+
+  it("returns the start month for a single-month forecast", () => {
+    expect(forecastEndMonth("2025-06", 1)).toBe("2025-06");
+  });
+
+  it("wraps across a year boundary", () => {
+    expect(forecastEndMonth("2025-11", 6)).toBe("2026-04");
+  });
+
+  it("agrees with the last entry of generateMonths", () => {
+    const months = generateMonths("2024-03", 30);
+    expect(forecastEndMonth("2024-03", 30)).toBe(months[months.length - 1]);
   });
 });

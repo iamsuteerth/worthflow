@@ -4,10 +4,13 @@ import { useState } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 import type { MonthKey } from "@/types/simulation";
 import MonthSelect from "@/components/common/MonthSelect";
+import { forecastEndMonth } from "@/engine/dateUtils";
 
 export default function AddSalaryChangeForm() {
   const addSalaryChange = usePlannerStore((state) => state.addTransientSalaryChange);
   const config = usePlannerStore((state) => state.config);
+
+  const forecastEnd = forecastEndMonth(config.forecast.startMonth, config.forecast.totalMonths);
 
   const [month, setMonth] = useState<MonthKey | null>(config.forecast.startMonth);
   const [newSalary, setNewSalary] = useState(150000);
@@ -17,6 +20,8 @@ export default function AddSalaryChangeForm() {
     <Stack gap="sm">
       <MonthSelect
         value={month}
+        minMonth={config.forecast.startMonth}
+        maxMonth={forecastEnd}
         onChange={(value) => setMonth(value as MonthKey | null)}
       />
 

@@ -1,7 +1,7 @@
 import { Button, Grid, NumberInput, Stack, Text, TextInput } from "@mantine/core";
 import { IconBuildingBank } from "@tabler/icons-react";
 import { useState } from "react";
-import { addMonths } from "@/engine/dateUtils";
+import { addMonths, forecastEndMonth } from "@/engine/dateUtils";
 import { formatMonth } from "@/engine/monthFormatting";
 import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
 import type { MonthKey } from "@/types/simulation";
@@ -21,6 +21,8 @@ export default function AddFdForm() {
   const [rate, setRate] = useState(7.2);
   const [durationMonths, setDurationMonths] = useState(12);
 
+  const forecastEnd = forecastEndMonth(config.forecast.startMonth, config.forecast.totalMonths);
+
   const maturityValue = fdMaturityValue(principal, rate, durationMonths);
   const interest = maturityValue - principal;
   const maturityMonth = month ? addMonths(month, durationMonths) : null;
@@ -32,6 +34,8 @@ export default function AddFdForm() {
     <Stack gap="sm">
       <MonthSelect
         value={month}
+        minMonth={config.forecast.startMonth}
+        maxMonth={forecastEnd}
         onChange={(value) => setMonth(value as MonthKey | null)}
       />
 

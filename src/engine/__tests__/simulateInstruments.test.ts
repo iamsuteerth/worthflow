@@ -33,6 +33,36 @@ describe("simulate — fixed deposits (end to end)", () => {
     expect(summary.finalNetWorth).toBeCloseTo(512_000, 2);
     expect(summary.xirr).toBeNull();
   });
+
+  // A historic FD (started before the forecast) is seeded with its accrued value —
+  // its principal already left cash in the past, so it is NOT re-debited — and it
+  // must still credit its matured value and emit FD_MATURED when it matures inside
+  // the window.
+  it("matures a historic FD inside the window without re-debiting principal", () => {
+    const config = baseConfig({
+      forecast: { startMonth: m("2025-01"), totalMonths: 12 },
+      cash: { openingBalance: 0 },
+      income: { monthly: 0 },
+      expenses: { defaultMonthly: 0, overrides: {} },
+      instruments: [
+        // Started 2024-07, 12-month term → matures 2025-07 (row index 6).
+        { id: "fd1", type: "FD", name: "Old FD", principal: 100_000, rate: 12, startMonth: m("2024-07"), durationMonths: 12 },
+      ],
+    });
+    const { rows, summary } = simulate(config);
+
+    // Seeded at 6 months of growth, with no cash debit (principal paid pre-forecast).
+    expect(rows[0].assets.cash).toBe(0);
+    expect(rows[0].assets.fdValue).toBeCloseTo(100_000 * Math.pow(1.12, 6 / 12), 2);
+
+    // 2025-07: 100k × 1.12 = 112k credited to cash; FD removed afterwards.
+    const maturityRow = rows[6];
+    expect(maturityRow.month).toBe("2025-07");
+    expect(maturityRow.events.some((e) => e.type === "FD_MATURED")).toBe(true);
+    expect(maturityRow.assets.cash).toBeCloseTo(112_000, 2);
+    expect(maturityRow.assets.fdValue).toBeCloseTo(0, 6);
+    expect(summary.finalNetWorth).toBeCloseTo(112_000, 2);
+  });
 });
 
 describe("simulate — recurring deposits (end to end)", () => {

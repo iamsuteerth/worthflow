@@ -29,8 +29,12 @@ interface Props {
 function ScenarioLabHeading() {
   return (
     <Stack gap={2} mb="md">
-      <Text fw={700} size="sm">Scenario Lab</Text>
-      <Text size="xs" c="dimmed">Explore financial what-if scenarios.</Text>
+      <Text fw={700} size="sm">
+        Scenario Lab
+      </Text>
+      <Text size="xs" c="dimmed">
+        Explore financial what-if scenarios.
+      </Text>
     </Stack>
   );
 }
@@ -39,31 +43,45 @@ export default function PlannerShell({ children }: Props) {
   const opened = useUiStore((state) => state.scenarioDrawerOpened);
   const open = useUiStore((state) => state.openScenarioDrawer);
   const close = useUiStore((state) => state.closeScenarioDrawer);
+
   const activeView = usePlannerStore((state) => state.activeView);
   const user = useAuthStore((state) => state.user);
   const isMobile = useIsMobile();
 
-  const [profileOpened, { open: openProfile, close: closeProfile }] = useDisclosure(false);
+  const [profileOpened, { open: openProfile, close: closeProfile }] =
+    useDisclosure(false);
 
   const initials = user ? getInitials(user.email) : "?";
 
   return (
     <>
-      {activeView === "forecast" && (
+      {/* Mobile drawer only */}
+      {activeView === "forecast" && isMobile && (
         <Drawer
-          opened={isMobile && opened}
+          opened={opened}
           onClose={close}
           title={<ScenarioLabHeading />}
-          styles={{ body: { paddingBottom: 40 } }}
+          styles={
+            { 
+              body: { paddingBottom: 40 },
+              header: {
+                alignItems: "flex-start",
+                paddingTop: 12,
+              },
+            }
+          }
           size="100%"
-          hiddenFrom="sm"
+          radius={0}
           position="left"
         >
           <ScenarioPanel />
         </Drawer>
       )}
 
-      <UserProfileModal opened={profileOpened} onClose={closeProfile} />
+      <UserProfileModal
+        opened={profileOpened}
+        onClose={closeProfile}
+      />
 
       <AppShell
         header={{ height: 60 }}
@@ -72,7 +90,10 @@ export default function PlannerShell({ children }: Props) {
             ? {
                 width: { sm: 400, lg: 440 },
                 breakpoint: "sm",
-                collapsed: { mobile: true },
+                collapsed: {
+                  mobile: true,
+                  desktop: !opened,
+                },
               }
             : undefined
         }
@@ -83,12 +104,13 @@ export default function PlannerShell({ children }: Props) {
             <Group>
               {activeView === "forecast" && (
                 <Burger
-                  hiddenFrom="sm"
                   opened={opened}
                   onClick={opened ? close : open}
                   size="sm"
+                  aria-label="Toggle Scenario Lab"
                 />
               )}
+
               <Title order={4} fw={700}>
                 Worth Flow
               </Title>
@@ -96,8 +118,17 @@ export default function PlannerShell({ children }: Props) {
 
             <Group gap="xs">
               <ThemeToggle />
-              <UnstyledButton onClick={openProfile} aria-label="Profile">
-                <Avatar radius="xl" size="sm" color="brand" style={{ cursor: "pointer" }}>
+
+              <UnstyledButton
+                onClick={openProfile}
+                aria-label="Profile"
+              >
+                <Avatar
+                  radius="xl"
+                  size="sm"
+                  color="brand"
+                  style={{ cursor: "pointer" }}
+                >
                   {initials}
                 </Avatar>
               </UnstyledButton>
@@ -105,11 +136,14 @@ export default function PlannerShell({ children }: Props) {
           </Group>
         </AppShell.Header>
 
-        {activeView === "forecast" && (
+        {/* Desktop sidebar only */}
+        {activeView === "forecast" && !isMobile && (
           <AppShell.Navbar
-            visibleFrom="sm"
             p="md"
-            style={{ overflowY: "auto", overflowX: "hidden" }}
+            style={{
+              overflowY: "auto",
+              overflowX: "hidden",
+            }}
           >
             <ScenarioLabHeading />
             <ScenarioPanel />

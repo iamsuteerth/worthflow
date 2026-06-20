@@ -6,6 +6,7 @@ import { useSimulation } from "@/hooks/useSimulation";
 import { usePlannerStore } from "@/store/plannerStore";
 import type { MonthKey } from "@/types/simulation";
 import MonthSelect from "@/components/common/MonthSelect";
+import { forecastEndMonth } from "@/engine/dateUtils";
 
 export default function AddInvestmentWithdrawalForm() {
   const result = useSimulation();
@@ -13,6 +14,7 @@ export default function AddInvestmentWithdrawalForm() {
   const config = usePlannerStore((s) => s.config);
 
   const forecastStart = config.forecast.startMonth;
+  const forecastEnd = forecastEndMonth(config.forecast.startMonth, config.forecast.totalMonths);
   const accounts = config.investments.accounts;
 
   const [accountId, setAccountId] = useState<string | null>(accounts[0]?.id ?? null);
@@ -68,6 +70,7 @@ export default function AddInvestmentWithdrawalForm() {
         label="Month"
         value={month}
         minMonth={minMonth}
+        maxMonth={forecastEnd}
         onChange={(v) => setMonth(v as MonthKey | null)}
       />
 

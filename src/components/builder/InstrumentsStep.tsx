@@ -17,6 +17,7 @@ import { useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
 import { useBuilderStore } from "@/store/builderStore";
+import { forecastEndMonth } from "@/engine/dateUtils";
 import type { MonthKey } from "@/types/simulation";
 import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
 import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
@@ -25,6 +26,10 @@ export default function InstrumentsStep() {
   const state = useBuilderStore((store) => store.state);
   const addInstrument = useBuilderStore((store) => store.addInstrument);
   const removeInstrument = useBuilderStore((store) => store.removeInstrument);
+
+  // FD/RD may start before the forecast (pre-existing instruments, by design),
+  // but never after it ends — a start beyond the horizon is silently ignored.
+  const forecastEnd = forecastEndMonth(state.startMonth, state.totalMonths);
 
   const [fdName, setFdName] = useState("");
   const [fdPrincipal, setFdPrincipal] = useState(0);
@@ -113,6 +118,7 @@ export default function InstrumentsStep() {
               <BuilderMonthSelect
                 label="Start Month"
                 value={fdStartMonth}
+                maxMonth={forecastEnd}
                 onChange={(value) => value && setFdStartMonth(value as MonthKey)}
               />
               <Button
@@ -200,6 +206,7 @@ export default function InstrumentsStep() {
               <BuilderMonthSelect
                 label="Start Month"
                 value={rdStartMonth}
+                maxMonth={forecastEnd}
                 onChange={(value) => value && setRdStartMonth(value as MonthKey)}
               />
               <Button

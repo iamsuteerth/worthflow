@@ -16,6 +16,7 @@ import { useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
 import { useBuilderStore } from "@/store/builderStore";
+import { forecastEndMonth } from "@/engine/dateUtils";
 import type { MonthKey } from "@/types/simulation";
 import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
 import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
@@ -24,6 +25,8 @@ export default function InvestmentsStep() {
   const state = useBuilderStore((store) => store.state);
   const addInvestmentAccount = useBuilderStore((store) => store.addInvestmentAccount);
   const removeInvestmentAccount = useBuilderStore((store) => store.removeInvestmentAccount);
+
+  const forecastEnd = forecastEndMonth(state.startMonth, state.totalMonths);
 
   const [name, setName] = useState("");
   const [startMonth, setStartMonth] = useState<MonthKey>(state.startMonth);
@@ -72,6 +75,7 @@ export default function InvestmentsStep() {
                 value={startMonth}
                 label="Start Month"
                 minMonth={state.startMonth}
+                maxMonth={forecastEnd}
                 onChange={(value) => {
                   if (!value) return;
                   setStartMonth(value as MonthKey);

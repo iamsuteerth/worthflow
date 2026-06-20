@@ -32,7 +32,7 @@ Generate month-by-month projections for:
 
 ### 🎭 Test Different Scenarios
 
-Explore alternate futures without modifying your base plan, using the **Scenario Lab** sidebar.
+Explore alternate futures without modifying your base plan, using the **Scenario Lab** — a panel you open from the menu button (☰) in the header.
 
 Examples:
 
@@ -48,7 +48,7 @@ Examples:
 
 A **Scenario Banner** keeps you oriented: it summarizes how many modifications are active, shows a badge per event type (click to jump straight to that group in the Events list), and flags any accounts created during the scenario.
 
-The **Scenario Lab** sidebar is organized into six sections — **Expenses**, **Cash**, **Investments**, **FD**, **RD**, and **Events** — so each type of modification has a focused home.
+The **Scenario Lab** is organized into six sections — **Expenses**, **Cash**, **Investments**, **FD**, **RD**, and **Events** — so each type of modification has a focused home.
 
 Instantly compare results against your original plan, then save, switch between, import, or export scenarios whenever you like.
 

@@ -3,11 +3,14 @@ import { IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 import MonthSelect from "@/components/common/MonthSelect";
+import { forecastEndMonth } from "@/engine/dateUtils";
 import type { MonthKey } from "@/types/simulation";
 
 export default function AddBonusForm() {
   const addBonus = usePlannerStore((state) => state.addTransientBonusIncome);
   const config = usePlannerStore((state) => state.config);
+
+  const forecastEnd = forecastEndMonth(config.forecast.startMonth, config.forecast.totalMonths);
 
   const [month, setMonth] = useState<MonthKey | null>(config.forecast.startMonth);
   const [amount, setAmount] = useState(50000);
@@ -17,6 +20,8 @@ export default function AddBonusForm() {
     <Stack gap="sm">
       <MonthSelect
         value={month}
+        minMonth={config.forecast.startMonth}
+        maxMonth={forecastEnd}
         onChange={(value) => setMonth(value as MonthKey | null)}
       />
 

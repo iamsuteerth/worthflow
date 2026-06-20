@@ -306,7 +306,7 @@ RD creation requires sufficient available cash to sustain the first monthly cont
 
 # 7. The Scenario Lab
 
-The Scenario Lab is the sidebar (or drawer, on mobile) where you build and manage your active scenario. It has **six sections**, arranged in a 2 × 3 grid:
+The Scenario Lab is where you build and manage your active scenario. Open it from the menu button (☰) in the header: it slides in as a sidebar on desktop and a full-screen drawer on mobile, staying collapsed otherwise so your forecast uses the full screen width. It has **six sections**, arranged in a 2 × 3 grid:
 
 ## Expenses
 

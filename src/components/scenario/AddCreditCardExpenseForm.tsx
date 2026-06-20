@@ -3,6 +3,7 @@ import { IconCreditCard } from "@tabler/icons-react";
 import { useState } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 import MonthSelect from "@/components/common/MonthSelect";
+import { forecastEndMonth } from "@/engine/dateUtils";
 import type { MonthKey } from "@/types/simulation";
 
 export default function AddCreditCardExpenseForm() {
@@ -10,6 +11,8 @@ export default function AddCreditCardExpenseForm() {
     (state) => state.addTransientCreditCardExpense
   );
   const config = usePlannerStore((state) => state.config);
+
+  const forecastEnd = forecastEndMonth(config.forecast.startMonth, config.forecast.totalMonths);
 
   const [month, setMonth] = useState<MonthKey | null>(config.forecast.startMonth);
   const [amount, setAmount] = useState<number>(10000);
@@ -19,6 +22,8 @@ export default function AddCreditCardExpenseForm() {
     <Stack gap="sm">
       <MonthSelect
         value={month}
+        minMonth={config.forecast.startMonth}
+        maxMonth={forecastEnd}
         onChange={(value) => setMonth(value as MonthKey | null)}
       />
 

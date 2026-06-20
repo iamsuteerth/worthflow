@@ -28,6 +28,7 @@ import { useMemo, useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
 import { getMaxAnnualYears, deriveAnnualEndMonth } from "@/engine/annualExpense";
+import { forecastEndMonth } from "@/engine/dateUtils";
 import { useBuilderStore } from "@/store/builderStore";
 import type { MonthKey } from "@/types/simulation";
 import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
@@ -109,6 +110,7 @@ export default function EventsStep() {
   const removeRecurringExpense = useBuilderStore((store) => store.removeRecurringExpense);
 
   const startMonth = useBuilderStore((s) => s.state.startMonth);
+  const forecastEnd = forecastEndMonth(state.startMonth, state.totalMonths);
 
   const [expenseMonth, setExpenseMonth]   = useState<MonthKey>(state.startMonth);
   const [expenseLabel, setExpenseLabel]   = useState("");
@@ -216,6 +218,7 @@ export default function EventsStep() {
               <BuilderMonthSelect
                 value={expenseMonth}
                 minMonth={startMonth}
+                maxMonth={forecastEnd}
                 label="Month"
                 onChange={(value) => value && setExpenseMonth(value as MonthKey)}
               />
@@ -284,6 +287,7 @@ export default function EventsStep() {
               <BuilderMonthSelect
                 value={recurringStart}
                 minMonth={startMonth}
+                maxMonth={forecastEnd}
                 label="Start Month"
                 onChange={(value) => value && setRecurringStart(value as MonthKey)}
               />
@@ -299,6 +303,7 @@ export default function EventsStep() {
                 <BuilderMonthSelect
                   value={recurringEnd}
                   minMonth={recurringStart}
+                  maxMonth={forecastEnd}
                   label="End Month"
                   onChange={(value) => value && setRecurringEnd(value as MonthKey)}
                 />
@@ -347,6 +352,7 @@ export default function EventsStep() {
               <BuilderMonthSelect
                 value={creditCardMonth}
                 minMonth={startMonth}
+                maxMonth={forecastEnd}
                 label="Month"
                 onChange={(value) => value && setCreditCardMonth(value as MonthKey)}
               />
@@ -392,6 +398,7 @@ export default function EventsStep() {
               <BuilderMonthSelect
                 value={bonusMonth}
                 minMonth={startMonth}
+                maxMonth={forecastEnd}
                 label="Month"
                 onChange={(value) => value && setBonusMonth(value as MonthKey)}
               />
@@ -437,6 +444,7 @@ export default function EventsStep() {
               <BuilderMonthSelect
                 value={salaryMonth}
                 minMonth={startMonth}
+                maxMonth={forecastEnd}
                 label="Effective Month"
                 onChange={(value) => value && setSalaryMonth(value as MonthKey)}
               />
