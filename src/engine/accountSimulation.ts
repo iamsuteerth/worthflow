@@ -55,7 +55,12 @@ export function processAccountMonth(
   accountBalances: Record<string, number>,
   month: MonthKey,
   deposits: RuntimeInvestmentDeposit[],
-  withdrawals: RuntimeInvestmentWithdrawal[]
+  withdrawals: RuntimeInvestmentWithdrawal[],
+  // The opening balance actually seeded for an account starting this month. `simulate`
+  // supplies this for future-dated accounts, where the opening is funded from cash and
+  // clamped to what's available. When absent, the configured opening is used (the
+  // pre-existing-wealth case for accounts that start at the forecast start).
+  seededOpenings?: Record<string, number>
 ): AccountMonthResult {
   const accounts = config.investments.accounts;
   const updated = { ...accountBalances };
@@ -70,9 +75,10 @@ export function processAccountMonth(
     }
 
     if (month === account.startMonth) {
-      updated[account.id] = account.openingBalance;
-      if (account.openingBalance > 0) {
-        xirrEntries.push({ amount: -account.openingBalance, date, accountId: account.id });
+      const opening = seededOpenings?.[account.id] ?? account.openingBalance;
+      updated[account.id] = opening;
+      if (opening > 0) {
+        xirrEntries.push({ amount: -opening, date, accountId: account.id });
       }
     }
 

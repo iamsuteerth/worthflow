@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 import { simulate }
   from "@/engine/simulate";
 
@@ -15,8 +17,11 @@ export function useSimulation() {
       (state) => state.overrides
     );
 
-  return simulate(
-    config,
-    overrides
+  // config and overrides are stable store references that only change when the
+  // plan is rebuilt, so this memo recomputes the (relatively expensive) simulation
+  // once per change instead of on every render of every consumer.
+  return useMemo(
+    () => simulate(config, overrides),
+    [config, overrides]
   );
 }

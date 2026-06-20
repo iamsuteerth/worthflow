@@ -12,8 +12,10 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
-import { useState } from "react";
-import { usePlannerStore } from "@/store/plannerStore";
+import { useMemo, useState } from "react";
+import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
+import { simulate } from "@/engine/simulate";
+import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 import { getEventVisual } from "@/theme/eventVisuals";
 import type { RuntimeEvent } from "@/types/runtimeEvent";
 import type { MonthKey } from "@/types/simulation";
@@ -174,6 +176,47 @@ export function EditEventModal({
   const [localReturn, setLocalReturn] = useState(getInitialReturn);
   const [localDuration, setLocalDuration] = useState(getInitialDuration);
 
+  const baseConfig = usePlannerStore((s) => s.baseConfig);
+  const overrides = usePlannerStore((s) => s.overrides);
+
+  const eventAccount =
+    "accountId" in event
+      ? baseConfig.investments.accounts.find((a) => a.id === event.accountId)
+      : undefined;
+
+  // Cap edited amounts exactly as the creation forms do: FD principal / RD
+  // contribution / deposit can't exceed the cash available that month, and a
+  // withdrawal can't exceed the account balance — both measured with THIS event
+  // removed, so editing reflects the same headroom creation enforced (previously an
+  // edit could raise the amount past what creation ever allowed). We rebuild the
+  // effective config without the event rather than just dropping it from the runtime
+  // overrides, because FDs/RDs are baked into the config layer — filtering the
+  // override list alone would leave the edited deposit's own outflow in the budget.
+  const cap = useMemo(() => {
+    if (!localMonth) return null;
+    const others = (overrides.runtimeEvents ?? []).filter((e) => e.id !== event.id);
+    const without = { ...overrides, runtimeEvents: others };
+    const cfg = buildEffectiveConfig(baseConfig, without);
+    if (event.type === "FD" || event.type === "RD" || event.type === "INVESTMENT_DEPOSIT") {
+      return getAvailableCash(cfg, without, localMonth);
+    }
+    if (event.type === "INVESTMENT_WITHDRAWAL") {
+      const row = simulate(cfg, without).rows.find((r) => r.month === localMonth);
+      const snap = row?.assets.accountSnapshots.find((s) => s.accountId === event.accountId);
+      return Math.max(0, snap?.value ?? 0);
+    }
+    return null;
+  }, [baseConfig, overrides, event, localMonth]);
+
+  const exceedsCap = cap !== null && localAmount > cap;
+  const capLabel = event.type === "INVESTMENT_WITHDRAWAL" ? "Account balance" : "Available cash";
+
+  // Deposits/withdrawals can't precede their account's start month (mirrors creation).
+  const monthMin =
+    (event.type === "INVESTMENT_DEPOSIT" || event.type === "INVESTMENT_WITHDRAWAL") && eventAccount
+      ? eventAccount.startMonth
+      : undefined;
+
   function handleSave() {
     const changes: Partial<RuntimeEvent> = {};
     switch (event.type) {
@@ -242,6 +285,7 @@ export function EditEventModal({
           <MonthSelect
             label={event.type === "SALARY_CHANGE" ? "Effective Month" : "Month"}
             value={localMonth}
+            minMonth={monthMin}
             onChange={(v) => setLocalMonth(v as MonthKey | null)}
           />
         )}
@@ -255,11 +299,21 @@ export function EditEventModal({
             }
             value={localAmount}
             min={allowNegativeAmount ? undefined : 0}
+            max={cap ?? undefined}
             allowNegative={allowNegativeAmount}
             thousandSeparator=","
             prefix="₹"
             onChange={(v) => setLocalAmount(Number(v))}
           />
+        )}
+        {cap !== null && (
+          <Text size="xs" c="dimmed">
+            {capLabel}
+            {localMonth ? ` at ${formatMonth(localMonth)}` : ""}:{" "}
+            <Text span fw={600} c={exceedsCap ? "red" : "teal"} style={{ fontVariantNumeric: "tabular-nums" }}>
+              {money(cap)}
+            </Text>
+          </Text>
         )}
         {showReturn && (
           <NumberInput
@@ -294,7 +348,7 @@ export function EditEventModal({
         )}
         <Group justify="flex-end" gap="xs" mt="xs">
           <Button variant="default" size="xs" onClick={onClose}>Cancel</Button>
-          <Button size="xs" onClick={handleSave}>Save</Button>
+          <Button size="xs" onClick={handleSave} disabled={exceedsCap}>Save</Button>
         </Group>
       </Stack>
     </Modal>

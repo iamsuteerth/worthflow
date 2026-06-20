@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { SavedScenario } from "@/types/scenario";
 import type { MonthKey } from "@/types/simulation";
 import { calculateChecksum } from "@/engine/checksum";
+import { decodeBase64 } from "@/engine/base64";
 
 const MonthKeySchema = z.custom<MonthKey>(
   (value) =>
@@ -301,7 +302,7 @@ export async function importPlan(file: File): Promise<{
     throw new Error("Invalid checksum");
   }
 
-  const decoded = JSON.parse(atob(wrapper.payload));
+  const decoded = JSON.parse(decodeBase64(wrapper.payload));
 
   try {
     const result = ImportedPlanSchema.parse(decoded);

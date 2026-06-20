@@ -14,6 +14,10 @@ import {
   calculateChecksum,
 } from "@/engine/checksum";
 
+import {
+  encodeBase64,
+} from "@/engine/base64";
+
 export interface ExportedPlan {
   baseConfig: PlannerConfig;
   overrides: PlannerOverrides;
@@ -24,7 +28,7 @@ export async function exportPlan(
   data: ExportedPlan
 ) {
   const payload =
-    btoa(
+    encodeBase64(
       JSON.stringify(data)
     );
 

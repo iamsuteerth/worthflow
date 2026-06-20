@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { importPlan } from "@/engine/importPlan";
 import { calculateChecksum } from "@/engine/checksum";
+import { encodeBase64 } from "@/engine/base64";
 
 const validPlan = {
   baseConfig: {
@@ -40,7 +41,7 @@ async function makeWfPlanFile(
   data: unknown,
   { name = "plan.wfplan", corruptChecksum = false, payload }: { name?: string; corruptChecksum?: boolean; payload?: string } = {}
 ): Promise<File> {
-  const encoded = payload ?? btoa(JSON.stringify(data));
+  const encoded = payload ?? encodeBase64(JSON.stringify(data));
   const checksum = corruptChecksum ? "deadbeef" : await calculateChecksum(encoded);
   const wrapper = {
     app: "wealth-forecast",
@@ -63,6 +64,28 @@ describe("importPlan — happy path", () => {
     expect(result.baseConfig.investments.accounts).toHaveLength(1);
     expect(result.baseConfig.instruments[0]).toMatchObject({ type: "FD", principal: 100_000 });
     expect(result.savedScenarios).toEqual([]);
+  });
+
+  it("round-trips a plan containing non-Latin1 text (₹, emoji, regional scripts)", async () => {
+    const unicodePlan = {
+      ...validPlan,
+      baseConfig: {
+        ...validPlan.baseConfig,
+        investments: {
+          ...validPlan.baseConfig.investments,
+          accounts: [
+            { ...validPlan.baseConfig.investments.accounts[0], name: "नया खाता 🎉" },
+          ],
+        },
+        oneOffExpenses: [
+          { id: "o1", month: "2025-03", label: "Café ₹ treat", amount: 500 },
+        ],
+      },
+    };
+    const file = await makeWfPlanFile(unicodePlan);
+    const result = await importPlan(file);
+    expect(result.baseConfig.investments.accounts[0].name).toBe("नया खाता 🎉");
+    expect(result.baseConfig.oneOffExpenses[0].label).toBe("Café ₹ treat");
   });
 
   it("defaults a missing recurringExpenses array to empty", async () => {

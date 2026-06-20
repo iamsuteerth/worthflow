@@ -55,6 +55,11 @@ export function simulate(
     accountCashflows[account.id] = [];
   }
 
+  // The opening balance actually funded for each future-dated account (clamped to the
+  // cash available at its start month). Surfaced so the UI reports what was invested,
+  // not the configured figure, when the two differ.
+  const accountFundedOpening: Record<string, number> = {};
+
   let lowestCash = state.cash;
   let lowestCashMonth = months[0];
 
@@ -106,9 +111,27 @@ export function simulate(
 
     const cashAfterContrib = state.cash - contributionPreview;
 
-    // Cumulative clamping: deposits processed in order against a running
-    // cash balance so collective deposits never exceed available cash.
+    // Future-dated accounts (those starting after the forecast begins) fund their
+    // opening balance from cash at the start month — a one-time outflow, like an FD
+    // principal, CLAMPED to the cash available so it can never conjure wealth or push
+    // cash negative. Accounts that start at the forecast start represent wealth
+    // already held and are seeded with no cash outflow (the existing behaviour).
+    // (Ongoing monthly contributions, like an RD's, are not clamped and may go
+    // negative — that path is unchanged.)
     let remainingCash = Math.max(0, cashAfterContrib);
+    let fundedOpeningTotal = 0;
+    const seededOpenings: Record<string, number> = {};
+    for (const account of accounts) {
+      if (account.startMonth === month && month > config.forecast.startMonth) {
+        const funded = Math.min(Math.max(0, account.openingBalance), remainingCash);
+        remainingCash -= funded;
+        fundedOpeningTotal += funded;
+        seededOpenings[account.id] = funded;
+        accountFundedOpening[account.id] = funded;
+      }
+    }
+
+    // Discretionary deposits clamp against the cash left after openings.
     const clampedDeposits = monthDeposits.map((deposit) => {
       const amount = Math.min(Math.max(0, deposit.amount), remainingCash);
       remainingCash -= amount;
@@ -120,11 +143,15 @@ export function simulate(
       state.accountBalances,
       month,
       clampedDeposits,
-      monthWithdrawals
+      monthWithdrawals,
+      seededOpenings
     );
 
     state.cash -= result.totalContribution;
-    const investmentAmount = result.totalContribution;
+    state.cash -= fundedOpeningTotal;
+    // Funded opening balances are an investment outflow, like monthly contributions,
+    // so they belong in investmentAmount (keeps the cashflow row reconciling).
+    const investmentAmount = result.totalContribution + fundedOpeningTotal;
     cashFloor = Math.min(cashFloor, state.cash);
 
     for (const deposit of clampedDeposits) {
@@ -331,6 +358,7 @@ export function simulate(
     xirr,
     accountXirr,
     accountContributions,
+    accountFundedOpening,
     finalInvestmentCorpus: finalRow.assets.investmentCorpus,
     finalNetWorth: finalRow.assets.netWorth,
   };

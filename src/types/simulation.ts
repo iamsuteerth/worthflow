@@ -28,6 +28,9 @@ export interface SimulationSummary {
   xirr: number | null;
   accountXirr: Record<string, number | null>;
   accountContributions: Record<string, number>;
+  // Opening balance actually funded for each future-dated account, when it was
+  // clamped to available cash (absent for forecast-start / pre-existing accounts).
+  accountFundedOpening: Record<string, number>;
 }
 
 export interface MonthlyCashflow {

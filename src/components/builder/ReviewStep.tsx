@@ -5,10 +5,13 @@ import {
   Divider,
   Grid,
   Group,
+  List,
+  Modal,
   Stack,
   Text,
   ThemeIcon,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconBolt,
   IconBuildingBank,
@@ -34,6 +37,38 @@ import {
   notifyCloudAutoSaveFailed,
   notifyGeneratedNudge,
 } from "@/lib/cloudNotifications";
+import type { RuntimeEvent } from "@/types/runtimeEvent";
+
+// Generating a plan resets the override layer (loadGeneratedPlan clears overrides and
+// saved scenarios). The builder carries the baseline forward, so this lists only what
+// is actually discarded: Scenario Lab what-if events and saved scenarios.
+function summarizeDroppedScenarioData(
+  events: RuntimeEvent[],
+  savedScenarioCount: number
+): string[] {
+  const count = (types: RuntimeEvent["type"][]) =>
+    events.filter((e) => types.includes(e.type)).length;
+  const plural = (n: number, s: string) => `${n} ${s}${n > 1 ? "s" : ""}`;
+
+  const items: string[] = [];
+  const spend = count(["SPENDING_OVERRIDE"]);
+  const inv = count(["ACCOUNT_AMOUNT_OVERRIDE", "ACCOUNT_RETURN_OVERRIDE"]);
+  const flows = count(["INVESTMENT_DEPOSIT", "INVESTMENT_WITHDRAWAL"]);
+  const instruments = count(["FD", "RD"]);
+  const income = count(["BONUS_INCOME", "SALARY_CHANGE"]);
+  const expenses = count(["ONE_OFF_EXPENSE", "CREDIT_CARD_EXPENSE", "RECURRING_EXPENSE"]);
+  const cash = count(["OPENING_CASH_OVERRIDE"]);
+
+  if (spend) items.push(plural(spend, "spending override"));
+  if (inv) items.push(plural(inv, "investment override"));
+  if (flows) items.push(plural(flows, "deposit / withdrawal"));
+  if (instruments) items.push(plural(instruments, "what-if FD/RD"));
+  if (income) items.push(plural(income, "income change"));
+  if (expenses) items.push(plural(expenses, "one-off / recurring expense"));
+  if (cash) items.push("opening cash override");
+  if (savedScenarioCount) items.push(plural(savedScenarioCount, "saved scenario"));
+  return items;
+}
 
 // Uniform summary card: icon + label on the top row, value below. Nothing else.
 function MetricCard({
@@ -68,9 +103,20 @@ export default function ReviewStep() {
   const state = useBuilderStore((store) => store.state);
   const loadGeneratedPlan = usePlannerStore((store) => store.loadGeneratedPlan);
   const setActiveView = usePlannerStore((store) => store.setActiveView);
+  const overrides = usePlannerStore((store) => store.overrides);
+  const savedScenarios = usePlannerStore((store) => store.savedScenarios);
   const saveCount = useCloudStore((s) => s.saves.length);
   const initialLoadFailed = useCloudStore((s) => s.initialLoadFailed);
   const willAutoSave = saveCount === 0 && !initialLoadFailed;
+
+  const [confirmOpened, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
+
+  // What the active plan's override layer would lose on regeneration. Only present
+  // once the user has built up Scenario Lab changes — i.e. on a 2nd+ plan.
+  const droppedItems = useMemo(
+    () => summarizeDroppedScenarioData(overrides.runtimeEvents ?? [], savedScenarios.length),
+    [overrides.runtimeEvents, savedScenarios.length]
+  );
 
   const config = useMemo(() => builderToConfig(state), [state]);
 
@@ -158,11 +204,51 @@ export default function ReviewStep() {
         </Button>
         <Button
           leftSection={<IconPlayerPlay size={16} />}
-          onClick={handleGenerate}
+          onClick={() => (droppedItems.length > 0 ? openConfirm() : handleGenerate())}
         >
           Generate Forecast
         </Button>
       </Group>
+
+      <Modal
+        opened={confirmOpened}
+        onClose={closeConfirm}
+        title="Generate a new plan?"
+        centered
+        size="md"
+      >
+        <Stack gap="sm">
+          <Text size="sm">
+            Generating rebuilds the plan from your baseline. These Scenario Lab changes on
+            the current plan will be <Text span fw={700}>discarded</Text>:
+          </Text>
+          <List size="sm" spacing={4}>
+            {droppedItems.map((item) => (
+              <List.Item key={item}>{item}</List.Item>
+            ))}
+          </List>
+          <Text size="xs" c="dimmed">
+            Your accounts, instruments, and baseline figures are kept. Export or save the
+            current plan first if you want to keep these changes.
+          </Text>
+          <Group justify="flex-end" gap="xs" mt="xs">
+            <Button variant="default" size="xs" onClick={closeConfirm}>
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              size="xs"
+              leftSection={<IconPlayerPlay size={14} />}
+              onClick={async () => {
+                closeConfirm();
+                await handleGenerate();
+              }}
+            >
+              Discard & Generate
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 }

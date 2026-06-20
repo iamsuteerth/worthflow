@@ -227,6 +227,11 @@ export default function InvestmentAccountsTable() {
                 (snap) => snap.accountId === account.id
               );
               const currentValue = finalSnapshot?.value ?? account.openingBalance;
+              // Report the opening that was actually funded from cash (future-dated
+              // accounts are clamped to available cash); falls back to the configured
+              // figure for pre-existing / forecast-start accounts.
+              const openingBalance =
+                result.summary.accountFundedOpening[account.id] ?? account.openingBalance;
               const totalContributions = result.summary.accountContributions[account.id] ?? 0;
               const xirr = result.summary.accountXirr[account.id] ?? null;
               const isExpanded = expanded.has(account.id);
@@ -258,9 +263,9 @@ export default function InvestmentAccountsTable() {
                           <Badge size="xs" variant="light" color="violet">Added</Badge>
                         )}
                       </Group>
-                      {account.openingBalance > 0 && (
+                      {openingBalance > 0 && (
                         <Text size="xs" c="dimmed">
-                          Opening: {money(account.openingBalance)}
+                          Opening: {money(openingBalance)}
                         </Text>
                       )}
                     </Table.Td>

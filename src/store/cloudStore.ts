@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { simulate } from '@/engine/simulate'
 import { calculateChecksum } from '@/engine/checksum'
+import { encodeBase64 } from '@/engine/base64'
 import { importPlan } from '@/engine/importPlan'
 import { usePlannerStore } from '@/store/plannerStore'
 import {
@@ -72,7 +73,7 @@ async function applySaveToPlanner(key: string): Promise<void> {
 async function serializePlan(): Promise<string> {
   const { baseConfig, overrides, savedScenarios } = usePlannerStore.getState()
   const data = { baseConfig, overrides, savedScenarios }
-  const payload = btoa(JSON.stringify(data))
+  const payload = encodeBase64(JSON.stringify(data))
   const checksum = await calculateChecksum(payload)
   return JSON.stringify(
     {
