@@ -21,10 +21,9 @@ import { useAuthStore } from "@/store/authStore";
 import { authService } from "@/lib/auth";
 import ThemeToggle from "@/components/layout/ThemeToggle";
 import AppFooter from "@/components/layout/AppFooter";
+import { isValidEmail, isValidPassword, PASSWORD_HINT } from "@/lib/validation";
 
 type AuthView = "signIn" | "signUp" | "confirmSignUp" | "forgotPassword" | "resetPassword";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function ViewHeader({
   icon: Icon,
@@ -229,7 +228,12 @@ export default function LoginPage() {
               onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
             />
           </Stack>
-          <Button fullWidth onClick={handleSignIn} loading={loading} disabled={!email || !password}>
+          <Button
+            fullWidth
+            onClick={handleSignIn}
+            loading={loading}
+            disabled={!isValidEmail(email) || !password}
+          >
             Sign In
           </Button>
           <Group justify="space-between">
@@ -245,7 +249,9 @@ export default function LoginPage() {
     }
 
     if (view === "signUp") {
-      const emailValid = EMAIL_RE.test(signUpEmail);
+      const emailValid = isValidEmail(signUpEmail);
+      const passwordValid = isValidPassword(signUpPassword);
+      const passwordsMatch = signUpPassword === confirmPassword;
       return (
         <Stack gap="lg">
           <ViewHeader icon={IconUserPlus} title="Create Account" />
@@ -262,20 +268,22 @@ export default function LoginPage() {
               placeholder="Password"
               value={signUpPassword}
               onChange={(e) => { setSignUpPassword(e.currentTarget.value); clearError(); }}
-              description="At least 8 characters, with uppercase, lowercase, and a number."
+              description={PASSWORD_HINT}
+              error={signUpPassword && !passwordValid ? PASSWORD_HINT : undefined}
             />
             <PasswordInput
               placeholder="Confirm Password"
               value={confirmPassword}
               onChange={(e) => { setConfirmPassword(e.currentTarget.value); clearError(); }}
               onKeyDown={(e) => e.key === "Enter" && handleSignUp()}
+              error={confirmPassword && !passwordsMatch ? "Passwords do not match." : undefined}
             />
           </Stack>
           <Button
             fullWidth
             onClick={handleSignUp}
             loading={loading}
-            disabled={!emailValid || !signUpPassword || !confirmPassword}
+            disabled={!emailValid || !passwordValid || !passwordsMatch}
           >
             Create Account
           </Button>
@@ -314,9 +322,12 @@ export default function LoginPage() {
           >
             Verify
           </Button>
-          <Group justify="center">
+          <Group justify="space-between">
             <Anchor component="button" type="button" size="sm" onClick={handleResendCode}>
               Resend code
+            </Anchor>
+            <Anchor component="button" type="button" size="sm" c="dimmed" onClick={() => navigate("signUp")}>
+              Cancel
             </Anchor>
           </Group>
         </Stack>
@@ -324,7 +335,7 @@ export default function LoginPage() {
     }
 
     if (view === "forgotPassword") {
-      const emailValid = EMAIL_RE.test(forgotEmail);
+      const emailValid = isValidEmail(forgotEmail);
       return (
         <Stack gap="lg">
           <ViewHeader
@@ -359,6 +370,8 @@ export default function LoginPage() {
     }
 
     if (view === "resetPassword") {
+      const passwordValid = isValidPassword(newPassword);
+      const passwordsMatch = newPassword === confirmNewPassword;
       return (
         <Stack gap="lg">
           <ViewHeader
@@ -380,19 +393,22 @@ export default function LoginPage() {
               placeholder="New password"
               value={newPassword}
               onChange={(e) => { setNewPassword(e.currentTarget.value); clearError(); }}
+              description={PASSWORD_HINT}
+              error={newPassword && !passwordValid ? PASSWORD_HINT : undefined}
             />
             <PasswordInput
               placeholder="Confirm new password"
               value={confirmNewPassword}
               onChange={(e) => { setConfirmNewPassword(e.currentTarget.value); clearError(); }}
               onKeyDown={(e) => e.key === "Enter" && handleResetPassword()}
+              error={confirmNewPassword && !passwordsMatch ? "Passwords do not match." : undefined}
             />
           </Stack>
           <Button
             fullWidth
             onClick={handleResetPassword}
             loading={loading}
-            disabled={resetCode.length < 6 || !newPassword || !confirmNewPassword}
+            disabled={resetCode.length < 6 || !passwordValid || !passwordsMatch}
           >
             Reset Password
           </Button>

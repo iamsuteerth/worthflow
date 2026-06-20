@@ -7,27 +7,8 @@
   <meta name="description" content="Worth Flow security overview - per-user data isolation, encryption at rest and in transit, Cognito auth, and responsible disclosure." />
   <link rel="canonical" href="https://worthflow.in/security" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.7; }
-    a { color: #6366f1; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .wrap { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
-    .back { font-size: 0.875rem; color: #64748b; display: inline-flex; align-items: center; gap: 0.25rem; margin-bottom: 2rem; }
-    h1 { font-size: 2rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; }
-    .meta { font-size: 0.85rem; color: #94a3b8; margin-bottom: 2.5rem; }
-    h2 { font-size: 1.125rem; font-weight: 600; color: #0f172a; margin: 2rem 0 0.75rem; }
-    p { margin-bottom: 1rem; color: #334155; }
-    ul { padding-left: 1.5rem; margin-bottom: 1rem; color: #334155; }
-    li { margin-bottom: 0.35rem; }
-    .callout { background: #eef2ff; border-left: 3px solid #6366f1; border-radius: 6px; padding: 0.85rem 1rem; margin-bottom: 1.25rem; font-size: 0.9rem; color: #3730a3; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.1rem; }
-    .card strong { display: block; color: #0f172a; margin-bottom: 0.25rem; }
-    .card span { font-size: 0.875rem; color: #64748b; }
-    footer { font-size: 0.8rem; color: #94a3b8; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
-    footer a { color: #94a3b8; }
-  </style>
+  <script src="/theme-sync.js"></script>
+  <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
   <div class="wrap">
@@ -82,7 +63,7 @@
       When you sign in, the Cognito Identity Pool exchanges your JWT for temporary IAM credentials.
       These credentials are restricted by policy to your own S3 prefix:
     </p>
-    <pre style="background:#f1f5f9;border-radius:8px;padding:0.85rem 1rem;font-size:0.8rem;overflow-x:auto;margin-bottom:1rem;color:#334155;">
+    <pre class="code-block">
 arn:aws:s3:::worth-flow-saves/users/&lt;your-identity-id&gt;/*</pre>
     <p>
       Attempting to read or write another user's prefix is denied by AWS at the IAM level -
@@ -121,7 +102,7 @@ arn:aws:s3:::worth-flow-saves/users/&lt;your-identity-id&gt;/*</pre>
     </p>
 
     <footer>
-      <span>&copy; <script>document.write(new Date().getFullYear())</script> Worth Flow &mdash; a personal hobby project</span>
+      <span>&copy; <span data-year>2026</span> Worth Flow &mdash; a personal hobby project</span>
       <span>
         <a href="/about">About</a> &middot;
         <a href="/privacy">Privacy</a> &middot;
