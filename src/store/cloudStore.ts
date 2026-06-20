@@ -19,6 +19,12 @@ export type { SaveFileMeta }
 export const SAVE_LIMIT = 5
 export const SAVE_LIMIT_ERROR = 'SAVE_LIMIT_REACHED'
 
+// Default label for the first plan's automatic save, e.g. "My Plan · Jun 2026".
+export function defaultPlanLabel(date = new Date()): string {
+  const stamp = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+  return `My Plan · ${stamp}`
+}
+
 function isPreconditionFailed(err: unknown): boolean {
   const e = err as { name?: string; $metadata?: { httpStatusCode?: number } }
   return e?.name === 'PreconditionFailed' || e?.$metadata?.httpStatusCode === 412

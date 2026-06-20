@@ -1,11 +1,11 @@
 import {
+  Alert,
   Badge,
   Button,
   Card,
   Divider,
   Grid,
   Group,
-  JsonInput,
   Stack,
   Text,
   ThemeIcon,
@@ -28,6 +28,12 @@ import { exportPlan } from "@/engine/exportPlan";
 import { formatMonth } from "@/engine/monthFormatting";
 import { useBuilderStore } from "@/store/builderStore";
 import { usePlannerStore } from "@/store/plannerStore";
+import { useCloudStore, defaultPlanLabel } from "@/store/cloudStore";
+import {
+  notifyCloudSaved,
+  notifyCloudAutoSaveFailed,
+  notifyGeneratedNudge,
+} from "@/lib/cloudNotifications";
 
 function MetricCard({
   label,
@@ -66,8 +72,11 @@ function MetricCard({
 
 export default function ReviewStep() {
   const state = useBuilderStore((store) => store.state);
-  const loadPlan = usePlannerStore((store) => store.loadPlan);
+  const loadGeneratedPlan = usePlannerStore((store) => store.loadGeneratedPlan);
   const setActiveView = usePlannerStore((store) => store.setActiveView);
+  const saveCount = useCloudStore((s) => s.saves.length);
+  const initialLoadFailed = useCloudStore((s) => s.initialLoadFailed);
+  const willAutoSave = saveCount === 0 && !initialLoadFailed;
 
   const config = useMemo(() => builderToConfig(state), [state]);
 
@@ -76,6 +85,24 @@ export default function ReviewStep() {
     state.bonusIncome.length +
     state.salaryChanges.length +
     state.creditCardBills.length;
+
+  async function handleGenerate() {
+    loadGeneratedPlan(config);
+    setActiveView("forecast");
+
+    const { saves, initialLoadFailed, uploadCurrentPlan } = useCloudStore.getState();
+
+    if (!initialLoadFailed && saves.length === 0) {
+      try {
+        await uploadCurrentPlan(defaultPlanLabel());
+        notifyCloudSaved(useCloudStore.getState().saves.length);
+      } catch {
+        notifyCloudAutoSaveFailed();
+      }
+    } else {
+      notifyGeneratedNudge();
+    }
+  }
 
   return (
     <Stack maw={800} mx="auto" mt="xl" mb="xl" gap="lg">
@@ -87,6 +114,12 @@ export default function ReviewStep() {
           Check your plan summary before generating the forecast.
         </Text>
       </Stack>
+
+      <Alert color="brand" variant="light" radius="md">
+        {willAutoSave
+          ? "Generating creates your forecast and saves it to the cloud automatically."
+          : "Generating creates a new plan. Save it to a cloud slot to keep it — your existing saves aren't changed."}
+      </Alert>
 
       <Card withBorder radius="md" p="lg">
         <Group gap="xs" mb="md">
@@ -183,31 +216,6 @@ export default function ReviewStep() {
         )}
       </Card>
 
-      <Card withBorder radius="md" p="lg">
-        <Group gap="xs" mb="md">
-          <Text fw={600} size="sm">
-            Generated Configuration
-          </Text>
-          <Badge variant="light" color="gray" size="sm">
-            JSON
-          </Badge>
-        </Group>
-        <Divider mb="md" />
-        <JsonInput
-          readOnly
-          autosize
-          minRows={10}
-          maxRows={22}
-          value={JSON.stringify(config, null, 2)}
-          styles={{
-            input: {
-              fontFamily: "var(--mantine-font-family-monospace)",
-              fontSize: "12px",
-            },
-          }}
-        />
-      </Card>
-
       <Group grow>
         <Button
           variant="default"
@@ -218,10 +226,7 @@ export default function ReviewStep() {
         </Button>
         <Button
           leftSection={<IconPlayerPlay size={16} />}
-          onClick={() => {
-            loadPlan(config, {});
-            setActiveView("forecast");
-          }}
+          onClick={handleGenerate}
         >
           Generate Forecast
         </Button>

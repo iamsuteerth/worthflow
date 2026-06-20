@@ -63,7 +63,7 @@ export default function AddRecurringExpenseForm() {
       />
 
       <NumberInput
-        label="Monthly Amount"
+        label={frequency === "ANNUAL" ? "Annual Amount" : "Monthly Amount"}
         value={amount}
         min={1}
         thousandSeparator=","

@@ -102,6 +102,7 @@ interface PlannerStore {
     overrides: PlannerOverrides,
     scenarios?: SavedScenario[]
   ) => void;
+  loadGeneratedPlan: (baseConfig: PlannerConfig) => void;
   saveScenario: (name: string) => void;
   loadScenario: (id: string) => void;
   deleteScenario: (id: string) => void;
@@ -436,6 +437,21 @@ export const usePlannerStore = create<PlannerStore>()(
           pristineSnapshot: serializePristine(baseConfig, overrides, scenarios),
         });
       },
+
+      // Loads a freshly builder-generated plan. Unlike loadPlan (used for cloud saves,
+      // which ARE the clean baseline), this leaves the plan DIRTY until a real cloud
+      // save calls markSaved(). pristineSnapshot = "" is the "no saved baseline yet"
+      // sentinel: serializePristine always returns a "{...}" JSON string, so the plan
+      // reads as dirty and autoLoadLatest() will preserve it across a refresh.
+      loadGeneratedPlan: (baseConfig) =>
+        set({
+          baseConfig,
+          overrides: {},
+          savedScenarios: [],
+          config: buildEffectiveConfig(baseConfig, {}),
+          baselineAccountIds: captureBaselineAccountIds(baseConfig),
+          pristineSnapshot: "",
+        }),
 
       resetOverrides: () =>
         set((s) => ({

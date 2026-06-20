@@ -266,7 +266,7 @@ export default function EventsStep() {
                 onChange={(e) => setRecurringName(e.currentTarget.value)}
               />
               <NumberInput
-                label="Monthly Amount"
+                label={recurringFrequency === "ANNUAL" ? "Annual Amount" : "Monthly Amount"}
                 value={recurringAmount}
                 min={1}
                 thousandSeparator=","

@@ -10,8 +10,8 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useState } from "react";
-import { notifications } from "@mantine/notifications";
 import { useCloudStore, SAVE_LIMIT, SAVE_LIMIT_ERROR, type SaveFileMeta } from "@/store/cloudStore";
+import { notifyCloudSaved, notifyCloudOverwritten } from "@/lib/cloudNotifications";
 
 interface SaveDialogProps {
   opened: boolean;
@@ -57,11 +57,11 @@ export function SaveDialog({ opened, onClose, existingSaves, atLimit }: SaveDial
     try {
       if (effectiveMode === "new") {
         await uploadCurrentPlan(label.trim());
-        notifications.show({ message: "Plan saved to cloud.", color: "teal" });
+        notifyCloudSaved(useCloudStore.getState().saves.length);
       } else {
         const existing = existingSaves.find((s) => s.key === overwriteKey);
         await uploadCurrentPlan(existing?.label ?? label.trim(), overwriteKey ?? undefined);
-        notifications.show({ message: "Save overwritten.", color: "teal" });
+        notifyCloudOverwritten(useCloudStore.getState().saves.length);
       }
       handleClose();
     } catch (err) {
