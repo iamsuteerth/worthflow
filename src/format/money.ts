@@ -19,3 +19,15 @@ export function moneySigned(value: number): string {
   const abs = Math.abs(value);
   return `${sign}₹${Math.round(abs).toLocaleString("en-IN")}`;
 }
+
+// Accounting convention: negatives are wrapped in brackets, e.g. -500 → (₹500).
+// Positives carry no sign.
+export function moneyParens(value: number): string {
+  const body = `₹${Math.round(Math.abs(value)).toLocaleString("en-IN")}`;
+  return value < 0 ? `(${body})` : body;
+}
+
+export function moneyCompactParens(value: number): string {
+  const body = moneyCompact(Math.abs(value));
+  return value < 0 ? `(${body})` : body;
+}

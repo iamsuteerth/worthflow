@@ -4,7 +4,7 @@ import { formatMonth } from "@/engine/monthFormatting";
 import { EmptyState, RecordCard } from "@/components/ui";
 import { Money } from "@/components/ui";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { money } from "@/components/tables/tableUtils";
+import { moneyParens } from "@/format/money";
 
 export default function ForecastTable() {
   const result = useFilteredSimulation();
@@ -32,17 +32,17 @@ export default function ForecastTable() {
             fields={[
               {
                 label: "Cash",
-                value: <Money value={row.assets.cash} compact />,
+                value: <Money value={row.assets.cash} compact accounting />,
                 valueColor: row.assets.cash < 0 ? "red" : undefined,
               },
               {
                 label: "Net Worth",
-                value: <Money value={row.assets.netWorth} compact />,
+                value: <Money value={row.assets.netWorth} compact accounting />,
                 valueColor: row.assets.netWorth < 0 ? "red" : undefined,
                 emphasis: true,
               },
-              { label: "FD",     value: <Money value={row.assets.fdValue} compact />,  valueColor: row.assets.fdValue > 0 ? "cyan" : undefined },
-              { label: "RD",     value: <Money value={row.assets.rdValue} compact />,  valueColor: row.assets.rdValue > 0 ? "grape" : undefined },
+              { label: "FD",     value: <Money value={row.assets.fdValue} compact accounting />,  valueColor: row.assets.fdValue > 0 ? "cyan" : undefined },
+              { label: "RD",     value: <Money value={row.assets.rdValue} compact accounting />,  valueColor: row.assets.rdValue > 0 ? "grape" : undefined },
               { label: "Events", value: String(row.events.length) },
             ]}
           />
@@ -77,25 +77,25 @@ export default function ForecastTable() {
 
                 <Table.Td>
                   <Text fw={500} c={row.assets.cash < 0 ? "red" : undefined}>
-                    {money(row.assets.cash)}
+                    {moneyParens(row.assets.cash)}
                   </Text>
                 </Table.Td>
 
                 <Table.Td>
                   <Text fw={700} c={row.assets.netWorth < 0 ? "red" : undefined}>
-                    {money(row.assets.netWorth)}
+                    {moneyParens(row.assets.netWorth)}
                   </Text>
                 </Table.Td>
 
                 <Table.Td>
                   <Text c={row.assets.fdValue > 0 ? "cyan" : undefined}>
-                    {money(row.assets.fdValue)}
+                    {moneyParens(row.assets.fdValue)}
                   </Text>
                 </Table.Td>
 
                 <Table.Td>
                   <Text c={row.assets.rdValue > 0 ? "grape" : undefined}>
-                    {money(row.assets.rdValue)}
+                    {moneyParens(row.assets.rdValue)}
                   </Text>
                 </Table.Td>
 

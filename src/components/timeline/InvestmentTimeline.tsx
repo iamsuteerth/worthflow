@@ -6,7 +6,7 @@ import {
   Timeline,
 } from "@mantine/core";
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
-import { formatMonth } from "@/engine/monthFormatting";
+import { formatMonthGrouped } from "@/engine/monthFormatting";
 import { getEventVisual } from "@/theme/eventVisuals";
 import { money } from "@/format/money";
 import { EmptyState } from "@/components/ui";
@@ -35,39 +35,44 @@ export default function InvestmentTimeline() {
   }
 
   return (
-    <Timeline bulletSize={30} lineWidth={2}>
-      {rows.flatMap((row) =>
-        row.events
-          .filter((e) => INVESTMENT_TYPES.has(e.type))
-          .map((event) => {
-            const { label, color, Icon } = getEventVisual(event.type);
-            return (
-              <Timeline.Item
-                key={event.id}
-                bullet={
-                  <ThemeIcon size="md" radius="xl" variant="light" color={color}>
-                    <Icon size={16} />
-                  </ThemeIcon>
-                }
-                title={
-                  <Group gap="xs">
-                    <Text fw={600} size="sm">{event.description}</Text>
-                    <Text size="xs" c={color} fw={500}>{label}</Text>
-                  </Group>
-                }
-              >
-                <Stack gap={4} mt={4}>
-                  <Text size="xs" c="dimmed">{formatMonth(row.month)}</Text>
-                  <Text fw={700} size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
-                    {event.type === "ACCOUNT_RETURN_OVERRIDE"
-                      ? `${event.amount.toFixed(2)}%`
-                      : money(event.amount)}
-                  </Text>
-                </Stack>
-              </Timeline.Item>
-            );
-          })
-      )}
-    </Timeline>
+    <Stack gap="lg">
+      {rows.map((row) => {
+        const monthEvents = row.events.filter((e) => INVESTMENT_TYPES.has(e.type));
+        return (
+          <Stack key={row.month} gap="xs">
+            <Text fw={700} size="sm">{formatMonthGrouped(row.month)}</Text>
+            <Timeline bulletSize={30} lineWidth={2}>
+              {monthEvents.map((event) => {
+                const { label, color, Icon } = getEventVisual(event.type);
+                return (
+                  <Timeline.Item
+                    key={event.id}
+                    bullet={
+                      <ThemeIcon size="md" radius="xl" variant="light" color={color}>
+                        <Icon size={16} />
+                      </ThemeIcon>
+                    }
+                    title={
+                      <Group gap="xs">
+                        <Text fw={600} size="sm">{event.description}</Text>
+                        <Text size="xs" c={color} fw={500}>{label}</Text>
+                      </Group>
+                    }
+                  >
+                    <Stack gap={4} mt={4}>
+                      <Text fw={700} size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
+                        {event.type === "ACCOUNT_RETURN_OVERRIDE"
+                          ? `${event.amount.toFixed(2)}%`
+                          : money(event.amount)}
+                      </Text>
+                    </Stack>
+                  </Timeline.Item>
+                );
+              })}
+            </Timeline>
+          </Stack>
+        );
+      })}
+    </Stack>
   );
 }

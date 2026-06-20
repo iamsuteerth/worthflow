@@ -1,29 +1,36 @@
 import { Text, Tooltip, type TextProps } from "@mantine/core";
-import { money, moneyCompact } from "@/format/money";
+import { money, moneyCompact, moneyParens, moneyCompactParens } from "@/format/money";
 
 interface MoneyProps extends Omit<TextProps, "children"> {
   value: number;
   compact?: boolean;
   signed?: boolean;
+  // Accounting style: negatives wrapped in brackets, positives unsigned.
+  accounting?: boolean;
 }
 
 export function Money({
   value,
   compact = false,
   signed = false,
+  accounting = false,
   ...textProps
 }: MoneyProps) {
   const abs = Math.abs(value);
   const sign = signed ? (value >= 0 ? "+" : "−") : "";
 
-  const fullText = signed
-    ? `${sign}₹${Math.round(abs).toLocaleString("en-IN")}`
-    : money(value);
+  const fullText = accounting
+    ? moneyParens(value)
+    : signed
+      ? `${sign}₹${Math.round(abs).toLocaleString("en-IN")}`
+      : money(value);
 
   const displayText = compact
-    ? signed
-      ? `${sign}${moneyCompact(abs)}`
-      : moneyCompact(value)
+    ? accounting
+      ? moneyCompactParens(value)
+      : signed
+        ? `${sign}${moneyCompact(abs)}`
+        : moneyCompact(value)
     : fullText;
 
   if (compact) {

@@ -1,6 +1,7 @@
 import { Badge, ScrollArea, Stack, Table, Text } from "@mantine/core";
 import { useMemo } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
+import { useFilterStore } from "@/store/filterStore";
 import { addMonths } from "@/engine/dateUtils";
 import { formatMonth } from "@/engine/monthFormatting";
 import { EmptyState, RecordCard, Money } from "@/components/ui";
@@ -12,6 +13,8 @@ export default function InstrumentsTable() {
   const config = usePlannerStore((state) => state.config);
   const isMobile = useIsMobile();
 
+  const { startMonth, endMonth } = useFilterStore();
+
   const instrumentRows = useMemo(
     () =>
       config.instruments.map((instrument) => ({
@@ -20,6 +23,18 @@ export default function InstrumentsTable() {
         ...projectInstrument(instrument),
       })),
     [config.instruments]
+  );
+
+  // Overlap filter: show instruments whose start→maturity span intersects the
+  // active month range (keeps historic-but-still-running instruments visible).
+  const visibleRows = useMemo(
+    () =>
+      instrumentRows.filter(({ instrument, maturity }) => {
+        if (startMonth && maturity < startMonth) return false;
+        if (endMonth && instrument.startMonth > endMonth) return false;
+        return true;
+      }),
+    [instrumentRows, startMonth, endMonth]
   );
 
   if (config.instruments.length === 0) {
@@ -31,10 +46,19 @@ export default function InstrumentsTable() {
     );
   }
 
+  if (visibleRows.length === 0) {
+    return (
+      <EmptyState
+        title="No Instruments In Range"
+        description="No FDs or RDs are active in the selected month range."
+      />
+    );
+  }
+
   if (isMobile) {
     return (
       <Stack gap="sm">
-        {instrumentRows.map(({ instrument, maturity, principal, maturityValue, interest }) => (
+        {visibleRows.map(({ instrument, maturity, principal, maturityValue, interest }) => (
           <RecordCard
             key={instrument.id}
             header={
@@ -78,7 +102,7 @@ export default function InstrumentsTable() {
         </Table.Thead>
 
         <Table.Tbody>
-          {instrumentRows.map(({ instrument, maturity, principal, maturityValue, interest }) => (
+          {visibleRows.map(({ instrument, maturity, principal, maturityValue, interest }) => (
             <Table.Tr key={instrument.id}>
               <Table.Td>{instrument.name}</Table.Td>
 

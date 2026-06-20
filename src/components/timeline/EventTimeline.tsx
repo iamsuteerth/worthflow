@@ -8,7 +8,7 @@ import {
 } from "@mantine/core";
 
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
-import { formatMonth } from "@/engine/monthFormatting";
+import { formatMonth, formatMonthGrouped } from "@/engine/monthFormatting";
 import { useFilterStore } from "@/store/filterStore";
 import { EVENT_CATEGORY_LIST, getEventCategory } from "@/engine/eventCategories";
 import { getEventVisual } from "@/theme/eventVisuals";
@@ -53,42 +53,48 @@ export default function EventTimeline() {
           description="Scenario changes and investment lifecycle events will appear here."
         />
       ) : (
-        <Timeline bulletSize={30} lineWidth={2}>
-          {rows.flatMap((row) =>
-            row.events
-              .filter((e) => isVisible(e.type))
-              .map((event) => {
-                const { label, color, Icon } = getEventVisual(event.type);
-                return (
-                  <Timeline.Item
-                    key={event.id}
-                    bullet={
-                      <ThemeIcon size="md" radius="xl" variant="light" color={color}>
-                        <Icon size={16} />
-                      </ThemeIcon>
-                    }
-                    title={
-                      <Group gap="xs" align="center">
-                        <Text fw={600} size="sm">{event.description}</Text>
-                        <Text size="xs" c={color} fw={500}>{label}</Text>
-                      </Group>
-                    }
-                  >
-                    <Stack gap={4} mt={4}>
-                      <Text size="xs" c="dimmed" fw={500}>
-                        {event.rangeEnd
-                          ? `${formatMonth(row.month)} → ${formatMonth(event.rangeEnd)}`
-                          : formatMonth(row.month)}
-                      </Text>
-                      <Text fw={700} size="lg" style={{ fontVariantNumeric: "tabular-nums" }}>
-                        {money(event.amount)}
-                      </Text>
-                    </Stack>
-                  </Timeline.Item>
-                );
-              })
-          )}
-        </Timeline>
+        <Stack gap="lg">
+          {rows.map((row) => {
+            const monthEvents = row.events.filter((e) => isVisible(e.type));
+            return (
+              <Stack key={row.month} gap="xs">
+                <Text fw={700} size="sm">{formatMonthGrouped(row.month)}</Text>
+                <Timeline bulletSize={30} lineWidth={2}>
+                  {monthEvents.map((event) => {
+                    const { label, color, Icon } = getEventVisual(event.type);
+                    return (
+                      <Timeline.Item
+                        key={event.id}
+                        bullet={
+                          <ThemeIcon size="md" radius="xl" variant="light" color={color}>
+                            <Icon size={16} />
+                          </ThemeIcon>
+                        }
+                        title={
+                          <Group gap="xs" align="center">
+                            <Text fw={600} size="sm">{event.description}</Text>
+                            <Text size="xs" c={color} fw={500}>{label}</Text>
+                          </Group>
+                        }
+                      >
+                        <Stack gap={4} mt={4}>
+                          {event.rangeEnd && (
+                            <Text size="xs" c="dimmed" fw={500}>
+                              Through {formatMonth(event.rangeEnd)}
+                            </Text>
+                          )}
+                          <Text fw={700} size="lg" style={{ fontVariantNumeric: "tabular-nums" }}>
+                            {money(event.amount)}
+                          </Text>
+                        </Stack>
+                      </Timeline.Item>
+                    );
+                  })}
+                </Timeline>
+              </Stack>
+            );
+          })}
+        </Stack>
       )}
     </Stack>
   );

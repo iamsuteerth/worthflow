@@ -2,7 +2,7 @@ import { ScrollArea, Stack, Table, Text } from "@mantine/core";
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { formatMonth } from "@/engine/monthFormatting";
 import { EmptyState, RecordCard, Money } from "@/components/ui";
-import { money } from "@/components/tables/tableUtils";
+import { moneyParens } from "@/format/money";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 
@@ -27,11 +27,11 @@ export default function NetWorthTable() {
             key={row.month}
             header={<Text fw={700} size="sm">{formatMonth(row.month)}</Text>}
             fields={[
-              { label: "Cash",       value: <Money value={row.assets.cash} compact />,             valueColor: row.assets.cash < 0 ? "red" : undefined },
-              { label: "Investment", value: <Money value={row.assets.investmentCorpus} compact /> },
-              { label: "FD",         value: <Money value={row.assets.fdValue} compact />,          valueColor: row.assets.fdValue > 0 ? "cyan" : undefined },
-              { label: "RD",         value: <Money value={row.assets.rdValue} compact />,          valueColor: row.assets.rdValue > 0 ? "grape" : undefined },
-              { label: "Net Worth",  value: <Money value={row.assets.netWorth} compact />,         emphasis: true, valueColor: row.assets.netWorth < 0 ? "red" : undefined },
+              { label: "Cash",       value: <Money value={row.assets.cash} compact accounting />,             valueColor: row.assets.cash < 0 ? "red" : undefined },
+              { label: "Investment", value: <Money value={row.assets.investmentCorpus} compact accounting />, valueColor: row.assets.investmentCorpus < 0 ? "red" : undefined },
+              { label: "FD",         value: <Money value={row.assets.fdValue} compact accounting />,          valueColor: row.assets.fdValue > 0 ? "cyan" : undefined },
+              { label: "RD",         value: <Money value={row.assets.rdValue} compact accounting />,          valueColor: row.assets.rdValue > 0 ? "grape" : undefined },
+              { label: "Net Worth",  value: <Money value={row.assets.netWorth} compact accounting />,         emphasis: true, valueColor: row.assets.netWorth < 0 ? "red" : undefined },
             ]}
           />
         ))}
@@ -61,29 +61,31 @@ export default function NetWorthTable() {
 
                 <Table.Td>
                   <Text fw={500} c={row.assets.cash < 0 ? "red" : undefined}>
-                    {money(row.assets.cash)}
+                    {moneyParens(row.assets.cash)}
                   </Text>
                 </Table.Td>
 
                 <Table.Td>
-                  <Text>{money(row.assets.investmentCorpus)}</Text>
+                  <Text c={row.assets.investmentCorpus < 0 ? "red" : undefined}>
+                    {moneyParens(row.assets.investmentCorpus)}
+                  </Text>
                 </Table.Td>
 
                 <Table.Td>
                   <Text c={row.assets.fdValue > 0 ? "cyan" : undefined}>
-                    {money(row.assets.fdValue)}
+                    {moneyParens(row.assets.fdValue)}
                   </Text>
                 </Table.Td>
 
                 <Table.Td>
                   <Text c={row.assets.rdValue > 0 ? "grape" : undefined}>
-                    {money(row.assets.rdValue)}
+                    {moneyParens(row.assets.rdValue)}
                   </Text>
                 </Table.Td>
 
                 <Table.Td>
                   <Text fw={700} c={row.assets.netWorth < 0 ? "red" : undefined}>
-                    {money(row.assets.netWorth)}
+                    {moneyParens(row.assets.netWorth)}
                   </Text>
                 </Table.Td>
               </Table.Tr>
