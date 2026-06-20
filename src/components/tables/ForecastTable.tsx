@@ -100,7 +100,7 @@ export default function ForecastTable() {
                 </Table.Td>
 
                 <Table.Td>
-                  <Text size="sm" c="dimmed" ta="right">
+                  <Text size="sm" c="dimmed">
                     {row.events.length}
                   </Text>
                 </Table.Td>

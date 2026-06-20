@@ -137,6 +137,11 @@ export function simulate(
       .reduce((sum, entry) => sum + entry.amount, 0);
     state.cash += withdrawalProceeds;
 
+    // Net runtime deposit/withdrawal cash effect: withdrawal proceeds in, clamped
+    // deposits out. (Monthly contributions are tracked separately as investmentAmount.)
+    const depositsTotal = clampedDeposits.reduce((sum, d) => sum + d.amount, 0);
+    const proceeds = withdrawalProceeds - depositsTotal;
+
     state.accountBalances = result.accountBalances;
     state.investmentCorpus = Object.values(result.accountBalances).reduce(
       (sum, value) => sum + value,
@@ -148,9 +153,13 @@ export function simulate(
       accountCashflows[entry.accountId]?.push({ amount: entry.amount, date: entry.date });
     }
 
+    const cashBeforeInstruments = state.cash;
     const lifecycle = processInstrumentLifecycle(state, config, month);
     state = lifecycle.state;
     cashFloor = Math.min(cashFloor, lifecycle.minCash);
+    // The lifecycle only moves cash via FD/RD contributions, principal and
+    // maturities, so its net cash delta is exactly this month's instrument flow.
+    const instrumentFlow = state.cash - cashBeforeInstruments;
 
     if (cashFloor < lowestCash) {
       lowestCash = cashFloor;
@@ -183,6 +192,8 @@ export function simulate(
       oneOffExpense,
       recurringExpense,
       investmentAmount,
+      proceeds,
+      instrumentFlow,
       totalInflow: income,
       totalOutflow,
     };

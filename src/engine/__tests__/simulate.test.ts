@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { simulate } from "@/engine/simulate";
 import type { PlannerConfig } from "@/types/config";
+import type { PlannerOverrides } from "@/types/overrides";
 
 function makeConfig(overrides: Partial<PlannerConfig> = {}): PlannerConfig {
   return {
@@ -201,5 +202,79 @@ describe("simulate — summary", () => {
     const config = makeConfig({ income: { monthly: 30_000 }, expenses: { defaultMonthly: 50_000, overrides: {} } });
     const { summary } = simulate(config);
     expect(summary.lowestBalance).toBeLessThan(0);
+  });
+});
+
+describe("simulate — cashflow reconciliation", () => {
+  it("every month's cashflow components sum to the closing balance", () => {
+    const config = makeConfig({
+      forecast: { startMonth: "2025-01", totalMonths: 6 },
+      cash: { openingBalance: 1_000_000 },
+      income: { monthly: 100_000 },
+      expenses: { defaultMonthly: 30_000, overrides: {} },
+      creditCardBills: [{ id: "cc1", month: "2025-02", amount: 15_000, label: "CC" }],
+      oneOffExpenses: [{ id: "oo1", month: "2025-03", amount: 25_000, label: "Trip" }],
+      recurringExpenses: [{ id: "re1", name: "Gym", amount: 2_000, startMonth: "2025-01", endMonth: "2025-06", frequency: "MONTHLY" }],
+      bonusIncome: [{ id: "b1", month: "2025-04", amount: 50_000, description: "Bonus" }],
+      investments: {
+        accounts: [{ id: "acc1", name: "MF", startMonth: "2025-01", openingBalance: 0, defaultAnnualReturn: 12, defaultMonthlyContribution: 10_000 }],
+        amountOverrides: [],
+        returnOverrides: [],
+      },
+      instruments: [
+        { id: "fd1", type: "FD", name: "FD", principal: 100_000, rate: 7, startMonth: "2025-02", durationMonths: 3 },
+        { id: "rd1", type: "RD", name: "RD", monthlyContribution: 5_000, rate: 6, startMonth: "2025-01", durationMonths: 3 },
+      ],
+    });
+    const overrides: PlannerOverrides = {
+      runtimeEvents: [
+        { id: "d1", type: "INVESTMENT_DEPOSIT", accountId: "acc1", month: "2025-02", amount: 20_000 },
+        { id: "w1", type: "INVESTMENT_WITHDRAWAL", accountId: "acc1", month: "2025-05", amount: 8_000 },
+      ],
+    };
+    const { rows } = simulate(config, overrides);
+
+    for (const row of rows) {
+      const c = row.cashflow;
+      const reconstructed =
+        row.openingBalance +
+        c.income -
+        c.flatExpense -
+        c.creditCardExpense -
+        c.oneOffExpense -
+        c.recurringExpense -
+        c.investmentAmount +
+        c.proceeds +
+        c.instrumentFlow;
+      expect(reconstructed).toBeCloseTo(row.closingBalance, 6);
+    }
+  });
+
+  it("splits runtime deposits/withdrawals into proceeds; investmentAmount stays contributions-only", () => {
+    const config = makeConfig({
+      forecast: { startMonth: "2025-01", totalMonths: 3 },
+      cash: { openingBalance: 500_000 },
+      income: { monthly: 0 },
+      expenses: { defaultMonthly: 0, overrides: {} },
+      investments: {
+        accounts: [{ id: "acc1", name: "MF", startMonth: "2025-01", openingBalance: 0, defaultAnnualReturn: 0, defaultMonthlyContribution: 10_000 }],
+        amountOverrides: [],
+        returnOverrides: [],
+      },
+    });
+    const overrides: PlannerOverrides = {
+      runtimeEvents: [
+        { id: "d1", type: "INVESTMENT_DEPOSIT", accountId: "acc1", month: "2025-01", amount: 20_000 },
+        { id: "w1", type: "INVESTMENT_WITHDRAWAL", accountId: "acc1", month: "2025-02", amount: 5_000 },
+      ],
+    };
+    const { rows } = simulate(config, overrides);
+
+    // Month 1: 10k contribution (investmentAmount), 20k deposit out → proceeds −20k.
+    expect(rows[0].cashflow.investmentAmount).toBe(10_000);
+    expect(rows[0].cashflow.proceeds).toBe(-20_000);
+    // Month 2: 10k contribution, 5k withdrawal in → proceeds +5k.
+    expect(rows[1].cashflow.investmentAmount).toBe(10_000);
+    expect(rows[1].cashflow.proceeds).toBe(5_000);
   });
 });

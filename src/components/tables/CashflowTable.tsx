@@ -1,7 +1,7 @@
 import { ScrollArea, Stack, Table, Text } from "@mantine/core";
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { formatMonth } from "@/engine/monthFormatting";
-import { money, sumEvents, netInstrumentFlow } from "@/components/tables/tableUtils";
+import { money, sumEvents } from "@/components/tables/tableUtils";
 import { EmptyState, RecordCard, Money } from "@/components/ui";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
@@ -24,22 +24,24 @@ export default function CashflowTable() {
       <Stack gap="sm">
         {result.rows.map((row) => {
           const bonus = sumEvents(row.events, "BONUS_INCOME");
-          const instrumentFlow = netInstrumentFlow(row.events);
-          const investWithdrawal = sumEvents(row.events, "INVESTMENT_WITHDRAWAL");
-          const netInvest = row.cashflow.investmentAmount - investWithdrawal;
+          const salary = row.cashflow.income - bonus;
+          const invest = row.cashflow.investmentAmount;
+          const proceeds = row.cashflow.proceeds;
+          const instrumentFlow = row.cashflow.instrumentFlow;
           return (
             <RecordCard
               key={row.month}
               header={<Text fw={700} size="sm">{formatMonth(row.month)}</Text>}
               fields={[
                 { label: "Open",        value: <Money value={row.openingBalance} compact />,  valueColor: row.openingBalance < 0 ? "red.6" : undefined },
-                { label: "Income",      value: <Money value={row.cashflow.income} compact />,  valueColor: row.cashflow.income > 0 ? "teal" : row.cashflow.income < 0 ? "red" : undefined },
+                { label: "Income",      value: <Money value={salary} compact />,              valueColor: salary > 0 ? "teal" : salary < 0 ? "red" : undefined },
                 { label: "Bonus",       value: <Money value={bonus} compact />,                valueColor: bonus > 0 ? "teal" : bonus < 0 ? "red" : undefined },
                 { label: "Expenses",    value: <Money value={row.cashflow.flatExpense} compact />, valueColor: row.cashflow.flatExpense > 0 ? "red" : undefined },
                 { label: "CC",          value: <Money value={row.cashflow.creditCardExpense} compact />, valueColor: row.cashflow.creditCardExpense > 0 ? "orange" : undefined },
                 { label: "One-Off",     value: <Money value={row.cashflow.oneOffExpense} compact />, valueColor: row.cashflow.oneOffExpense > 0 ? "red" : undefined },
                 { label: "Recurring",   value: <Money value={row.cashflow.recurringExpense} compact />, valueColor: row.cashflow.recurringExpense > 0 ? "red" : undefined },
-                { label: "Invest",      value: <Money value={netInvest} compact />,           valueColor: netInvest > 0 ? "violet" : netInvest < 0 ? "teal" : undefined },
+                { label: "Invest",      value: <Money value={invest} compact />,               valueColor: invest > 0 ? "violet" : undefined },
+                { label: "Proceeds",    value: <Money value={proceeds} compact />,             valueColor: proceeds > 0 ? "teal" : proceeds < 0 ? "red" : undefined },
                 { label: "Instruments", value: <Money value={instrumentFlow} compact />,       valueColor: instrumentFlow > 0 ? "teal" : instrumentFlow < 0 ? "red" : undefined },
                 { label: "Close",       value: <Money value={row.closingBalance} compact />,   emphasis: true, valueColor: row.closingBalance < 0 ? "red.6" : undefined },
               ]}
@@ -53,7 +55,7 @@ export default function CashflowTable() {
   return (
     <Stack gap="md">
       <ScrollArea viewportProps={{ style: { overscrollBehaviorX: "contain" } }}>
-        <Table miw={1400} striped highlightOnHover verticalSpacing="sm">
+        <Table miw={1500} striped highlightOnHover verticalSpacing="sm">
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Month</Table.Th>
@@ -65,6 +67,7 @@ export default function CashflowTable() {
               <Table.Th>One-Off</Table.Th>
               <Table.Th>Recurring</Table.Th>
               <Table.Th>Invest</Table.Th>
+              <Table.Th>Proceeds</Table.Th>
               <Table.Th>Instruments</Table.Th>
               <Table.Th>Close</Table.Th>
             </Table.Tr>
@@ -73,9 +76,10 @@ export default function CashflowTable() {
           <Table.Tbody>
             {result.rows.map((row) => {
               const bonus = sumEvents(row.events, "BONUS_INCOME");
-              const instrumentFlow = netInstrumentFlow(row.events);
-              const investWithdrawal = sumEvents(row.events, "INVESTMENT_WITHDRAWAL");
-              const netInvest = row.cashflow.investmentAmount - investWithdrawal;
+              const salary = row.cashflow.income - bonus;
+              const invest = row.cashflow.investmentAmount;
+              const proceeds = row.cashflow.proceeds;
+              const instrumentFlow = row.cashflow.instrumentFlow;
 
               return (
                 <Table.Tr key={row.month}>
@@ -88,8 +92,8 @@ export default function CashflowTable() {
                   </Table.Td>
 
                   <Table.Td>
-                    <Text c={row.cashflow.income > 0 ? "teal" : row.cashflow.income < 0 ? "red" : undefined} fw={500}>
-                      {money(row.cashflow.income)}
+                    <Text c={salary > 0 ? "teal" : salary < 0 ? "red" : undefined} fw={500}>
+                      {money(salary)}
                     </Text>
                   </Table.Td>
 
@@ -124,8 +128,14 @@ export default function CashflowTable() {
                   </Table.Td>
 
                   <Table.Td>
-                    <Text c={netInvest > 0 ? "violet" : netInvest < 0 ? "teal" : undefined}>
-                      {money(netInvest)}
+                    <Text c={invest > 0 ? "violet" : undefined}>
+                      {money(invest)}
+                    </Text>
+                  </Table.Td>
+
+                  <Table.Td>
+                    <Text c={proceeds > 0 ? "teal" : proceeds < 0 ? "red" : undefined}>
+                      {money(proceeds)}
                     </Text>
                   </Table.Td>
 

@@ -1,6 +1,5 @@
 import {
   Alert,
-  Badge,
   Button,
   Card,
   Divider,
@@ -13,6 +12,7 @@ import {
 import {
   IconBolt,
   IconBuildingBank,
+  IconCalendarEvent,
   IconCalendarMonth,
   IconCash,
   IconChartLine,
@@ -35,37 +35,31 @@ import {
   notifyGeneratedNudge,
 } from "@/lib/cloudNotifications";
 
+// Uniform summary card: icon + label on the top row, value below. Nothing else.
 function MetricCard({
   label,
   value,
   icon,
   color,
-  sub,
 }: {
   label: string;
   value: string;
   icon: React.ReactNode;
   color: string;
-  sub?: string;
 }) {
   return (
     <Card withBorder radius="md" p="md" h="100%">
-      <Group justify="space-between" align="flex-start" mb="xs">
+      <Group gap="xs" wrap="nowrap" mb="xs">
         <ThemeIcon variant="light" color={color} size="sm" radius="md">
           {icon}
         </ThemeIcon>
-        <Text size="xs" c="dimmed" fw={500} tt="uppercase" ta="right" style={{ letterSpacing: "0.04em" }}>
+        <Text size="xs" c="dimmed" fw={600} tt="uppercase" style={{ letterSpacing: "0.04em" }}>
           {label}
         </Text>
       </Group>
       <Text fw={700} size="lg" style={{ fontVariantNumeric: "tabular-nums" }}>
         {value}
       </Text>
-      {sub && (
-        <Text size="xs" c="dimmed" mt={2}>
-          {sub}
-        </Text>
-      )}
     </Card>
   );
 }
@@ -80,11 +74,24 @@ export default function ReviewStep() {
 
   const config = useMemo(() => builderToConfig(state), [state]);
 
+  // Every category addable in the Events step counts as an event.
   const totalEvents =
     state.oneOffExpenses.length +
+    state.creditCardBills.length +
+    state.recurringExpenses.length +
     state.bonusIncome.length +
-    state.salaryChanges.length +
-    state.creditCardBills.length;
+    state.salaryChanges.length;
+
+  const metrics = [
+    { label: "Start Month", value: formatMonth(state.startMonth), icon: <IconCalendarMonth size={14} />, color: "brand" },
+    { label: "Duration", value: `${state.totalMonths} mo`, icon: <IconChartLine size={14} />, color: "violet" },
+    { label: "Monthly Income", value: money(state.monthlyIncome), icon: <IconCash size={14} />, color: "teal" },
+    { label: "Monthly Expenses", value: money(state.defaultMonthlyExpense), icon: <IconBolt size={14} />, color: "red" },
+    { label: "Opening Cash", value: money(state.openingCash), icon: <IconWallet size={14} />, color: "brand" },
+    { label: "Investment Accounts", value: String(state.investmentAccounts.length), icon: <IconCoins size={14} />, color: "violet" },
+    { label: "Instruments", value: String(state.instruments.length), icon: <IconBuildingBank size={14} />, color: "cyan" },
+    { label: "Events", value: String(totalEvents), icon: <IconCalendarEvent size={14} />, color: "gray" },
+  ];
 
   async function handleGenerate() {
     loadGeneratedPlan(config);
@@ -133,87 +140,12 @@ export default function ReviewStep() {
         <Divider mb="md" />
 
         <Grid gap="sm">
-          <Grid.Col span={{ base: 6, md: 3 }}>
-            <MetricCard
-              label="Start Month"
-              value={formatMonth(state.startMonth)}
-              icon={<IconCalendarMonth size={14} />}
-              color="brand"
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 3 }}>
-            <MetricCard
-              label="Duration"
-              value={`${state.totalMonths} mo`}
-              icon={<IconChartLine size={14} />}
-              color="violet"
-              sub={`${Math.floor(state.totalMonths / 12)} yr${state.totalMonths % 12 > 0 ? ` ${state.totalMonths % 12} mo` : ""}`}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 3 }}>
-            <MetricCard
-              label="Monthly Income"
-              value={money(state.monthlyIncome)}
-              icon={<IconCash size={14} />}
-              color="teal"
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 3 }}>
-            <MetricCard
-              label="Monthly Expenses"
-              value={money(state.defaultMonthlyExpense)}
-              icon={<IconBolt size={14} />}
-              color="red"
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 3 }}>
-            <MetricCard
-              label="Opening Cash"
-              value={money(state.openingCash)}
-              icon={<IconWallet size={14} />}
-              color="brand"
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 3 }}>
-            <MetricCard
-              label="Investment Accounts"
-              value={String(state.investmentAccounts.length)}
-              icon={<IconCoins size={14} />}
-              color="violet"
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 3 }}>
-            <MetricCard
-              label="Events"
-              value={String(totalEvents)}
-              icon={<IconBolt size={14} />}
-              color="gray"
-            />
-          </Grid.Col>
+          {metrics.map((metric) => (
+            <Grid.Col key={metric.label} span={{ base: 6, md: 3 }}>
+              <MetricCard {...metric} />
+            </Grid.Col>
+          ))}
         </Grid>
-
-        {state.instruments.length > 0 && (
-          <Card withBorder radius="sm" p="sm" mt="sm" style={{ background: "var(--mantine-color-default-hover)" }}>
-            <Group justify="space-between">
-              <Group gap="xs">
-                <ThemeIcon variant="light" color="gray" size="sm" radius="sm">
-                  <IconBuildingBank size={14} />
-                </ThemeIcon>
-                <Text size="sm" fw={500}>
-                  Instruments
-                </Text>
-              </Group>
-              <Group gap="xs">
-                <Badge variant="light" color="cyan" size="sm">
-                  {state.instruments.filter((i) => i.type === "FD").length} FD
-                </Badge>
-                <Badge variant="light" color="grape" size="sm">
-                  {state.instruments.filter((i) => i.type === "RD").length} RD
-                </Badge>
-              </Group>
-            </Group>
-          </Card>
-        )}
       </Card>
 
       <Group grow>

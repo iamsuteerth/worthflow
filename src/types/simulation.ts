@@ -36,7 +36,15 @@ export interface MonthlyCashflow {
   creditCardExpense: number;
   oneOffExpense: number;
   recurringExpense: number;
+  // Monthly account contributions only (an outflow). Runtime deposits/withdrawals
+  // are tracked separately in `proceeds`.
   investmentAmount: number;
+  // Net cash from runtime investment deposits/withdrawals: positive for withdrawal
+  // proceeds (cash in), negative for deposits (cash out).
+  proceeds: number;
+  // Net cash movement from FD/RD instruments this month: negative for RD monthly
+  // contributions and FD principal outflows, positive for maturity payouts.
+  instrumentFlow: number;
   totalInflow: number;
   totalOutflow: number;
 }

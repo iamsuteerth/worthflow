@@ -79,6 +79,38 @@ describe("simulate — recurring deposits (end to end)", () => {
     // Month 3: three installments, aged [2, 1, 0] months.
     expect(rows[2].assets.rdValue).toBeCloseTo(rdAges(10_000, 6, [2, 1, 0]), 4);
   });
+
+  // Staggered RDs stack in the monthly instrument cashflow, and the maturity
+  // payout shows up as a positive flow in the maturity month.
+  it("reflects stacked RD contributions and maturity in instrument cashflow", () => {
+    const config = baseConfig({
+      forecast: { startMonth: m("2025-01"), totalMonths: 24 },
+      cash: { openingBalance: 500_000 },
+      income: { monthly: 0 },
+      expenses: { defaultMonthly: 0, overrides: {} },
+      instruments: [
+        { id: "rd1", type: "RD", name: "RD June", monthlyContribution: 5_000, rate: 6, startMonth: m("2025-06"), durationMonths: 12 },
+        { id: "rd2", type: "RD", name: "RD Sept", monthlyContribution: 5_000, rate: 6, startMonth: m("2025-09"), durationMonths: 12 },
+      ],
+    });
+    const { rows } = simulate(config);
+    const flowAt = (month: string) =>
+      rows.find((r) => r.month === month)!.cashflow.instrumentFlow;
+
+    expect(flowAt("2025-03")).toBe(0);        // before any RD starts
+    expect(flowAt("2025-06")).toBe(-5_000);   // RD June only
+    expect(flowAt("2025-08")).toBe(-5_000);
+    expect(flowAt("2025-09")).toBe(-10_000);  // both contributing
+    expect(flowAt("2026-05")).toBe(-10_000);  // RD June's last installment + RD Sept
+
+    // 2026-06: RD June matures (full payout) while RD Sept still contributes −5k.
+    const maturityRow = rows.find((r) => r.month === "2026-06")!;
+    expect(maturityRow.events.some((e) => e.type === "RD_MATURED")).toBe(true);
+    expect(maturityRow.cashflow.instrumentFlow).toBeCloseTo(
+      rdBankMaturity(5_000, 6, 12) - 5_000,
+      2
+    );
+  });
 });
 
 describe("simulate — investment accounts (end to end)", () => {

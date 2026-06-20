@@ -23,7 +23,7 @@ export function StatCard({
   const resolvedColor = valueColor ?? (negative ? "red.6" : undefined);
 
   return (
-    <Card withBorder p="lg">
+    <Card withBorder p="lg" h="100%">
       <Stack gap="xs">
         <Group justify="space-between" align="flex-start">
           <Text size="xs" c="dimmed" fw={500} tt="uppercase" style={{ letterSpacing: "0.04em" }}>

@@ -1,4 +1,5 @@
 import { Card, Stack, Text, Group, Divider, Box } from "@mantine/core";
+import { useElementSize } from "@mantine/hooks";
 import MonthRangeFilter from "@/components/common/MonthRangeFilter";
 import { AreaChart } from "@mantine/charts";
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
@@ -162,6 +163,12 @@ const SERIES = [
 export default function NetWorthChart() {
   const result = useFilteredSimulation();
 
+  // Only mount the chart once its container has a real measured width. recharts'
+  // ResponsiveContainer logs a "width(-1)/height(-1)" warning if it renders into an
+  // unsized container (which happens under StrictMode's throwaway mount / first paint);
+  // gating on a measured width avoids that entirely.
+  const { ref: chartRef, width: chartWidth } = useElementSize();
+
   const data: DataPoint[] = result.rows.map((row, index) => {
     const prev = index > 0 ? result.rows[index - 1] : null;
 
@@ -199,24 +206,28 @@ export default function NetWorthChart() {
             description="Adjust the month range filter to see the wealth projection."
           />
         ) : (
-          <AreaChart
-            h={360}
-            w="100%"
-            data={data}
-            dataKey="month"
-            withLegend
-            curveType="monotone"
-            valueFormatter={(value) => moneyCompact(Number(value))}
-            series={SERIES}
-            tooltipProps={{
-              content: ({ label, payload }) => (
-                <ChartTooltip
-                  label={label != null ? String(label) : undefined}
-                  payload={payload as unknown as { payload: DataPoint }[]}
-                />
-              ),
-            }}
-          />
+          <Box ref={chartRef} h={360}>
+            {chartWidth > 0 && (
+              <AreaChart
+                h={360}
+                w="100%"
+                data={data}
+                dataKey="month"
+                withLegend
+                curveType="monotone"
+                valueFormatter={(value) => moneyCompact(Number(value))}
+                series={SERIES}
+                tooltipProps={{
+                  content: ({ label, payload }) => (
+                    <ChartTooltip
+                      label={label != null ? String(label) : undefined}
+                      payload={payload as unknown as { payload: DataPoint }[]}
+                    />
+                  ),
+                }}
+              />
+            )}
+          </Box>
         )}
       </Stack>
     </Card>

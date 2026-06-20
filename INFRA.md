@@ -33,7 +33,7 @@ All infrastructure lives in [`/terraform`](./terraform), split into five modules
 | `ses` | `aws_ses_domain_identity` (data source) | Reads the verified `worthflow.in` domain identity; Cognito sends as `noreply@worthflow.in`. The identity is verified out-of-band via DNS (DKIM/SPF), so Terraform only references it, never manages its lifecycle. |
 | `cognito` | User Pool, User Pool Client, Lambda invoke permission | Email login, password policy (8+ chars, upper/lower/number), `custom:member_since` attribute, HTML verification email template, `prevent_user_existence_errors = ENABLED`, no client secret, SRP auth. |
 | `post_confirmation` | Lambda, IAM role + policies, CloudWatch log group | Node.js 22 function that sets `custom:member_since`; logs retained 14 days. |
-| `storage` | S3 bucket + public-access block, versioning, lifecycle, SSE, CORS | Bucket `worth-flow-saves`. Versioning on; non-current versions expire after 90 days; SSE-S3 (AES256); CORS limited to the app origins. |
+| `storage` | S3 bucket + public-access block, versioning, lifecycle, SSE, CORS | Bucket `worth-flow-saves`. Versioning on; non-current versions expire after 90 days; SSE-S3 (AES256); CORS limited to the app origins and **exposes the `ETag` header** (required for cloud-save concurrency — see deploy note 4). |
 | `identity_pool` | Identity Pool, authenticated IAM role + S3 policy, roles attachment | Authenticated users get S3 access scoped to `users/${cognito-identity.amazonaws.com:sub}/*` only. |
 
 ### Per-user data isolation
@@ -196,6 +196,11 @@ VITE_S3_ENDPOINT=http://localhost:4566
 2. **Redeploy** — Vercel only picks up env-var changes on a new deployment.
 3. The production origin (`https://worthflow.in`) must be in the S3 bucket's CORS
    `allowed_origins` (it is, via the `storage` module's `allowed_origins` input, derived from `domain`).
+4. The bucket's CORS **must keep `ETag` in `expose_headers`** (it does, in the `storage` module).
+   Cloud saves use a manifest with optimistic-concurrency writes (`If-Match` / `If-None-Match`),
+   and the browser SDK can only read an object's `ETag` to drive those conditional writes if CORS
+   exposes it. Without it the SDK reads a null ETag and falls back to create-only writes, so the
+   *second* save / any overwrite fails with **HTTP 412 Precondition Failed**.
 
 Build locally to sanity-check before pushing:
 

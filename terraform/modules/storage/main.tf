@@ -42,6 +42,8 @@ resource "aws_s3_bucket_cors_configuration" "saves" {
     allowed_headers = ["*"]
     allowed_methods = ["GET", "PUT", "DELETE"]
     allowed_origins = var.allowed_origins
-    expose_headers  = []
+    # ETag must be exposed so the browser SDK can read it from GetObject responses;
+    # the manifest's optimistic-concurrency writes (If-Match / If-None-Match) depend on it.
+    expose_headers  = ["ETag"]
   }
 }

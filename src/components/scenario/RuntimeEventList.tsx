@@ -22,42 +22,61 @@ import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
 import MonthSelect from "@/components/common/MonthSelect";
 
-function eventSummary(event: RuntimeEvent, accounts: InvestmentAccount[]): string {
+// The event's own identity (user label / name / account), shown as the card title.
+function eventName(event: RuntimeEvent, accounts: InvestmentAccount[]): string {
   switch (event.type) {
     case "ONE_OFF_EXPENSE":
-      return `${event.label} • ${money(event.amount)} in ${formatMonth(event.month)}`;
     case "CREDIT_CARD_EXPENSE":
-      return `${event.label} • ${money(event.amount)} in ${formatMonth(event.month)}`;
+      return event.label;
     case "RECURRING_EXPENSE":
-      return `${event.name} • ${money(event.amount)}${event.frequency === "ANNUAL" ? "/yr" : "/mo"} · ${formatMonth(event.startMonth)} → ${formatMonth(event.endMonth)}${event.frequency === "ANNUAL" ? " (Annual)" : ""}`;
-    case "BONUS_INCOME":
-      return `${event.description} • ${money(event.amount)} in ${formatMonth(event.month)}`;
-    case "SALARY_CHANGE":
-      return `${event.description} • ${money(event.newMonthlyIncome)}/mo from ${formatMonth(event.effectiveMonth)}`;
     case "FD":
-      return `${event.name} • ${money(event.principal)} @ ${event.rate}% from ${formatMonth(event.startMonth)}`;
     case "RD":
-      return `${event.name} • ${money(event.monthlyContribution)}/mo @ ${event.rate}% from ${formatMonth(event.startMonth)}`;
-    case "ACCOUNT_AMOUNT_OVERRIDE": {
-      const account = accounts.find((a) => a.id === event.accountId);
-      return `${account?.name ?? "Account"} • ${money(event.amount)}/mo · ${formatMonth(event.startMonth)} → ${formatMonth(event.endMonth)}`;
-    }
-    case "ACCOUNT_RETURN_OVERRIDE": {
-      const account = accounts.find((a) => a.id === event.accountId);
-      return `${account?.name ?? "Account"} • ${event.annualReturn}% · ${formatMonth(event.startMonth)} → ${formatMonth(event.endMonth)}`;
-    }
-    case "INVESTMENT_DEPOSIT": {
-      const account = accounts.find((a) => a.id === event.accountId);
-      return `${account?.name ?? "Account"} • ${money(event.amount)} in ${formatMonth(event.month)}`;
-    }
-    case "INVESTMENT_WITHDRAWAL": {
-      const account = accounts.find((a) => a.id === event.accountId);
-      return `${account?.name ?? "Account"} • ${money(event.amount)} in ${formatMonth(event.month)}`;
-    }
+      return event.name;
+    case "BONUS_INCOME":
+    case "SALARY_CHANGE":
+      return event.description;
+    case "ACCOUNT_AMOUNT_OVERRIDE":
+    case "ACCOUNT_RETURN_OVERRIDE":
+    case "INVESTMENT_DEPOSIT":
+    case "INVESTMENT_WITHDRAWAL":
+      return accounts.find((a) => a.id === event.accountId)?.name ?? "Account";
+    case "SPENDING_OVERRIDE":
+      return "Monthly spend";
+    case "OPENING_CASH_OVERRIDE":
+      return "Opening cash";
+    default:
+      return "";
+  }
+}
+
+// The amount/timing detail, sans the name (which is the title) and the type
+// (which moves into the subtext alongside this).
+function eventDetails(event: RuntimeEvent): string {
+  switch (event.type) {
+    case "ONE_OFF_EXPENSE":
+    case "CREDIT_CARD_EXPENSE":
+      return `${money(event.amount)} in ${formatMonth(event.month)}`;
+    case "RECURRING_EXPENSE":
+      return `${money(event.amount)}${event.frequency === "ANNUAL" ? "/yr" : "/mo"} · ${formatMonth(event.startMonth)} → ${formatMonth(event.endMonth)}${event.frequency === "ANNUAL" ? " (Annual)" : ""}`;
+    case "BONUS_INCOME":
+      return `${money(event.amount)} in ${formatMonth(event.month)}`;
+    case "SALARY_CHANGE":
+      return `${money(event.newMonthlyIncome)}/mo from ${formatMonth(event.effectiveMonth)}`;
+    case "FD":
+      return `${money(event.principal)} @ ${event.rate}% from ${formatMonth(event.startMonth)}`;
+    case "RD":
+      return `${money(event.monthlyContribution)}/mo @ ${event.rate}% from ${formatMonth(event.startMonth)}`;
+    case "ACCOUNT_AMOUNT_OVERRIDE":
+      return `${money(event.amount)}/mo · ${formatMonth(event.startMonth)} → ${formatMonth(event.endMonth)}`;
+    case "ACCOUNT_RETURN_OVERRIDE":
+      return `${event.annualReturn}% · ${formatMonth(event.startMonth)} → ${formatMonth(event.endMonth)}`;
+    case "INVESTMENT_DEPOSIT":
+    case "INVESTMENT_WITHDRAWAL":
+      return `${money(event.amount)} in ${formatMonth(event.month)}`;
     case "SPENDING_OVERRIDE":
       return `${money(event.amount)}/mo · ${formatMonth(event.startMonth)} → ${formatMonth(event.endMonth)} (replaces baseline)`;
     case "OPENING_CASH_OVERRIDE":
-      return `Opening cash → ${money(event.amount)}`;
+      return `→ ${money(event.amount)}`;
     default:
       return "";
   }
@@ -331,9 +350,11 @@ export default function RuntimeEventList({ filterTypes, filterAccountId, filterI
             >
               <Group justify="space-between" wrap="nowrap" gap="xs">
                 <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                  <Text size="sm" style={{ wordBreak: "break-word" }}>{label}</Text>
+                  <Text size="sm" fw={500} style={{ wordBreak: "break-word" }}>
+                    {eventName(event, accounts)}
+                  </Text>
                   <Text size="xs" c="dimmed" style={{ wordBreak: "break-word" }}>
-                    {eventSummary(event, accounts)}
+                    {label} • {eventDetails(event)}
                   </Text>
                 </Stack>
 
