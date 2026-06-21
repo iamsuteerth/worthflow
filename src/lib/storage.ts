@@ -114,3 +114,57 @@ export async function deleteSave(key: string): Promise<void> {
 export function generateSaveKey(): string {
   return `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.wfplan`
 }
+
+// ---------------------------------------------------------------------------
+// Generic per-user object helpers (used by ai/cloud/aiCloud.ts).
+// These operate outside the save manifest and do not affect the 5-save cap.
+// ---------------------------------------------------------------------------
+
+export interface GetObjectResult {
+  body: string | null
+  etag: string | null
+}
+
+export async function getUserObject(key: string): Promise<GetObjectResult> {
+  const { client, prefix } = await getClientAndPrefix()
+  try {
+    const res = await client.send(
+      new GetObjectCommand({ Bucket: BUCKET, Key: `${prefix}/${key}` })
+    )
+    const body = (await res.Body?.transformToString()) ?? null
+    return { body, etag: res.ETag ?? null }
+  } catch (err: unknown) {
+    const code = (err as { name?: string }).name
+    if (code === 'NoSuchKey' || code === 'NotFound') return { body: null, etag: null }
+    throw err
+  }
+}
+
+// `ifMatch`: undefined = unconditional; null = IfNoneMatch:* (create only); string = IfMatch (update only)
+export async function putUserObject(
+  key: string,
+  body: string,
+  contentType = 'application/json',
+  ifMatch?: string | null
+): Promise<string | null> {
+  const { client, prefix } = await getClientAndPrefix()
+  const isMock = import.meta.env.VITE_AUTH_MODE === 'mock'
+  const useConditional = !isMock && ifMatch !== undefined
+  const res = await client.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: `${prefix}/${key}`,
+      Body: body,
+      ContentType: contentType,
+      ...(useConditional ? (ifMatch ? { IfMatch: ifMatch } : { IfNoneMatch: '*' }) : {}),
+    })
+  )
+  return (res as { ETag?: string }).ETag ?? null
+}
+
+export async function deleteUserObject(key: string): Promise<void> {
+  const { client, prefix } = await getClientAndPrefix()
+  await client.send(
+    new DeleteObjectCommand({ Bucket: BUCKET, Key: `${prefix}/${key}` })
+  )
+}

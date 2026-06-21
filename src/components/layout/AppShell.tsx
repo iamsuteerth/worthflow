@@ -10,7 +10,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import type { ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 
 import ThemeToggle from "@/components/layout/ThemeToggle";
 import AppFooter from "@/components/layout/AppFooter";
@@ -21,6 +21,15 @@ import { useUiStore } from "@/store/uiStore";
 import { useAuthStore } from "@/store/authStore";
 import { UserProfileModal } from "@/components/profile/UserProfileModal";
 import { getInitials } from "@/utils/display";
+
+// Lazy-loaded AI components: only bundled & reachable when VITE_AI_ENABLED is true.
+const AiEntryButton = import.meta.env.VITE_AI_ENABLED
+  ? lazy(() => import("@/components/ai/AiEntryButton"))
+  : null;
+const ChatPanel = import.meta.env.VITE_AI_ENABLED
+  ? lazy(() => import("@/components/ai/ChatPanel"))
+  : null;
+
 
 interface Props {
   children: ReactNode;
@@ -43,6 +52,8 @@ export default function PlannerShell({ children }: Props) {
   const opened = useUiStore((state) => state.scenarioDrawerOpened);
   const open = useUiStore((state) => state.openScenarioDrawer);
   const close = useUiStore((state) => state.closeScenarioDrawer);
+  const aiPanelOpened = useUiStore((state) => state.aiPanelOpened);
+  const closeAiPanel = useUiStore((state) => state.closeAiPanel);
 
   const activeView = usePlannerStore((state) => state.activeView);
   const user = useAuthStore((state) => state.user);
@@ -62,7 +73,7 @@ export default function PlannerShell({ children }: Props) {
           onClose={close}
           title={<ScenarioLabHeading />}
           styles={
-            { 
+            {
               body: { paddingBottom: 40 },
               header: {
                 alignItems: "flex-start",
@@ -75,6 +86,22 @@ export default function PlannerShell({ children }: Props) {
           position="left"
         >
           <ScenarioPanel />
+        </Drawer>
+      )}
+
+      {/* AI chat panel drawer (right side) */}
+      {ChatPanel && (
+        <Drawer
+          opened={aiPanelOpened}
+          onClose={closeAiPanel}
+          position="right"
+          size="md"
+          padding={0}
+          withCloseButton={false}
+        >
+          <Suspense fallback={null}>
+            <ChatPanel />
+          </Suspense>
         </Drawer>
       )}
 
@@ -117,6 +144,11 @@ export default function PlannerShell({ children }: Props) {
             </Group>
 
             <Group gap="xs">
+              {AiEntryButton && (
+                <Suspense fallback={null}>
+                  <AiEntryButton />
+                </Suspense>
+              )}
               <ThemeToggle />
 
               <UnstyledButton

@@ -19,7 +19,8 @@ This guide explains how to create an account, build a financial plan, model inve
 11. Dashboards & Reports
 12. Saving, Importing & Exporting
 13. Data & Privacy
-14. Frequently Asked Questions
+14. AI Assistant
+15. Frequently Asked Questions
 
 # 1. Getting Started
 
@@ -633,7 +634,58 @@ Restores a previously exported `.wfplan` file. Imported plans are validated befo
 * **While you work**, your current plan is also kept in your browser's local storage so a refresh doesn't lose it. **Signing out clears it** from the browser, so nothing of yours remains on a shared computer.
 * **Exporting** a plan produces a `.wfplan` file you fully control — use it to back up your data or move it elsewhere. Downloaded cloud saves use the same format.
 
-# 14. Frequently Asked Questions
+# 14. AI Assistant
+
+Worth Flow includes an optional AI assistant powered by Google Gemini. You supply your own API key — Worth Flow never has access to it.
+
+## How it works
+
+The assistant reads a compact, anonymised snapshot of your current forecast (totals, a monthly cash series, account summaries, and your active scenario in plain language) and answers questions about it. It cannot see your credentials, internal IDs, or raw configuration. All inference runs between your browser and Google's servers; no data passes through Worth Flow's infrastructure.
+
+## Setting up your Gemini key
+
+1. Get a key from [Google AI Studio](https://aistudio.google.com). A free-tier key is sufficient for typical use.
+2. Open the **Forecast** view and click the **sparkle (✦)** icon in the top toolbar to open the AI panel.
+3. Click **Set up your Gemini key** and paste your key.
+4. Choose an **AI passphrase** (at least 8 characters). This is separate from your account password — Worth Flow uses it to encrypt the key and your chat before storing them.
+5. Confirm the passphrase and click **Encrypt & Save Key**.
+
+Your key is encrypted in your browser before it is saved. Worth Flow's cloud storage holds only the encrypted form and cannot read it.
+
+## Restricting your key (recommended)
+
+In Google AI Studio, you can limit your key's blast radius:
+
+* Restrict it to the **Generative Language API** only.
+* Add an **HTTP referrer restriction** to your app's origin.
+* Use a **dedicated key** for Worth Flow so you can revoke it independently without affecting other projects.
+
+## Asking questions
+
+Once your key is set up and unlocked, type a question in the chat box and press **Enter** (use **Shift+Enter** for a new line). The assistant streams its reply in real time.
+
+Good starting questions:
+
+* "When does my cash reach its lowest point, and why?"
+* "Which account contributes most to my net worth by the end of the forecast?"
+* "What would happen if I reduced expenses by ₹10,000/month from next year?"
+* "Summarise my FD maturities for the next two years."
+
+## Passphrase and security
+
+**There is no passphrase reset.** If you forget your AI passphrase, you must use **Forgot passphrase** (available in Key Settings) to start fresh — this permanently erases your saved key and chat, and you will need to re-enter your Gemini API key and choose a new passphrase. Your financial plan is not affected.
+
+Your chat is encrypted with the same passphrase-derived key as your API key. Only you can decrypt it — not even Worth Flow.
+
+## Using the assistant across devices
+
+Your encrypted key and chat are synced to your personal cloud storage. When you sign in on another device, unlock the AI panel with your passphrase; the key and your conversation are fetched and decrypted locally.
+
+## Removing the AI key
+
+Open **Key Settings** (three-dot menu in the AI panel) and choose **Remove key & chat**. This deletes both the stored key and your chat history permanently. The AI panel will revert to setup mode.
+
+# 15. Frequently Asked Questions
 
 ## I didn't receive my verification / reset email — what now?
 

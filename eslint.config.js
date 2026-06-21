@@ -32,4 +32,27 @@ export default defineConfig([
       ],
     },
   },
+  // AI isolation: the simulation core must never import from @/ai/*.
+  // Deleting src/ai/ must leave the planner fully functional.
+  {
+    files: [
+      'src/engine/**/*.{ts,tsx}',
+      'src/store/plannerStore.ts',
+      'src/store/cloudStore.ts',
+      'src/engine/simulate.ts',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/ai/*', '*/ai/*'],
+              message: 'The simulation core must not depend on AI modules (AI is a leaf).',
+            },
+          ],
+        },
+      ],
+    },
+  },
 ])

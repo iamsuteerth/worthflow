@@ -11,6 +11,11 @@ import { usePlannerStore, type AppView } from "@/store/plannerStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCloudStore } from "@/store/cloudStore";
 
+let aiStoreImport: Promise<{ useAiStore: { getState: () => { initAi: () => Promise<void> } } }> | null = null;
+if (import.meta.env.VITE_AI_ENABLED) {
+  aiStoreImport = import("@/store/aiStore") as unknown as typeof aiStoreImport;
+}
+
 const NAV_DATA = [
   {
     value: "builder",
@@ -52,8 +57,16 @@ export default function App() {
     let cancelled = false;
     // setState lives in the async callback (allowed) and the cleanup (runs on
     // sign-out / before re-run), never synchronously in the effect body.
-    autoLoadLatest().finally(() => {
-      if (!cancelled) setCloudReady(true);
+    autoLoadLatest().finally(async () => {
+      if (!cancelled) {
+        setCloudReady(true);
+        // Kick off AI init non-blockingly after the plan loads
+        if (aiStoreImport) {
+          aiStoreImport.then(({ useAiStore }) => {
+            useAiStore.getState().initAi().catch(() => {});
+          });
+        }
+      }
     });
     return () => {
       cancelled = true;

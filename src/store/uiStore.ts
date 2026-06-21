@@ -30,6 +30,10 @@ interface UiStore {
   openScenarioDrawer: () => void;
   closeScenarioDrawer: () => void;
 
+  aiPanelOpened: boolean;
+  openAiPanel: () => void;
+  closeAiPanel: () => void;
+
   navigateToEvents: (filter?: { types?: RuntimeEvent["type"][]; accountId?: string }) => void;
 }
 
@@ -50,6 +54,10 @@ export const useUiStore = create<UiStore>()((set) => ({
   scenarioDrawerOpened: false,
   openScenarioDrawer: () => set({ scenarioDrawerOpened: true }),
   closeScenarioDrawer: () => set({ scenarioDrawerOpened: false }),
+
+  aiPanelOpened: false,
+  openAiPanel: () => set({ aiPanelOpened: true }),
+  closeAiPanel: () => set({ aiPanelOpened: false }),
 
   navigateToEvents: (filter) =>
     set({
