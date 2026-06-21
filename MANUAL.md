@@ -647,7 +647,7 @@ The assistant reads a compact, anonymised snapshot of your current forecast (tot
 ## Setting up your Gemini key
 
 1. Get a key from [Google AI Studio](https://aistudio.google.com). A free-tier key is sufficient for typical use.
-2. Open the **Forecast** view and click the **sparkle (✦)** icon in the top toolbar to open the AI panel.
+2. Open the **Forecast** view and click the floating **sparkle (✦)** button in the bottom-right corner to open the AI panel.
 3. Click **Set up your Gemini key** and paste your key.
 4. Choose an **AI passphrase** (at least 8 characters). This is separate from your account password — Worth Flow uses it to encrypt the key and your chat before storing them.
 5. Confirm the passphrase and click **Encrypt & Save Key**.
@@ -664,7 +664,9 @@ In Google AI Studio, you can limit your key's blast radius:
 
 ## Asking questions
 
-Once your key is set up and unlocked, type a question in the chat box and press **Enter** (use **Shift+Enter** for a new line). The assistant streams its reply in real time.
+Once your key is set up and unlocked, type a question in the chat box and press **Enter** (use **Shift+Enter** for a new line). The assistant streams its reply in real time, formatted with **bold** figures, lists, and tables for easy reading. While a reply is streaming you can press the **Stop** button to end it early; closing the panel also stops it.
+
+Every figure the assistant quotes comes directly from Worth Flow's simulation engine — it never computes or estimates numbers itself, so its answers always match your forecast.
 
 Good starting questions:
 

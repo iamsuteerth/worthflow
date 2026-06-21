@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActionIcon,
   Alert,
   Box,
   Button,
+  CloseButton,
   Group,
   Menu,
   Modal,
@@ -15,6 +16,7 @@ import {
   IconDotsVertical,
   IconRefresh,
   IconSettings,
+  IconShieldLock,
   IconSparkles,
   IconTrash,
   IconX,
@@ -31,10 +33,16 @@ export default function ChatPanel() {
   const conversation = useAiStore((s) => s.conversation);
   const sending = useAiStore((s) => s.sending);
   const send = useAiStore((s) => s.send);
+  const stopStreaming = useAiStore((s) => s.stopStreaming);
   const clearChat = useAiStore((s) => s.clearChat);
   const reloadChat = useAiStore((s) => s.reloadChat);
+  const disclosureAcknowledged = useAiStore((s) => s.settings.disclosureAcknowledged);
+  const acknowledgeDisclosure = useAiStore((s) => s.acknowledgeDisclosure);
 
   const closeAiPanel = useUiStore((s) => s.closeAiPanel);
+
+  // Closing the panel (this component unmounts) cancels any in-flight stream.
+  useEffect(() => () => useAiStore.getState().stopStreaming(), []);
 
   const [settingsOpened, { open: openSettings, close: closeSettings }] = useDisclosure(false);
   const [forgotMode, setForgotMode] = useState(false);
@@ -155,12 +163,30 @@ export default function ChatPanel() {
 
       {isReady && (
         <Box style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+          {!disclosureAcknowledged && (
+            <Alert
+              color="indigo"
+              variant="light"
+              radius={0}
+              icon={<IconShieldLock size={15} />}
+              p="xs"
+              styles={{ message: { width: '100%' } }}
+            >
+              <Group justify="space-between" align="flex-start" wrap="nowrap" gap={8}>
+                <Text size="xs">
+                  Your forecast figures, account/instrument summaries and active scenario are sent to
+                  Google Gemini with <b>your</b> key. Your credentials and internal IDs never are.
+                </Text>
+                <CloseButton size="sm" aria-label="Dismiss notice" onClick={acknowledgeDisclosure} />
+              </Group>
+            </Alert>
+          )}
           <MessageList
             messages={conversation.messages}
             summary={conversation.summary}
             sending={sending}
           />
-          <MessageComposer onSend={send} disabled={sending} />
+          <MessageComposer onSend={send} onStop={stopStreaming} sending={sending} />
         </Box>
       )}
 

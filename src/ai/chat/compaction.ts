@@ -1,6 +1,5 @@
-import { KEEP_TAIL_MESSAGES } from '@/ai/config';
+import { KEEP_TAIL_MESSAGES, SUMMARY_SYSTEM_PROMPT } from '@/ai/config';
 import { estimateTokens } from '@/ai/chat/tokenBudget';
-import { SYSTEM_PROMPT } from '@/ai/config';
 import type { Conversation } from '@/ai/chat/conversation.types';
 import type { AIProvider } from '@/ai/provider/types';
 
@@ -28,12 +27,15 @@ export async function compactConversation(
     const turnText = toSummarize
       .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
       .join('\n\n');
-    const prompt = `Summarize the following conversation turns in 2-3 sentences, preserving any key financial decisions or insights mentioned:\n\n${turnText}`;
+    const prior = conversation.summary
+      ? `Earlier summary so far:\n${conversation.summary}\n\nNew turns to fold in:\n`
+      : 'Conversation turns to summarise:\n';
+    const prompt = `${prior}${turnText}`;
 
     let accumulated = '';
     for await (const chunk of provider.complete(
       {
-        systemPrompt: SYSTEM_PROMPT,
+        systemPrompt: SUMMARY_SYSTEM_PROMPT,
         contextBlock: '',
         history: [],
         userMessage: prompt,
@@ -43,8 +45,9 @@ export async function compactConversation(
       accumulated += chunk.textDelta;
     }
 
-    const prevSummary = conversation.summary ? conversation.summary + ' ' : '';
-    newSummary = prevSummary + accumulated.trim();
+    // The summary call returns a single consolidated summary (prior + new turns),
+    // so it replaces rather than appends — prevents unbounded summary growth.
+    newSummary = accumulated.trim();
   } catch {
     // Compaction summary call failed — drop turns without summary, never block.
     newSummary = conversation.summary ?? '';

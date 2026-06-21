@@ -47,6 +47,8 @@ import {
 
 import { usePlannerStore } from '@/store/plannerStore';
 import { simulate } from '@/engine/simulate';
+import type { PlannerConfig } from '@/types/config';
+import type { PlannerOverrides } from '@/types/overrides';
 import { aesGcmEncrypt } from '@/ai/keyVault/crypto';
 import { cacheKek, clearKek } from '@/ai/keyVault/kekCache';
 
@@ -81,6 +83,7 @@ interface AiStore {
   // Chat lifecycle
   loadConversationFromCloud(): Promise<void>;
   send(text: string): Promise<void>;
+  stopStreaming(): void;
   clearChat(): Promise<void>;
   reloadChat(): Promise<void>;
   acknowledgeDisclosure(): void;
@@ -113,6 +116,37 @@ async function decryptConversation(
     return 'decrypt_error';
   }
 }
+
+// ---------------------------------------------------------------------------
+// Context-pack cache
+// ---------------------------------------------------------------------------
+// Building the pack re-runs simulate() and serialises the result. plannerStore
+// replaces `config`/`overrides` with new object references on every plan change,
+// so caching by reference identity (a) skips redundant work when the plan is
+// unchanged between turns and (b) keeps the serialised block byte-identical across
+// those turns — which lets Gemini's implicit prefix caching discount the repeated
+// context. Accuracy is preserved: any real plan edit yields new references and a
+// fresh rebuild (with a new contextEpoch).
+let _ctxCache: { configRef: unknown; overridesRef: unknown; block: string; epoch: string } | null = null;
+
+function getContextBlock(
+  config: PlannerConfig,
+  overrides: PlannerOverrides,
+  baselineAccountIds: string[],
+): { block: string; epoch: string } {
+  if (_ctxCache && _ctxCache.configRef === config && _ctxCache.overridesRef === overrides) {
+    return { block: _ctxCache.block, epoch: _ctxCache.epoch };
+  }
+  const result = simulate(config, overrides);
+  const pack = buildContextPack(result, config, overrides, baselineAccountIds);
+  const block = serializeContextPack(pack);
+  const epoch = crypto.randomUUID();
+  _ctxCache = { configRef: config, overridesRef: overrides, block, epoch };
+  return { block, epoch };
+}
+
+// In-flight stream controller, so the panel/Stop button can cancel a send.
+let _abortController: AbortController | null = null;
 
 // ---------------------------------------------------------------------------
 // Store
@@ -403,20 +437,20 @@ export const useAiStore = create<AiStore>()(
         };
         set({ conversation: updatedWithUser, sending: true });
 
-        // Build context pack from live simulation
+        // Build the context block (cached by plan identity — see getContextBlock)
         const plannerState = usePlannerStore.getState();
         let contextBlock: string;
+        let contextEpoch: string;
         try {
-          const result = simulate(plannerState.config, plannerState.overrides);
-          const pack = buildContextPack(
-            result,
+          const ctx = getContextBlock(
             // Effective config (= base + active scenario) so the pack's accounts,
-            // instruments and horizon match exactly what the simulation just ran.
+            // instruments and horizon match exactly what the simulation ran on.
             plannerState.config,
             plannerState.overrides,
             plannerState.baselineAccountIds,
           );
-          contextBlock = serializeContextPack(pack);
+          contextBlock = ctx.block;
+          contextEpoch = ctx.epoch;
         } catch {
           const errMsg: Message = {
             id: assistantMsgId,
@@ -444,9 +478,12 @@ export const useAiStore = create<AiStore>()(
           MAX_HISTORY_TOKENS,
         );
 
-        // Stream the response
+        // Stream the response, cancellable via stopStreaming() / panel close.
+        const controller = new AbortController();
+        _abortController = controller;
         let accumulated = '';
         let errorOccurred: { kind: AiErrorKind; message: string } | null = null;
+        let aborted = false;
 
         try {
           for await (const chunk of aiProvider.complete(
@@ -457,6 +494,7 @@ export const useAiStore = create<AiStore>()(
               userMessage: text,
             },
             apiKey,
+            controller.signal,
           )) {
             accumulated += chunk.textDelta;
 
@@ -471,36 +509,52 @@ export const useAiStore = create<AiStore>()(
             }));
           }
         } catch (err) {
-          const kind = err instanceof AiError ? err.kind : 'UNKNOWN';
-          const message =
-            err instanceof AiError
-              ? err.message
-              : "I didn't get a complete answer — please retry.";
-          errorOccurred = { kind, message };
+          if ((err as { name?: string })?.name === 'AbortError') {
+            aborted = true; // user stopped — keep whatever streamed, no error
+          } else {
+            const kind = err instanceof AiError ? err.kind : 'UNKNOWN';
+            const message =
+              err instanceof AiError
+                ? err.message
+                : "I didn't get a complete answer — please retry.";
+            errorOccurred = { kind, message };
+          }
+        } finally {
+          if (_abortController === controller) _abortController = null;
         }
 
-        // Finalize the assistant message
-        const finalMsg: Message = {
-          id: assistantMsgId,
-          role: 'assistant',
-          text: accumulated || (errorOccurred?.message ?? "I didn't get a complete answer — please retry."),
-          createdAt: new Date().toISOString(),
-          streaming: false,
-          error: errorOccurred ?? undefined,
-        };
-
-        const finalConversation: Conversation = {
-          ...get().conversation,
-          messages: get().conversation.messages.map((m) =>
-            m.id === assistantMsgId ? finalMsg : m,
-          ),
-          updatedAt: new Date().toISOString(),
-        };
+        // Finalize: stamp the context epoch on the conversation so it persists.
+        const cur = get().conversation;
+        let finalConversation: Conversation;
+        if (aborted && !accumulated) {
+          // Stopped before any text — drop the empty placeholder, keep the user turn.
+          finalConversation = {
+            ...cur,
+            contextEpochId: contextEpoch,
+            messages: cur.messages.filter((m) => m.id !== assistantMsgId),
+            updatedAt: new Date().toISOString(),
+          };
+        } else {
+          const finalMsg: Message = {
+            id: assistantMsgId,
+            role: 'assistant',
+            text: accumulated || (errorOccurred?.message ?? "I didn't get a complete answer — please retry."),
+            createdAt: new Date().toISOString(),
+            streaming: false,
+            error: errorOccurred ?? undefined,
+          };
+          finalConversation = {
+            ...cur,
+            contextEpochId: contextEpoch,
+            messages: cur.messages.map((m) => (m.id === assistantMsgId ? finalMsg : m)),
+            updatedAt: new Date().toISOString(),
+          };
+        }
 
         set({ conversation: finalConversation, sending: false });
 
-        // Compact if needed
-        if (shouldCompact(finalConversation.messages, finalConversation.summary)) {
+        // Compact if needed (skip after an abort — nothing new to summarise)
+        if (!aborted && shouldCompact(finalConversation.messages, finalConversation.summary)) {
           try {
             const compacted = await compactConversation(finalConversation, aiProvider, apiKey);
             set({ conversation: compacted });
@@ -514,6 +568,13 @@ export const useAiStore = create<AiStore>()(
         // session KEK and never needs the plaintext key, so it isn't passed in —
         // the decrypted key isn't retained beyond this provider call.
         scheduleWrite(get, set);
+      },
+
+      // ------------------------------------------------------------------
+      // Stop an in-flight stream (Stop button / panel close)
+      // ------------------------------------------------------------------
+      stopStreaming: () => {
+        _abortController?.abort();
       },
 
       // ------------------------------------------------------------------
@@ -546,12 +607,16 @@ export const useAiStore = create<AiStore>()(
       // Sign-out: wipe local state only; S3 stays encrypted
       // ------------------------------------------------------------------
       clearForSignOut: () => {
-        // Cancel any pending cloud write so it can't fire post-sign-out (when the
-        // session KEK is gone) and surface a spurious sync-failed toast.
+        // Abort any in-flight stream and cancel the pending cloud write so neither
+        // can fire post-sign-out (when the session KEK is gone) and surface a
+        // spurious error. Also drop the context cache (it belongs to this user).
+        _abortController?.abort();
+        _abortController = null;
         if (_writeDebounce) {
           clearTimeout(_writeDebounce);
           _writeDebounce = null;
         }
+        _ctxCache = null;
         clearSessionKek();
         clearKek().catch(() => {});
         set({
@@ -565,19 +630,40 @@ export const useAiStore = create<AiStore>()(
     }),
     {
       name: 'worth-flow-ai-v1',
-      // Only persist non-secret settings. Never persist the conversation,
-      // the key blob, the KEK, passphrase, or keyStatus to localStorage.
-      partialize: (state) => ({
-        settings: state.settings,
-        indexedDbWarningShown: state.indexedDbWarningShown,
-      }),
+      partialize: aiPersistPartialize,
     },
   ),
 );
 
+// Exactly what gets written to localStorage. Only non-secret settings — NEVER the
+// conversation, key blob, KEK, passphrase, or keyStatus. Exported so a test can lock
+// this allow-list against accidental regression (a leaked secret here is critical).
+export function aiPersistPartialize(state: AiStore): {
+  settings: AiSettings;
+  indexedDbWarningShown: boolean;
+} {
+  return {
+    settings: state.settings,
+    indexedDbWarningShown: state.indexedDbWarningShown,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Debounced cloud write helper (outside the store to avoid re-creating on each render)
 // ---------------------------------------------------------------------------
+
+// Cross-device merge: keep all remote messages, append any local messages whose ids
+// aren't already in remote (dedupe by id). Exported so the concurrency behaviour can
+// be locked by a test without driving the debounced S3 path.
+export function mergeConversations(remote: Conversation, local: Conversation): Conversation {
+  const remoteIds = new Set(remote.messages.map((m) => m.id));
+  const newLocal = local.messages.filter((m) => !remoteIds.has(m.id));
+  return {
+    ...remote,
+    messages: [...remote.messages, ...newLocal],
+    updatedAt: new Date().toISOString(),
+  };
+}
 
 let _writeDebounce: ReturnType<typeof setTimeout> | null = null;
 
@@ -605,15 +691,7 @@ function scheduleWrite(
           if (remote === 'epoch_mismatch' || remote === 'decrypt_error') return;
 
           // Merge: keep remote messages, append any local messages not yet in remote
-          const { conversation: currentConv } = get();
-          const remoteIds = new Set(remote.messages.map((m) => m.id));
-          const newLocal = currentConv.messages.filter((m) => !remoteIds.has(m.id));
-          const merged: Conversation = {
-            ...remote,
-            messages: [...remote.messages, ...newLocal],
-            updatedAt: new Date().toISOString(),
-          };
-
+          const merged = mergeConversations(remote, get().conversation);
           const mergedEnvelope = await encryptConversation(merged);
           const mergedEtag = await putConversation(mergedEnvelope, remoteEtag);
           set({ conversation: merged, _conversationEtag: mergedEtag ?? remoteEtag });

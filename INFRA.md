@@ -55,10 +55,21 @@ worth-flow-saves/
       1718700000000-a1b2c3d4.wfplan
       1718800000000-e5f6g7h8.wfplan
       ...
+      ai/
+        keyblob.json         # AI feature: zero-knowledge encrypted Gemini key (ciphertext only)
+        conversation.json    # AI feature: the single chat, end-to-end encrypted under the same key
 ```
 
 `manifest.json` is a lightweight index so the profile screen can list saves without
 downloading every `.wfplan`. Save files are capped at **5 per user** (enforced in the UI).
+
+The `ai/` objects are written only when a user enables the optional AI assistant. They hold
+**only ciphertext** plus a non-secret salt/iv/keyEpoch — the decryption key derives from a
+passphrase that never leaves the browser, so neither the owner nor an S3 breach can read them.
+They are covered by the same per-user prefix policy above and sit **outside** the manifest, so
+they never count toward the 5-save cap. Objects are tagged `ObjectType=ai`, which an S3
+lifecycle rule uses to expire noncurrent (superseded) versions after 30 days, versus 90 days
+for plan saves.
 
 ## Provisioning from scratch
 
@@ -163,10 +174,18 @@ secrets (the Cognito client has no secret; there are no static AWS keys).
 | `VITE_COGNITO_CLIENT_ID` | `terraform output cognito_client_id` | `xxxxxxxxxxxxxxxxxxxxxxxxxx` |
 | `VITE_COGNITO_IDENTITY_POOL_ID` | `terraform output cognito_identity_pool_id` | `ap-south-1:xxxxxxxx-...` |
 | `VITE_S3_BUCKET_NAME` | `terraform output s3_bucket_name` | `worth-flow-saves` |
+| `VITE_AI_ENABLED` | optional kill-switch for the AI assistant | `true` (omit/`false` = feature absent from the bundle) |
 
 > ⚠️ **User Pool ID vs Identity Pool ID** are easy to swap. The **User Pool** ID looks like
 > `region_ShortCode`; the **Identity Pool** ID looks like `region:UUID`. Mixing them up causes
 > "Sign up failed" with no useful client error.
+
+> **AI assistant (BYOK, optional).** When `VITE_AI_ENABLED=true`, the browser calls Google
+> Gemini directly with the user's own key — there is **no owner-side proxy, server, or house
+> API key**, and no inference cost to the owner. The build flag is a true kill-switch: when it
+> is off, no AI module is reachable and the `@google/genai` SDK is not in the bundle. The only
+> server-side requirement is the CSP `connect-src` allowance for
+> `https://generativelanguage.googleapis.com` (already set in [`vercel.json`](./vercel.json)).
 
 A committed template lives at [`.env.production.example`](./.env.production.example).
 

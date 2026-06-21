@@ -3,7 +3,7 @@ import type { Content } from '@google/genai';
 import { AI_MODEL_ID } from '@/ai/config';
 import { AiError, type AIProvider, type AiRequest, type AiStreamChunk } from '@/ai/provider/types';
 
-function translateError(err: unknown): AiError {
+export function translateError(err: unknown): AiError {
   const e = err as { status?: number; message?: string; name?: string };
   const status = e?.status;
   const msg = e?.message ?? 'Unknown error';
@@ -34,7 +34,7 @@ function translateError(err: unknown): AiError {
   return new AiError('UNKNOWN', 'Something went wrong with the AI. Please retry.');
 }
 
-function buildContents(req: AiRequest): Content[] {
+export function buildContents(req: AiRequest): Content[] {
   const contents: Content[] = [];
 
   // Pin the context block as the first exchange so it's always in scope.
@@ -69,7 +69,8 @@ const geminiProvider: AIProvider = {
     try {
       stream = await ai.models.generateContentStream({
         model: AI_MODEL_ID,
-        config: { systemInstruction: req.systemPrompt },
+        // abortSignal lets the underlying fetch be cancelled (Stop button / panel close).
+        config: { systemInstruction: req.systemPrompt, abortSignal: signal },
         contents: buildContents(req),
       });
     } catch (err) {

@@ -49,6 +49,11 @@ file. It sets `VITE_AUTH_MODE=mock`, so:
 > Plain `npm run dev` (without `:mock`) uses `.env`, which is configured for **cognito** mode and
 > needs live AWS. Use `dev:mock` for everyday local work.
 
+> **AI assistant in mock mode.** `.env.mock` sets `VITE_AI_ENABLED=true`, and mock mode auto-selects a
+> deterministic offline AI provider — so you can exercise the whole assistant flow (key setup,
+> passphrase unlock, chat, compaction) with **no real Gemini key and no network**. Use any
+> `AIza…`-prefixed string as the key.
+
 ## 3. (Optional) Test cloud saves locally with LocalStack
 
 Mock auth and the whole UI work without this. You only need it to exercise the **save/load to
@@ -67,15 +72,17 @@ running, the app still works — only save/load will surface an error. See
 
 ## Running the tests
 
-The forecasting engine has a fast, dev-only [Vitest](https://vitest.dev) suite (no browser, no AWS):
+A fast, dev-only [Vitest](https://vitest.dev) suite (no browser, no AWS):
 
 ```bash
 npm test            # run once
 npm run test:watch  # re-run on change while developing
 ```
 
-Tests live in [`src/engine/__tests__`](./src/engine/__tests__) and cover the calculation engine
-end to end (cashflow, FD/RD, XIRR, accounts, import/export, scenario building).
+Coverage spans two areas:
+
+- [`src/engine/__tests__`](./src/engine/__tests__) — the calculation engine end to end (cashflow, FD/RD, XIRR, accounts, import/export, scenario building).
+- [`src/ai/__tests__`](./src/ai/__tests__) — the AI bundle: the zero-knowledge key vault (WebCrypto round-trips, wrong-passphrase failure), the context pack (grounding, redaction, long-horizon scaling), error redaction, compaction, and the store flows (setup, send, the localStorage allow-list, cross-device merge).
 
 ## All the scripts
 

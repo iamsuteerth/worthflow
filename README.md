@@ -130,6 +130,15 @@ Interactive dashboards help you understand:
 * Financial Events
 * Scenario Impact
 
+### 🤖 Ask the AI Assistant (optional)
+
+An optional, **bring-your-own-key** assistant (Google Gemini) you can chat with about your forecast:
+
+* Ask things like *"When does my cash dip lowest, and why?"* or *"Summarise my FD maturities for the next two years."* Replies stream in real time, formatted with bold figures, lists, and tables.
+* **Grounded in the engine** — every number it quotes comes straight from Worth Flow's simulation, never from the model's own arithmetic, so answers always match your forecast.
+* **Zero-knowledge by design** — your API key and chat are encrypted in your browser with a passphrase only you know, then synced (as ciphertext) across your devices. Worth Flow can never read either.
+* Fully optional and removable; calls go directly from your browser to Google with your own key — no Worth Flow server in the loop. See [MANUAL.md → AI Assistant](./MANUAL.md#14-ai-assistant).
+
 ## 🧱 Core Concepts
 
 ### Base Plan
@@ -302,6 +311,12 @@ This README is the product overview and feature tour. Each companion guide has o
 * Amazon S3 via `@aws-sdk/client-s3`
 * Amazon SES, AWS Lambda
 * Terraform (infrastructure as code)
+
+**AI assistant (optional)**
+
+* Google Gemini via `@google/genai` (browser-direct, bring-your-own-key)
+* WebCrypto (PBKDF2 + AES-GCM) zero-knowledge key vault; IndexedDB KEK cache
+* `react-markdown` + `remark-gfm` for formatted replies
 
 ![Cloud Architecture](./architecture_diagram.png)
 

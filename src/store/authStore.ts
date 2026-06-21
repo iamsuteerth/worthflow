@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import { authService, type AuthUser } from '@/lib/auth'
 import { usePlannerStore } from '@/store/plannerStore'
 import { useCloudStore } from '@/store/cloudStore'
-import { useAiStore } from '@/store/aiStore'
 
 interface AuthStore {
   user: AuthUser | null
@@ -50,6 +49,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
     usePlannerStore.getState().resetForSignOut()
     useCloudStore.setState({ saves: [], savesError: null, initialLoadFailed: false })
     if (import.meta.env.VITE_AI_ENABLED) {
+      // Dynamic import so the AI bundle (incl. @google/genai) is NOT pulled into the
+      // main graph when the feature is off — keeps VITE_AI_ENABLED a true kill-switch.
+      const { useAiStore } = await import('@/store/aiStore')
       useAiStore.getState().clearForSignOut()
     }
   },
