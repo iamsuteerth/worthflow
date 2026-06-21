@@ -1,3 +1,13 @@
+@keyframes ai-fab-pulse {
+  0%, 100% {
+    box-shadow: 0 4px 18px rgba(99, 102, 241, 0.4), 0 2px 8px rgba(0, 0, 0, 0.18);
+  }
+  50% {
+    box-shadow: 0 4px 30px rgba(99, 102, 241, 0.75), 0 0 0 8px rgba(99, 102, 241, 0.12),
+      0 2px 8px rgba(0, 0, 0, 0.18);
+  }
+}
+
 html,
 body {
   overscroll-behavior: none;

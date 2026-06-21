@@ -4,6 +4,7 @@ import { IconBrandGithub, IconBrandLinkedin, IconHeartFilled } from "@tabler/ico
 export default function AppFooter() {
   return (
     <Group
+      id="app-footer"
       justify="space-between"
       wrap="wrap"
       gap="xs"

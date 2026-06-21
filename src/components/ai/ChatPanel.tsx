@@ -17,8 +17,10 @@ import {
   IconSettings,
   IconSparkles,
   IconTrash,
+  IconX,
 } from '@tabler/icons-react';
 import { useAiStore } from '@/store/aiStore';
+import { useUiStore } from '@/store/uiStore';
 import MessageList from '@/components/ai/MessageList';
 import MessageComposer from '@/components/ai/MessageComposer';
 import UnlockPrompt from '@/components/ai/UnlockPrompt';
@@ -31,6 +33,8 @@ export default function ChatPanel() {
   const send = useAiStore((s) => s.send);
   const clearChat = useAiStore((s) => s.clearChat);
   const reloadChat = useAiStore((s) => s.reloadChat);
+
+  const closeAiPanel = useUiStore((s) => s.closeAiPanel);
 
   const [settingsOpened, { open: openSettings, close: closeSettings }] = useDisclosure(false);
   const [forgotMode, setForgotMode] = useState(false);
@@ -110,6 +114,16 @@ export default function ChatPanel() {
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
+
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            onClick={closeAiPanel}
+            aria-label="Close AI panel"
+            title="Close"
+          >
+            <IconX size={14} />
+          </ActionIcon>
         </Group>
       </Group>
 
