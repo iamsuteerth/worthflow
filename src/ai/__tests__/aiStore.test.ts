@@ -26,6 +26,13 @@ const h = vi.hoisted(() => ({
       yield { textDelta: 'Hello' };
       yield { textDelta: ' there' };
     },
+    // Canned, schema-valid, in-window action for the propose→apply→undo flow.
+    // (Return type widened so tests can swap in clarify / infeasible payloads.)
+    proposeAction: async (): Promise<{ text: string; proposedActionJson: unknown; finishReason: 'stop' }> => ({
+      text: 'json',
+      proposedActionJson: { kind: 'ADD_ONE_OFF_EXPENSE', month: '2025-01', amount: 50000, label: 'Mock' },
+      finishReason: 'stop',
+    }),
   },
 }));
 
@@ -51,6 +58,8 @@ vi.mock('@/ai/aiNotifications', () => ({
   notifyAiPassphraseChanged: () => {},
   notifyIndexedDbUnavailable: () => {},
   notifyAiChatCompacted: () => {},
+  notifyAiActionApplied: () => {},
+  notifyAiActionUndone: () => {},
 }));
 
 import { useAiStore, aiPersistPartialize, mergeConversations } from '@/store/aiStore';
@@ -163,6 +172,93 @@ describe('aiStore — lifecycle', () => {
 
   it('stopStreaming is a safe no-op when idle', () => {
     expect(() => useAiStore.getState().stopStreaming()).not.toThrow();
+  });
+});
+
+describe('aiStore — assisted actions (Phase 2)', () => {
+  it('proposes a pending action without mutating the plan', async () => {
+    await useAiStore.getState().setupKey('AIzaTESTKEY', 'passphrase1');
+    await useAiStore.getState().proposeAction('add a big expense');
+
+    const msgs = useAiStore.getState().conversation.messages;
+    const proposal = msgs.find((m) => m.proposedAction);
+    expect(proposal).toBeTruthy();
+    expect(proposal!.actionStatus).toBe('pending');
+    // Nothing is applied before the user clicks Apply.
+    expect(usePlannerStore.getState().overrides.runtimeEvents ?? []).toHaveLength(0);
+  });
+
+  it('applies on confirm (one runtime event) and undoes it exactly', async () => {
+    await useAiStore.getState().setupKey('AIzaTESTKEY', 'passphrase1');
+    await useAiStore.getState().proposeAction('add a big expense');
+    const id = useAiStore.getState().conversation.messages.find((m) => m.proposedAction)!.id;
+
+    useAiStore.getState().applyProposedAction(id);
+    const applied = useAiStore.getState().conversation.messages.find((m) => m.id === id)!;
+    expect(applied.actionStatus).toBe('applied');
+    expect(applied.appliedEventId).toBeTruthy();
+    expect(usePlannerStore.getState().overrides.runtimeEvents ?? []).toHaveLength(1);
+
+    useAiStore.getState().undoProposedAction(id);
+    expect(usePlannerStore.getState().overrides.runtimeEvents ?? []).toHaveLength(0);
+    expect(useAiStore.getState().conversation.messages.find((m) => m.id === id)!.actionStatus).toBe('pending');
+  });
+
+  it('dismiss changes nothing', async () => {
+    await useAiStore.getState().setupKey('AIzaTESTKEY', 'passphrase1');
+    await useAiStore.getState().proposeAction('add a big expense');
+    const id = useAiStore.getState().conversation.messages.find((m) => m.proposedAction)!.id;
+
+    useAiStore.getState().dismissProposedAction(id);
+    expect(useAiStore.getState().conversation.messages.find((m) => m.id === id)!.actionStatus).toBe('dismissed');
+    expect(usePlannerStore.getState().overrides.runtimeEvents ?? []).toHaveLength(0);
+  });
+
+  it('does nothing when no key is ready', async () => {
+    await useAiStore.getState().proposeAction('add a big expense');
+    expect(useAiStore.getState().conversation.messages).toEqual([]);
+  });
+
+  it('renders a clarify reply (multi-action) as plain text, no card, no mutation', async () => {
+    await useAiStore.getState().setupKey('AIzaTESTKEY', 'passphrase1');
+    const original = h.provider.proposeAction;
+    h.provider.proposeAction = async () => ({
+      text: 'json',
+      proposedActionJson: { clarify: 'I can apply one change at a time — which first?' },
+      finishReason: 'stop' as const,
+    });
+    try {
+      await useAiStore.getState().proposeAction('add an expense and an FD and a bonus');
+    } finally {
+      h.provider.proposeAction = original;
+    }
+    const msgs = useAiStore.getState().conversation.messages;
+    const last = msgs[msgs.length - 1];
+    expect(last.role).toBe('assistant');
+    expect(last.proposedAction).toBeUndefined();
+    expect(last.text).toContain('one change at a time');
+    expect(usePlannerStore.getState().overrides.runtimeEvents ?? []).toHaveLength(0);
+  });
+
+  it('marks an infeasible action as failed on apply with a reason', async () => {
+    await useAiStore.getState().setupKey('AIzaTESTKEY', 'passphrase1');
+    const original = h.provider.proposeAction;
+    h.provider.proposeAction = async () => ({
+      text: 'json',
+      proposedActionJson: { kind: 'ADD_FD', month: '2025-01', principal: 99_000_000, rate: 7, durationMonths: 12, name: 'Big' },
+      finishReason: 'stop' as const,
+    });
+    try {
+      await useAiStore.getState().proposeAction('huge fd');
+    } finally {
+      h.provider.proposeAction = original;
+    }
+    const id = useAiStore.getState().conversation.messages.find((mm) => mm.proposedAction)!.id;
+    useAiStore.getState().applyProposedAction(id);
+    const msg = useAiStore.getState().conversation.messages.find((mm) => mm.id === id)!;
+    expect(msg.actionStatus).toBe('failed');
+    expect(msg.actionError).toBeTruthy();
+    expect(usePlannerStore.getState().overrides.runtimeEvents ?? []).toHaveLength(0);
   });
 });
 

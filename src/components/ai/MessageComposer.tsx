@@ -1,20 +1,28 @@
 import { useState } from 'react';
 import { ActionIcon, Group, Textarea, Tooltip } from '@mantine/core';
-import { IconSend, IconPlayerStopFilled } from '@tabler/icons-react';
+import { IconSend, IconPlayerStopFilled, IconWand } from '@tabler/icons-react';
 
 interface Props {
   onSend: (text: string) => void;
+  onPropose: (text: string) => void;
   onStop: () => void;
   sending: boolean;
 }
 
-export default function MessageComposer({ onSend, onStop, sending }: Props) {
+export default function MessageComposer({ onSend, onPropose, onStop, sending }: Props) {
   const [text, setText] = useState('');
 
   function handleSend() {
     const trimmed = text.trim();
     if (!trimmed || sending) return;
     onSend(trimmed);
+    setText('');
+  }
+
+  function handlePropose() {
+    const trimmed = text.trim();
+    if (!trimmed || sending) return;
+    onPropose(trimmed);
     setText('');
   }
 
@@ -53,19 +61,34 @@ export default function MessageComposer({ onSend, onStop, sending }: Props) {
           </ActionIcon>
         </Tooltip>
       ) : (
-        <Tooltip label="Send (Enter)" withArrow>
-          <ActionIcon
-            size="lg"
-            color="brand"
-            variant="filled"
-            onClick={handleSend}
-            disabled={!text.trim()}
-            radius="md"
-            aria-label="Send message"
-          >
-            <IconSend size={16} />
-          </ActionIcon>
-        </Tooltip>
+        <>
+          <Tooltip label="Suggest a change to your plan" withArrow>
+            <ActionIcon
+              size="lg"
+              color="violet"
+              variant="light"
+              onClick={handlePropose}
+              disabled={!text.trim()}
+              radius="md"
+              aria-label="Suggest a change"
+            >
+              <IconWand size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Send (Enter)" withArrow>
+            <ActionIcon
+              size="lg"
+              color="brand"
+              variant="filled"
+              onClick={handleSend}
+              disabled={!text.trim()}
+              radius="md"
+              aria-label="Send message"
+            >
+              <IconSend size={16} />
+            </ActionIcon>
+          </Tooltip>
+        </>
       )}
     </Group>
   );

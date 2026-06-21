@@ -1,4 +1,18 @@
-import type { AIProvider, AiRequest, AiStreamChunk } from '@/ai/provider/types';
+import type { AIProvider, AiRequest, AiResult, AiStreamChunk } from '@/ai/provider/types';
+
+// Pull the forecast's first month out of the serialized context pack so the
+// canned action is always inside the window the test/dev plan actually has.
+function contextStartMonth(contextBlock: string): string {
+  try {
+    const pack = JSON.parse(contextBlock) as { meta?: { startMonth?: string } };
+    if (pack.meta?.startMonth && /^\d{4}-(0[1-9]|1[0-2])$/.test(pack.meta.startMonth)) {
+      return pack.meta.startMonth;
+    }
+  } catch {
+    // fall through to default
+  }
+  return '2025-01';
+}
 
 const MOCK_RESPONSES = [
   "Based on your forecast, your net worth is growing steadily over the horizon. Your investment corpus is the biggest driver — the monthly contributions are compounding nicely.",
@@ -28,6 +42,21 @@ const mockProvider: AIProvider = {
     _mockResponseIndex++;
     void req; // used only to satisfy the interface
     yield* mockStream(response);
+  },
+
+  async proposeAction(req: AiRequest, _key: string, signal?: AbortSignal): Promise<AiResult> {
+    await new Promise((r) => setTimeout(r, 200));
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+    void _key;
+    // Deterministic, schema-valid, in-window canned action so the whole
+    // propose→preview→apply flow is testable offline (mock-first philosophy).
+    const proposedActionJson = {
+      kind: 'ADD_ONE_OFF_EXPENSE',
+      month: contextStartMonth(req.contextBlock),
+      amount: 50000,
+      label: 'Suggested expense',
+    };
+    return { text: JSON.stringify(proposedActionJson), proposedActionJson, finishReason: 'stop' };
   },
 
   async validateKey(_key: string, signal?: AbortSignal): Promise<boolean> {

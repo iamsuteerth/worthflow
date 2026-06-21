@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { translateError, buildContents } from '@/ai/provider/geminiProvider';
 import mockProvider from '@/ai/provider/mockProvider';
+import { proposedActionSchema } from '@/ai/actions/actionSchema';
 
 describe('translateError — classification', () => {
   it('maps auth failures to INVALID_KEY', () => {
@@ -94,6 +95,35 @@ describe('mockProvider', () => {
           void _;
         }
       })(),
+    ).rejects.toMatchObject({ name: 'AbortError' });
+  });
+});
+
+describe('mockProvider.proposeAction (Phase 2)', () => {
+  it('returns a schema-valid canned action inside the context window', async () => {
+    const result = await mockProvider.proposeAction(
+      {
+        systemPrompt: '',
+        contextBlock: JSON.stringify({ meta: { startMonth: '2027-05' } }),
+        history: [],
+        userMessage: 'add an expense',
+        expectAction: true,
+      },
+      'mock-key',
+    );
+    expect(proposedActionSchema.safeParse(result.proposedActionJson).success).toBe(true);
+    expect((result.proposedActionJson as { month: string }).month).toBe('2027-05');
+  });
+
+  it('honours an aborted signal', async () => {
+    const ac = new AbortController();
+    ac.abort();
+    await expect(
+      mockProvider.proposeAction(
+        { systemPrompt: '', contextBlock: '', history: [], userMessage: 'x', expectAction: true },
+        'mock-key',
+        ac.signal,
+      ),
     ).rejects.toMatchObject({ name: 'AbortError' });
   });
 });

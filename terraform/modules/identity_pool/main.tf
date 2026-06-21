@@ -42,7 +42,7 @@ resource "aws_iam_role_policy" "authenticated_s3" {
     Statement = [
       {
         Effect   = "Allow"
-        Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+        Action   = ["s3:GetObject", "s3:PutObject", "s3:PutObjectTagging", "s3:DeleteObject"]
         Resource = "arn:aws:s3:::${var.bucket_name}/users/$${cognito-identity.amazonaws.com:sub}/*"
       },
       {

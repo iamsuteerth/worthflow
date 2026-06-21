@@ -12,6 +12,9 @@ const summarizer: AIProvider = {
   async *complete() {
     yield { textDelta: 'Concise faithful summary.' };
   },
+  async proposeAction() {
+    return { text: '', finishReason: 'stop' };
+  },
   async validateKey() {
     return true;
   },
@@ -26,6 +29,9 @@ const failing: AIProvider = {
       return { next: () => Promise.reject(new Error('boom')) };
     },
   }),
+  async proposeAction() {
+    return { text: '', finishReason: 'stop' };
+  },
   async validateKey() {
     return true;
   },

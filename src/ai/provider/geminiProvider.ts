@@ -1,7 +1,15 @@
 import { GoogleGenAI } from '@google/genai';
 import type { Content } from '@google/genai';
 import { AI_MODEL_ID } from '@/ai/config';
-import { AiError, type AIProvider, type AiRequest, type AiStreamChunk } from '@/ai/provider/types';
+import { AiError, type AIProvider, type AiRequest, type AiResult, type AiStreamChunk } from '@/ai/provider/types';
+
+// Strip a ```json … ``` fence if the model wraps its JSON despite the
+// application/json response mode (occasionally happens).
+function unfence(text: string): string {
+  const trimmed = text.trim();
+  const fence = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+  return fence ? fence[1].trim() : trimmed;
+}
 
 export function translateError(err: unknown): AiError {
   const e = err as { status?: number; message?: string; name?: string };
@@ -86,6 +94,41 @@ const geminiProvider: AIProvider = {
     } catch (err) {
       if ((err as { name?: string })?.name === 'AbortError') throw err;
       throw translateError(err);
+    }
+  },
+
+  async proposeAction(req: AiRequest, key: string, signal?: AbortSignal): Promise<AiResult> {
+    const ai = new GoogleGenAI({ apiKey: key });
+    let raw: string;
+    try {
+      const response = await ai.models.generateContent({
+        model: AI_MODEL_ID,
+        // JSON mode: the model returns a single ProposedAction object. We never
+        // trust it — it goes straight into Zod (validateAction) downstream.
+        config: {
+          systemInstruction: req.systemPrompt,
+          responseMimeType: 'application/json',
+          abortSignal: signal,
+        },
+        contents: buildContents(req),
+      });
+      raw = response.text ?? '';
+    } catch (err) {
+      if ((err as { name?: string })?.name === 'AbortError') throw err;
+      throw translateError(err);
+    }
+
+    if (!raw.trim()) {
+      throw new AiError('MALFORMED_RESPONSE', "I didn't get a complete suggestion — please retry.");
+    }
+
+    try {
+      const proposedActionJson = JSON.parse(unfence(raw));
+      return { text: raw, proposedActionJson, finishReason: 'stop' };
+    } catch {
+      // Non-JSON / unparseable → leave the action undefined so the caller maps
+      // it to INVALID_ACTION and renders nothing.
+      return { text: raw, proposedActionJson: undefined, finishReason: 'error' };
     }
   },
 

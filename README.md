@@ -136,6 +136,7 @@ An optional, **bring-your-own-key** assistant (Google Gemini) you can chat with 
 
 * Ask things like *"When does my cash dip lowest, and why?"* or *"Summarise my FD maturities for the next two years."* Replies stream in real time, formatted with bold figures, lists, and tables.
 * **Grounded in the engine** — every number it quotes comes straight from Worth Flow's simulation, never from the model's own arithmetic, so answers always match your forecast.
+* **Suggests changes you confirm** — tap the wand to have it propose a scenario change: add, edit, or remove almost anything the Scenario Lab can (expenses, salary/bonus, overrides, FDs/RDs, deposits/withdrawals, even a new investment account). You see a plain-language summary and an estimated impact, and impossible changes are flagged before you apply. The AI never changes your plan on its own — you **Apply** or **Dismiss**, one change at a time, within the same guardrails as the manual forms.
 * **Zero-knowledge by design** — your API key and chat are encrypted in your browser with a passphrase only you know, then synced (as ciphertext) across your devices. Worth Flow can never read either.
 * Fully optional and removable; calls go directly from your browser to Google with your own key — no Worth Flow server in the loop. See [MANUAL.md → AI Assistant](./MANUAL.md#14-ai-assistant).
 

@@ -44,3 +44,19 @@ export function notifyAiChatCompacted() {
     autoClose: 4000,
   });
 }
+
+export function notifyAiActionApplied() {
+  notifications.show({
+    color: 'teal',
+    message: 'Change applied to your scenario. You can undo it from the chat.',
+    autoClose: 5000,
+  });
+}
+
+export function notifyAiActionUndone() {
+  notifications.show({
+    color: 'gray',
+    message: 'Change undone.',
+    autoClose: 3000,
+  });
+}

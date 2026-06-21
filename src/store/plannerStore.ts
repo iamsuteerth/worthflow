@@ -167,6 +167,21 @@ export function getAvailableCash(
   return Math.floor(Math.max(0, row?.closingBalance ?? 0));
 }
 
+// The simulated value of a single investment account at `month` — the cap a
+// withdrawal can't exceed (mirrors AddInvestmentWithdrawalForm). Exported so the
+// store guard and the AI feasibility check share one source of truth.
+export function getAccountValueAtMonth(
+  config: PlannerConfig,
+  overrides: PlannerOverrides,
+  accountId: string,
+  month: MonthKey
+): number {
+  const result = simulate(config, overrides);
+  const row = result.rows.find((r) => r.month === month);
+  const snap = row?.assets.accountSnapshots.find((s) => s.accountId === accountId);
+  return Math.max(0, snap?.value ?? 0);
+}
+
 export const usePlannerStore = create<PlannerStore>()(
   persist(
     (set, get) => ({
@@ -292,6 +307,15 @@ export const usePlannerStore = create<PlannerStore>()(
         set((s) => {
           if (account.openingBalance < 0 || account.defaultMonthlyContribution < 0) return s;
           if (account.openingBalance === 0 && account.defaultMonthlyContribution === 0) return s;
+          // A future-dated account funds its opening balance from cash at its start
+          // month, so (like deposits/FDs) it can't exceed the cash available then.
+          // An account starting at the forecast start is wealth already held — no cap.
+          if (
+            account.startMonth > s.config.forecast.startMonth &&
+            account.openingBalance > getAvailableCash(s.config, s.overrides, account.startMonth)
+          ) {
+            return s;
+          }
 
           const existingNames = s.baseConfig.investments.accounts.map((a) => a.name);
           const id = crypto.randomUUID();
@@ -387,6 +411,9 @@ export const usePlannerStore = create<PlannerStore>()(
         set((s) => {
           const account = s.config.investments.accounts.find((a) => a.id === accountId);
           if (!account || month < account.startMonth) return s;
+          // A deposit moves cash into the account, so it can't exceed the cash
+          // available that month (the authority for this cap; the UI form mirrors it).
+          if (amount > getAvailableCash(s.config, s.overrides, month)) return s;
 
           const events = appendEvent(s.overrides.runtimeEvents ?? [], {
             id: crypto.randomUUID(), type: "INVESTMENT_DEPOSIT",
@@ -399,6 +426,8 @@ export const usePlannerStore = create<PlannerStore>()(
         set((s) => {
           const account = s.config.investments.accounts.find((a) => a.id === accountId);
           if (!account || month < account.startMonth) return s;
+          // A withdrawal can't exceed the account's balance that month.
+          if (amount > getAccountValueAtMonth(s.config, s.overrides, accountId, month)) return s;
 
           const events = appendEvent(s.overrides.runtimeEvents ?? [], {
             id: crypto.randomUUID(), type: "INVESTMENT_WITHDRAWAL",

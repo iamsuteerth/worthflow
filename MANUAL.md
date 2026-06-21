@@ -675,6 +675,32 @@ Good starting questions:
 * "What would happen if I reduced expenses by ₹10,000/month from next year?"
 * "Summarise my FD maturities for the next two years."
 
+## Suggesting changes to your plan
+
+Beyond answering questions, the assistant can **propose a change** to your scenario that you apply with one click — it never edits your plan on its own.
+
+1. Type what you'd like to try (e.g. *"Add a ₹2,00,000 one-off expense in March 2028"*, *"Create an FD of ₹5 lakh next month"*, or *"Change my spending override to ₹50,000"*).
+2. Click the **wand (✨ "Suggest a change")** button next to Send instead of sending a normal message.
+3. The assistant replies with a **proposed-change card** showing:
+   * a plain-language summary of exactly what it would do;
+   * an **estimated impact** — how your lowest projected cash and final net worth would change (a preview that does **not** touch your plan);
+   * **Apply** and **Dismiss** buttons.
+4. If a change *can't* be applied — say, an FD bigger than your available cash, or a spending override that overlaps an existing one — the card **flags it up front** with the reason and disables **Apply**, so you never hit a dead end. Adjust your request and try again.
+5. **Apply** makes the change through the *same checks the Scenario Lab uses*. It then appears in your Scenario Banner and Events list like any other scenario edit.
+   * Newly **added** items offer one-click **Undo**.
+   * **Edits**, **removals**, and **new investment accounts** don't have an in-chat undo — if you want to roll them back, load a saved plan.
+6. **Dismiss** discards the suggestion; nothing changes.
+
+### What it can do
+
+The assistant can exercise the whole Scenario Lab, always within the same guardrails as the manual forms:
+
+* **Add** one-off, recurring and credit-card expenses; bonuses and salary changes; spending and opening-cash overrides; FDs and RDs; investment deposits and withdrawals; a new investment account; and contribution or return overrides on an account.
+* **Edit** an existing scenario change (e.g. its amount, month, rate, or duration).
+* **Remove** an existing scenario change.
+
+It works on **one change at a time** — if you ask for several at once, it'll say so and ask which to do first. It **can't** delete an investment account, switch views, or save/load — those stay in your hands. And it can never exceed a real limit (you can't, for instance, fund an FD or deposit beyond the cash available that month).
+
 ## Passphrase and security
 
 **There is no passphrase reset.** If you forget your AI passphrase, you must use **Forgot passphrase** (available in Key Settings) to start fresh — this permanently erases your saved key and chat, and you will need to re-enter your Gemini API key and choose a new passphrase. Your financial plan is not affected.

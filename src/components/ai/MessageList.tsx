@@ -3,6 +3,7 @@ import { Alert, Box, Group, Loader, Stack, Text } from '@mantine/core';
 import { IconAlertCircle, IconSparkles, IconUser } from '@tabler/icons-react';
 import type { Message } from '@/ai/chat/conversation.types';
 import { Markdown } from '@/components/ai/Markdown';
+import ProposedActionCard from '@/components/ai/ProposedActionCard';
 
 interface Props {
   messages: Message[];
@@ -65,6 +66,8 @@ function MessageBubble({ message }: { message: Message }) {
             <Text size="xs">{message.error.message}</Text>
           </Alert>
         )}
+
+        {message.proposedAction && <ProposedActionCard message={message} />}
       </Stack>
     </Box>
   );

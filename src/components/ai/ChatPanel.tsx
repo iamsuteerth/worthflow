@@ -33,6 +33,7 @@ export default function ChatPanel() {
   const conversation = useAiStore((s) => s.conversation);
   const sending = useAiStore((s) => s.sending);
   const send = useAiStore((s) => s.send);
+  const proposeAction = useAiStore((s) => s.proposeAction);
   const stopStreaming = useAiStore((s) => s.stopStreaming);
   const clearChat = useAiStore((s) => s.clearChat);
   const reloadChat = useAiStore((s) => s.reloadChat);
@@ -186,7 +187,7 @@ export default function ChatPanel() {
             summary={conversation.summary}
             sending={sending}
           />
-          <MessageComposer onSend={send} onStop={stopStreaming} sending={sending} />
+          <MessageComposer onSend={send} onPropose={proposeAction} onStop={stopStreaming} sending={sending} />
         </Box>
       )}
 

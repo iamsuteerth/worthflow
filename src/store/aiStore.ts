@@ -34,7 +34,11 @@ import type { Conversation, Message } from '@/ai/chat/conversation.types';
 import { shouldCompact, MAX_HISTORY_TOKENS } from '@/ai/chat/tokenBudget';
 import { compactConversation, buildHistoryForRequest, pruneHistoryTokens } from '@/ai/chat/compaction';
 import { buildContextPack, serializeContextPack } from '@/ai/context/buildContextPack';
-import { SYSTEM_PROMPT } from '@/ai/config';
+import { SYSTEM_PROMPT, ACTION_CONTRACT } from '@/ai/config';
+
+import { validateAction } from '@/ai/actions/validateAction';
+import { applyAction } from '@/ai/actions/applyAction';
+import { describeAction } from '@/ai/actions/describeAction';
 
 import {
   notifyAiCloudSyncFailed,
@@ -43,6 +47,8 @@ import {
   notifyAiPassphraseChanged,
   notifyIndexedDbUnavailable,
   notifyAiChatCompacted,
+  notifyAiActionApplied,
+  notifyAiActionUndone,
 } from '@/ai/aiNotifications';
 
 import { usePlannerStore } from '@/store/plannerStore';
@@ -88,6 +94,12 @@ interface AiStore {
   reloadChat(): Promise<void>;
   acknowledgeDisclosure(): void;
   clearForSignOut(): void;
+
+  // Phase 2: assisted actions (propose → confirm → apply → undo)
+  proposeAction(text: string): Promise<void>;
+  applyProposedAction(messageId: string): void;
+  dismissProposedAction(messageId: string): void;
+  undoProposedAction(messageId: string): void;
 }
 
 // ---------------------------------------------------------------------------
@@ -571,6 +583,157 @@ export const useAiStore = create<AiStore>()(
       },
 
       // ------------------------------------------------------------------
+      // Phase 2: propose a structured change (explicit "Suggest a change")
+      // ------------------------------------------------------------------
+      proposeAction: async (text) => {
+        const { keyBlob, keyStatus, conversation, sending } = get();
+        if (sending) return;
+        if (keyStatus !== 'ready' || !keyBlob) return;
+
+        let apiKey: string;
+        try {
+          apiKey = await revealKey(keyBlob);
+        } catch (err) {
+          const kind = err instanceof AiError ? err.kind : 'UNKNOWN';
+          const message = err instanceof AiError ? err.message : 'Could not unlock key.';
+          appendAssistant(set, get, { text: message, error: { kind, message } });
+          return;
+        }
+
+        const userMsg: Message = {
+          id: crypto.randomUUID(),
+          role: 'user',
+          text,
+          createdAt: new Date().toISOString(),
+        };
+        set({
+          conversation: { ...conversation, messages: [...conversation.messages, userMsg], updatedAt: new Date().toISOString() },
+          sending: true,
+        });
+
+        // Build the grounded context block + the validation context (window + names).
+        const plannerState = usePlannerStore.getState();
+        let contextBlock: string;
+        let contextEpoch: string;
+        try {
+          const ctx = getContextBlock(plannerState.config, plannerState.overrides, plannerState.baselineAccountIds);
+          contextBlock = ctx.block;
+          contextEpoch = ctx.epoch;
+        } catch {
+          appendAssistant(set, get, {
+            text: 'Build or load a plan first so I have a forecast to work with.',
+            error: { kind: 'NO_CONTEXT', message: 'No simulation context available.' },
+          });
+          set({ sending: false });
+          return;
+        }
+
+        const history = pruneHistoryTokens(buildHistoryForRequest(get().conversation), MAX_HISTORY_TOKENS);
+
+        const controller = new AbortController();
+        _abortController = controller;
+
+        let invalidMessage = "I couldn't form a valid suggestion. Try rephrasing what you'd like to change.";
+        try {
+          const result = await aiProvider.proposeAction(
+            {
+              systemPrompt: `${SYSTEM_PROMPT}\n\n${ACTION_CONTRACT}`,
+              contextBlock,
+              history,
+              userMessage: text,
+              expectAction: true,
+            },
+            apiKey,
+            controller.signal,
+          );
+
+          // The model may decline to pick one change when several were asked for.
+          const clarify = extractClarify(result.proposedActionJson);
+          if (clarify) {
+            appendAssistant(set, get, { text: clarify }, contextEpoch);
+            return;
+          }
+
+          const validation = validateAction(result.proposedActionJson, {
+            startMonth: plannerState.config.forecast.startMonth,
+            totalMonths: plannerState.config.forecast.totalMonths,
+            accountNames: plannerState.config.investments.accounts.map((a) => a.name),
+            // Same order as the context pack's scenarioChanges, so a 1-based ref resolves.
+            scenarioEventIds: (plannerState.overrides.runtimeEvents ?? []).map((e) => e.id),
+          });
+
+          if (validation.ok) {
+            appendAssistant(set, get, {
+              text: `Here's a change you can apply:\n\n**${describeAction(validation.action)}**`,
+              proposedAction: validation.action,
+              actionStatus: 'pending',
+            }, contextEpoch);
+          } else {
+            invalidMessage = validation.message;
+            appendAssistant(set, get, {
+              text: invalidMessage,
+              error: { kind: 'INVALID_ACTION', message: invalidMessage },
+            }, contextEpoch);
+          }
+        } catch (err) {
+          if ((err as { name?: string })?.name === 'AbortError') {
+            // user cancelled — leave just the user turn
+          } else {
+            const kind = err instanceof AiError ? err.kind : 'UNKNOWN';
+            const message = err instanceof AiError ? err.message : invalidMessage;
+            appendAssistant(set, get, { text: message, error: { kind, message } }, contextEpoch);
+          }
+        } finally {
+          if (_abortController === controller) _abortController = null;
+          set({ sending: false });
+        }
+
+        scheduleWrite(get, set);
+      },
+
+      // ------------------------------------------------------------------
+      // Phase 2: apply a pending proposed action (the user's explicit click)
+      // ------------------------------------------------------------------
+      applyProposedAction: (messageId) => {
+        const msg = get().conversation.messages.find((m) => m.id === messageId);
+        // Apply from a fresh proposal, or retry one a store guard previously
+        // rejected (the plan may have changed since). Never re-apply an applied
+        // or dismissed one.
+        if (!msg?.proposedAction || (msg.actionStatus !== 'pending' && msg.actionStatus !== 'failed')) return;
+
+        const result = applyAction(msg.proposedAction);
+        if (result.ok) {
+          updateMessage(set, get, messageId, { actionStatus: 'applied', appliedEventId: result.eventId, actionError: undefined });
+          notifyAiActionApplied();
+        } else {
+          updateMessage(set, get, messageId, { actionStatus: 'failed', actionError: result.message });
+        }
+        scheduleWrite(get, set);
+      },
+
+      // ------------------------------------------------------------------
+      // Phase 2: dismiss a pending proposal (nothing changes)
+      // ------------------------------------------------------------------
+      dismissProposedAction: (messageId) => {
+        const msg = get().conversation.messages.find((m) => m.id === messageId);
+        if (!msg?.proposedAction) return;
+        updateMessage(set, get, messageId, { actionStatus: 'dismissed' });
+        scheduleWrite(get, set);
+      },
+
+      // ------------------------------------------------------------------
+      // Phase 2: undo an applied action (delete exactly its runtime event)
+      // ------------------------------------------------------------------
+      undoProposedAction: (messageId) => {
+        const msg = get().conversation.messages.find((m) => m.id === messageId);
+        if (!msg || msg.actionStatus !== 'applied' || !msg.appliedEventId) return;
+        usePlannerStore.getState().deleteRuntimeEvent(msg.appliedEventId);
+        updateMessage(set, get, messageId, { actionStatus: 'pending', appliedEventId: undefined });
+        notifyAiActionUndone();
+        scheduleWrite(get, set);
+      },
+
+      // ------------------------------------------------------------------
       // Stop an in-flight stream (Stop button / panel close)
       // ------------------------------------------------------------------
       stopStreaming: () => {
@@ -663,6 +826,57 @@ export function mergeConversations(remote: Conversation, local: Conversation): C
     messages: [...remote.messages, ...newLocal],
     updatedAt: new Date().toISOString(),
   };
+}
+
+// Detect the model's "I can only do one change — which first?" reply. Returns the
+// clarification text, or null if the JSON isn't a clarify object.
+function extractClarify(json: unknown): string | null {
+  if (json && typeof json === 'object' && !Array.isArray(json)) {
+    const c = (json as { clarify?: unknown }).clarify;
+    if (typeof c === 'string' && c.trim()) return c.trim();
+  }
+  return null;
+}
+
+// Append a new assistant message (optionally stamping the context epoch).
+function appendAssistant(
+  set: (partial: Partial<AiStore>) => void,
+  get: () => AiStore,
+  fields: Partial<Message> & { text: string },
+  contextEpochId?: string,
+) {
+  const conv = get().conversation;
+  const msg: Message = {
+    id: crypto.randomUUID(),
+    role: 'assistant',
+    createdAt: new Date().toISOString(),
+    ...fields,
+  };
+  set({
+    conversation: {
+      ...conv,
+      messages: [...conv.messages, msg],
+      ...(contextEpochId ? { contextEpochId } : {}),
+      updatedAt: new Date().toISOString(),
+    },
+  });
+}
+
+// Patch a single message in place by id.
+function updateMessage(
+  set: (partial: Partial<AiStore>) => void,
+  get: () => AiStore,
+  messageId: string,
+  changes: Partial<Message>,
+) {
+  const conv = get().conversation;
+  set({
+    conversation: {
+      ...conv,
+      messages: conv.messages.map((m) => (m.id === messageId ? { ...m, ...changes } : m)),
+      updatedAt: new Date().toISOString(),
+    },
+  });
 }
 
 let _writeDebounce: ReturnType<typeof setTimeout> | null = null;
