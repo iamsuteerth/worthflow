@@ -141,11 +141,13 @@ export async function getUserObject(key: string): Promise<GetObjectResult> {
 }
 
 // `ifMatch`: undefined = unconditional; null = IfNoneMatch:* (create only); string = IfMatch (update only)
+// `tagging`: URL-encoded S3 tag string (e.g. "ObjectType=ai") — applied to the stored object
 export async function putUserObject(
   key: string,
   body: string,
   contentType = 'application/json',
-  ifMatch?: string | null
+  ifMatch?: string | null,
+  tagging?: string,
 ): Promise<string | null> {
   const { client, prefix } = await getClientAndPrefix()
   const isMock = import.meta.env.VITE_AUTH_MODE === 'mock'
@@ -157,6 +159,7 @@ export async function putUserObject(
       Body: body,
       ContentType: contentType,
       ...(useConditional ? (ifMatch ? { IfMatch: ifMatch } : { IfNoneMatch: '*' }) : {}),
+      ...(tagging ? { Tagging: tagging } : {}),
     })
   )
   return (res as { ETag?: string }).ETag ?? null

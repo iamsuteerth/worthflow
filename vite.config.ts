@@ -36,6 +36,25 @@ export default defineConfig({
           if (id.includes("recharts")) {
             return "recharts";
           }
+          if (id.includes("@google/genai") || id.includes("google/genai")) {
+            return "ai-vendor";
+          }
+          // Markdown rendering is only used by the (lazy) AI chat. Keep its
+          // sizeable dependency tree out of the main bundle.
+          if (
+            id.includes("react-markdown") ||
+            id.includes("remark-") ||
+            id.includes("micromark") ||
+            id.includes("mdast") ||
+            id.includes("hast") ||
+            id.includes("unified") ||
+            id.includes("/unist-") ||
+            id.includes("vfile") ||
+            id.includes("property-information") ||
+            id.includes("decode-named-character-reference")
+          ) {
+            return "markdown-vendor";
+          }
         },
       },
     },

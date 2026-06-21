@@ -26,8 +26,8 @@ describe("createInitialState", () => {
     const config = baseConfig({ forecast: { startMonth: m("2025-01"), totalMonths: 12 }, instruments: [histFd] });
     const state = createInitialState(config);
     expect(state.fds).toHaveLength(1);
-    // 12 months elapsed at 10% → one year of growth.
-    expect(state.fds[0].currentValue).toBeCloseTo(110_000, 4);
+    // 12 months elapsed at 10%, quarterly compounded → 100k × 1.025^4 ≈ 110,381.
+    expect(state.fds[0].currentValue).toBeCloseTo(100_000 * Math.pow(1 + 10 / 400, 12 / 3), 4);
   });
 
   it("includes an FD that matures exactly on the forecast start month", () => {

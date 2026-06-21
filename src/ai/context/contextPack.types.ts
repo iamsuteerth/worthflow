@@ -17,10 +17,23 @@ export interface ContextPackHeadline {
   totalExpenses: number;
 }
 
-export interface ContextPackSeriesPoint {
-  month: string;
-  cash: number;
-  netWorth: number;
+/**
+ * Columnar monthly series. Each array is parallel to `labels`: the value for
+ * month `labels[i]` is `cash[i]`, `netWorth[i]`, etc. Look a month up by finding
+ * it in `labels` — never by arithmetic, because long forecasts (> 120 months)
+ * include only the first 36 months plus each year-end, so positions are NOT a
+ * linear function of the calendar month.
+ * All values are integers in INR (rounded to the nearest rupee).
+ */
+export interface ContextPackSeries {
+  startMonth: string;   // "YYYY-MM" — labels[0]
+  months: number;       // total entries (= length of each array)
+  labels: string[];     // "YYYY-MM" for each entry; the index key for every array below
+  cash: number[];       // end-of-month cash balance
+  netWorth: number[];
+  investments: number[]; // investment corpus (all accounts combined)
+  fd: number[];          // FD book value
+  rd: number[];          // RD book value
 }
 
 export interface ContextPackAccount {
@@ -44,7 +57,7 @@ export interface ContextPackInstrument {
 export interface ContextPack {
   meta: ContextPackMeta;
   headline: ContextPackHeadline;
-  series: ContextPackSeriesPoint[];
+  series: ContextPackSeries;
   accounts: ContextPackAccount[];
   instruments: ContextPackInstrument[];
   scenarioChanges: string[];

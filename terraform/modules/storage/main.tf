@@ -20,11 +20,27 @@ resource "aws_s3_bucket_lifecycle_configuration" "saves" {
   bucket     = aws_s3_bucket.saves.id
   depends_on = [aws_s3_bucket_versioning.saves]
 
+  # Plan saves: keep noncurrent versions 90 days so users can recover an old save.
   rule {
-    id     = "expire-noncurrent"
+    id     = "expire-noncurrent-saves"
     status = "Enabled"
-    filter {} # applies to all objects
+    filter {} # all objects (plan saves don't carry tags)
     noncurrent_version_expiration { noncurrent_days = 90 }
+  }
+
+  # AI objects (keyblob + encrypted chat) are tagged ObjectType=ai on write.
+  # After forgotPassphrase or removeKey, old versions become noncurrent;
+  # 30 days is enough — they're zero-knowledge ciphertext but shouldn't linger.
+  rule {
+    id     = "expire-noncurrent-ai"
+    status = "Enabled"
+    filter {
+      tag {
+        key   = "ObjectType"
+        value = "ai"
+      }
+    }
+    noncurrent_version_expiration { noncurrent_days = 30 }
   }
 }
 

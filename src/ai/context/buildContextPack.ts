@@ -15,27 +15,38 @@ import type {
   RuntimeFixedDeposit,
   RuntimeRecurringDeposit,
 } from '@/types/runtimeEvent';
-import { MAX_CONTEXT_PACK_BYTES, SERIES_MAX_POINTS } from '@/ai/config';
-import type { ContextPack, ContextPackSeriesPoint } from '@/ai/context/contextPack.types';
+import { MAX_CONTEXT_PACK_BYTES } from '@/ai/config';
+import { projectInstrument } from '@/engine/instrumentProjection';
+import { addMonths } from '@/engine/dateUtils';
+import type { ContextPack, ContextPackSeries } from '@/ai/context/contextPack.types';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function formatMoney(n: number): string {
   return `₹${n.toLocaleString('en-IN')}`;
-}
-
-function roundTo(n: number, nearest: number): number {
-  return Math.round(n / nearest) * nearest;
 }
 
 function xirrToPercent(xirr: number | null): number | null {
   return xirr !== null ? Math.round(xirr * 1000) / 10 : null;
 }
 
-function downSampleSeries(
+// ---------------------------------------------------------------------------
+// Full columnar series
+// For forecasts > FULL_MONTH_LIMIT, keep the first LEAD_MONTHS in full
+// resolution and sample the remainder at yearly intervals (December of each
+// year) plus always include the lowest-cash month.
+// ---------------------------------------------------------------------------
+
+const FULL_MONTH_LIMIT = 120;
+const LEAD_MONTHS = 36;
+
+function buildFullSeries(
   result: SimulationResult,
-  maxPoints: number,
   focusFrom?: string,
   focusTo?: string,
-): ContextPackSeriesPoint[] {
+): ContextPackSeries {
   let rows = result.rows;
 
   if (focusFrom || focusTo) {
@@ -46,41 +57,46 @@ function downSampleSeries(
     });
   }
 
-  if (rows.length === 0) return [];
-
-  const lowestMonth = result.summary.lowestBalanceMonth;
-  const step = Math.max(1, Math.floor(rows.length / maxPoints));
-  const sampled = new Map<string, ContextPackSeriesPoint>();
-
-  for (let i = 0; i < rows.length; i += step) {
-    const r = rows[i];
-    sampled.set(r.month, {
-      month: r.month,
-      cash: roundTo(r.assets.cash, 100),
-      netWorth: roundTo(r.assets.netWorth, 100),
-    });
+  if (rows.length === 0) {
+    return { startMonth: '', months: 0, labels: [], cash: [], netWorth: [], investments: [], fd: [], rd: [] };
   }
 
-  // Always include the lowest cash month
-  const lowestRow = result.rows.find((r) => r.month === lowestMonth);
-  if (lowestRow && !sampled.has(lowestMonth)) {
-    sampled.set(lowestMonth, {
-      month: lowestMonth,
-      cash: roundTo(lowestRow.assets.cash, 100),
-      netWorth: roundTo(lowestRow.assets.netWorth, 100),
-    });
+  let seriesRows = rows;
+
+  if (rows.length > FULL_MONTH_LIMIT) {
+    const lead = rows.slice(0, LEAD_MONTHS);
+    const tail = rows.slice(LEAD_MONTHS);
+
+    // December of each year in the tail (month string ends in "-12")
+    const yearlyTail = tail.filter((r) => r.month.endsWith('-12'));
+
+    // Always include the lowest-cash month even if it's not a December
+    const lowestMonth = result.summary.lowestBalanceMonth;
+    const lowestRow = tail.find((r) => r.month === lowestMonth);
+
+    const tailMap = new Map<string, typeof rows[0]>();
+    for (const r of yearlyTail) tailMap.set(r.month, r);
+    if (lowestRow && !tailMap.has(lowestRow.month)) tailMap.set(lowestRow.month, lowestRow);
+
+    const sortedTail = [...tailMap.values()].sort((a, b) => (a.month < b.month ? -1 : 1));
+    seriesRows = [...lead, ...sortedTail];
   }
 
-  // Always include last row
-  const lastRow = rows[rows.length - 1];
-  sampled.set(lastRow.month, {
-    month: lastRow.month,
-    cash: roundTo(lastRow.assets.cash, 100),
-    netWorth: roundTo(lastRow.assets.netWorth, 100),
-  });
-
-  return [...sampled.values()].sort((a, b) => (a.month < b.month ? -1 : 1));
+  return {
+    startMonth: seriesRows[0].month,
+    months: seriesRows.length,
+    labels: seriesRows.map((r) => r.month),
+    cash: seriesRows.map((r) => Math.round(r.assets.cash)),
+    netWorth: seriesRows.map((r) => Math.round(r.assets.netWorth)),
+    investments: seriesRows.map((r) => Math.round(r.assets.investmentCorpus)),
+    fd: seriesRows.map((r) => Math.round(r.assets.fdValue)),
+    rd: seriesRows.map((r) => Math.round(r.assets.rdValue)),
+  };
 }
+
+// ---------------------------------------------------------------------------
+// Scenario changes
+// ---------------------------------------------------------------------------
 
 function buildScenarioChanges(
   config: PlannerConfig,
@@ -158,6 +174,10 @@ function buildScenarioChanges(
   return lines;
 }
 
+// ---------------------------------------------------------------------------
+// Main export
+// ---------------------------------------------------------------------------
+
 export function buildContextPack(
   result: SimulationResult,
   config: PlannerConfig,
@@ -173,48 +193,27 @@ export function buildContextPack(
     const snap = finalRow.assets.accountSnapshots.find((s) => s.accountId === acct.id);
     return {
       name: acct.name,
-      currentValue: roundTo(snap?.value ?? 0, 100),
+      currentValue: Math.round(snap?.value ?? 0),
       xirrPct: xirrToPercent(summary.accountXirr[acct.id] ?? null),
-      totalContributions: roundTo(summary.accountContributions[acct.id] ?? 0, 100),
+      totalContributions: Math.round(summary.accountContributions[acct.id] ?? 0),
       addedInScenario: !baselineAccountIds.includes(acct.id),
     };
   });
 
+  // Maturity figures come straight from the engine's projection so they can never
+  // disagree with the fd[]/rd[] series or the simulated payout.
   const instruments = config.instruments.map((inst) => {
-    const [yearStr, monthStr] = inst.startMonth.split('-');
-    const startYear = parseInt(yearStr);
-    const startMonthNum = parseInt(monthStr);
-    const totalMonths = startMonthNum - 1 + inst.durationMonths;
-    const maturityYear = startYear + Math.floor(totalMonths / 12);
-    const maturityMonthNum = (totalMonths % 12) + 1;
-    const maturityMonth = `${maturityYear}-${String(maturityMonthNum).padStart(2, '0')}`;
-
-    if (inst.type === 'FD') {
-      const maturityValue = roundTo(inst.principal * Math.pow(1 + inst.rate / (4 * 100), (inst.durationMonths / 12) * 4), 100);
-      return {
-        kind: 'FD' as const,
-        name: inst.name,
-        principalOrContribution: inst.principal,
-        ratePct: inst.rate,
-        startMonth: inst.startMonth,
-        maturityMonth,
-        maturityValue,
-      };
-    } else {
-      const maturityValue = roundTo(
-        inst.monthlyContribution * inst.durationMonths * (1 + (inst.rate / 100) * (inst.durationMonths + 1) / (2 * 12)),
-        100,
-      );
-      return {
-        kind: 'RD' as const,
-        name: inst.name,
-        principalOrContribution: inst.monthlyContribution,
-        ratePct: inst.rate,
-        startMonth: inst.startMonth,
-        maturityMonth,
-        maturityValue,
-      };
-    }
+    const { maturityValue } = projectInstrument(inst);
+    const maturityMonth = addMonths(inst.startMonth, inst.durationMonths);
+    return {
+      kind: inst.type,
+      name: inst.name,
+      principalOrContribution: inst.type === 'FD' ? inst.principal : inst.monthlyContribution,
+      ratePct: inst.rate,
+      startMonth: inst.startMonth,
+      maturityMonth,
+      maturityValue: Math.round(maturityValue),
+    };
   });
 
   const pack: ContextPack = {
@@ -226,26 +225,27 @@ export function buildContextPack(
       generatedFor: hasActiveScenario ? 'scenario' : 'base',
     },
     headline: {
-      finalNetWorth: roundTo(summary.finalNetWorth, 100),
-      finalCash: roundTo(summary.finalBalance, 100),
-      finalInvestmentCorpus: roundTo(summary.finalInvestmentCorpus, 100),
-      lowestCash: roundTo(summary.lowestBalance, 100),
+      finalNetWorth: Math.round(summary.finalNetWorth),
+      finalCash: Math.round(summary.finalBalance),
+      finalInvestmentCorpus: Math.round(summary.finalInvestmentCorpus),
+      lowestCash: Math.round(summary.lowestBalance),
       lowestCashMonth: summary.lowestBalanceMonth,
       portfolioXirrPct: xirrToPercent(summary.xirr),
-      totalIncome: roundTo(summary.totalIncome, 100),
-      totalExpenses: roundTo(summary.totalExpenses, 100),
+      totalIncome: Math.round(summary.totalIncome),
+      totalExpenses: Math.round(summary.totalExpenses),
     },
-    series: downSampleSeries(result, SERIES_MAX_POINTS, focusWindow?.from, focusWindow?.to),
+    series: buildFullSeries(result, focusWindow?.from, focusWindow?.to),
     accounts,
     instruments,
     scenarioChanges: buildScenarioChanges(config, overrides),
     focusWindow,
   };
 
-  // Size guard: if the pack exceeds the byte cap, drop the series detail.
+  // Size guard: if the pack exceeds the byte cap, drop instruments (series is never dropped —
+  // the model needs it to answer month-specific questions correctly).
   const json = JSON.stringify(pack);
   if (json.length > MAX_CONTEXT_PACK_BYTES) {
-    return { ...pack, series: [], instruments: [] };
+    return { ...pack, instruments: [] };
   }
 
   return pack;

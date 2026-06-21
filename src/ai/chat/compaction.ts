@@ -29,9 +29,6 @@ export async function compactConversation(
       .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
       .join('\n\n');
     const prompt = `Summarize the following conversation turns in 2-3 sentences, preserving any key financial decisions or insights mentioned:\n\n${turnText}`;
-    if (conversation.summary) {
-      // Merge with existing summary
-    }
 
     let accumulated = '';
     for await (const chunk of provider.complete(
@@ -59,12 +56,6 @@ export async function compactConversation(
     summary: newSummary || undefined,
     updatedAt: new Date().toISOString(),
   };
-}
-
-export function compactedTokenEstimate(conversation: Conversation): number {
-  const msgTokens = conversation.messages.reduce((s, m) => s + estimateTokens(m.text), 0);
-  const summaryTokens = conversation.summary ? estimateTokens(conversation.summary) : 0;
-  return msgTokens + summaryTokens;
 }
 
 export function buildHistoryForRequest(

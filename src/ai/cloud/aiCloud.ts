@@ -46,7 +46,7 @@ export async function getKeyBlob(): Promise<KeyBlob | null> {
 }
 
 export async function putKeyBlob(blob: KeyBlob): Promise<void> {
-  await putUserObject(KEY_BLOB_PATH, JSON.stringify(blob));
+  await putUserObject(KEY_BLOB_PATH, JSON.stringify(blob), 'application/json', undefined, 'ObjectType=ai');
 }
 
 export async function deleteKeyBlob(): Promise<void> {
@@ -64,11 +64,12 @@ export async function getConversation(): Promise<{ envelope: EncryptedEnvelope |
 }
 
 // `ifMatch`: null = create (IfNoneMatch:*); string = update (IfMatch); undefined = unconditional
+// Returns the new ETag from S3 (store it so the next write can be conditional).
 export async function putConversation(
   envelope: EncryptedEnvelope,
   ifMatch: string | null | undefined,
-): Promise<void> {
-  await putUserObject(CONVERSATION_PATH, JSON.stringify(envelope), 'application/json', ifMatch);
+): Promise<string | null> {
+  return putUserObject(CONVERSATION_PATH, JSON.stringify(envelope), 'application/json', ifMatch, 'ObjectType=ai');
 }
 
 export async function deleteConversation(): Promise<void> {

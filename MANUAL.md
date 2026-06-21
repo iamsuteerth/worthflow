@@ -282,6 +282,8 @@ At maturity:
 * Interest is added
 * Cash balance increases automatically
 
+Interest is **compounded quarterly** — the standard method Indian banks (e.g. HDFC) use — so an FD's projected maturity value lines up with what a bank's FD calculator shows.
+
 FD creation requires sufficient available cash (see [Understanding Overrides](#9-understanding-overrides) for how this is calculated).
 
 # 6. Recurring Deposits (RD)

@@ -29,7 +29,6 @@ export interface AiRequest {
   contextBlock: string;
   history: Array<{ role: 'user' | 'assistant'; text: string }>;
   userMessage: string;
-  expectAction?: boolean;
 }
 
 export interface AiStreamChunk {

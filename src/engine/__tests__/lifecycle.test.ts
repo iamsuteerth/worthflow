@@ -40,13 +40,14 @@ describe("processFdLifecycle", () => {
   });
 
   it("matures an FD on its maturity month, crediting the compounded value to cash", () => {
-    // 1-month FD at 12% → matures the next month at principal * 1.12^(1/12).
+    // 1-month FD at 12% → matures the next month at principal × (1 + 12/400)^(1/3)
+    // (quarterly compounding, one month = a third of a quarter elapsed).
     const config = baseConfig({ cash: { openingBalance: 500_000 }, instruments: [fd({ durationMonths: 1 })] });
     let state = createInitialState(config);
     state = processFdLifecycle(state, config, m("2025-01")).state; // created, cash 400k
     const matured = processFdLifecycle(state, config, m("2025-02"));
 
-    const expectedValue = 100_000 * Math.pow(1.12, 1 / 12);
+    const expectedValue = 100_000 * Math.pow(1 + 12 / 400, 1 / 3);
     expect(matured.state.fds).toHaveLength(0);
     expect(matured.state.cash).toBeCloseTo(400_000 + expectedValue, 4);
     expect(matured.events[0]).toMatchObject({ type: "FD_MATURED", description: "FD A" });

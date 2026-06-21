@@ -70,9 +70,6 @@ interface AiStore {
   // Chat ETag for optimistic concurrency
   _conversationEtag: string | null;
 
-  // Pending write timer handle
-  _writeTimer: ReturnType<typeof setTimeout> | null;
-
   // Key lifecycle
   initAi: () => Promise<void>;
   setupKey(plaintextApiKey: string, passphrase: string): Promise<void>;
@@ -131,7 +128,6 @@ export const useAiStore = create<AiStore>()(
       sending: false,
       indexedDbWarningShown: false,
       _conversationEtag: null,
-      _writeTimer: null,
 
       // ------------------------------------------------------------------
       // Init: run after sign-in. Loads the key blob + checks KEK cache.
@@ -180,11 +176,11 @@ export const useAiStore = create<AiStore>()(
         // 3. Upload blob
         await putKeyBlob(blob);
 
-        // 4. Write empty encrypted conversation (same epoch)
+        // 4. Write empty encrypted conversation (same epoch) — create-only (IfNoneMatch:*)
         const emptyCov = emptyConversation();
         const { iv, ciphertext } = await aesGcmEncrypt(kek, JSON.stringify(emptyCov));
         const envelope: EncryptedEnvelope = { v: 1, keyEpoch: blob.keyEpoch, iv, ciphertext };
-        await putConversation(envelope, null);
+        const initEtag = await putConversation(envelope, null);
 
         // 5. Cache KEK + set session
         try {
@@ -203,7 +199,7 @@ export const useAiStore = create<AiStore>()(
           keyBlob: blob,
           keyStatus: 'ready',
           conversation: emptyCov,
-          _conversationEtag: null,
+          _conversationEtag: initEtag,
         });
 
         notifyAiKeySetup();
@@ -236,9 +232,9 @@ export const useAiStore = create<AiStore>()(
         const newEnvelope = await encryptConversation(conversation);
 
         await putKeyBlob(newBlob);
-        await putConversation(newEnvelope, undefined);
+        const cpEtag = await putConversation(newEnvelope, undefined);
 
-        set({ keyBlob: newBlob });
+        set({ keyBlob: newBlob, _conversationEtag: cpEtag });
         notifyAiPassphraseChanged();
       },
 
@@ -283,11 +279,11 @@ export const useAiStore = create<AiStore>()(
         // 3. Overwrite blob
         await putKeyBlob(blob);
 
-        // 4. Write fresh empty chat under new epoch
+        // 4. Write fresh empty chat under new epoch — unconditional (destroying old epoch)
         const emptyCov = emptyConversation();
         const { iv, ciphertext } = await aesGcmEncrypt(kek, JSON.stringify(emptyCov));
         const envelope: EncryptedEnvelope = { v: 1, keyEpoch: blob.keyEpoch, iv, ciphertext };
-        await putConversation(envelope, undefined);
+        const fpEtag = await putConversation(envelope, undefined);
 
         // 5. Cache new KEK
         try {
@@ -306,7 +302,7 @@ export const useAiStore = create<AiStore>()(
           keyBlob: blob,
           keyStatus: 'ready',
           conversation: emptyCov,
-          _conversationEtag: null,
+          _conversationEtag: fpEtag,
         });
       },
 
@@ -414,7 +410,9 @@ export const useAiStore = create<AiStore>()(
           const result = simulate(plannerState.config, plannerState.overrides);
           const pack = buildContextPack(
             result,
-            plannerState.baseConfig,
+            // Effective config (= base + active scenario) so the pack's accounts,
+            // instruments and horizon match exactly what the simulation just ran.
+            plannerState.config,
             plannerState.overrides,
             plannerState.baselineAccountIds,
           );
@@ -512,8 +510,10 @@ export const useAiStore = create<AiStore>()(
           }
         }
 
-        // Debounced encrypted cloud write-back
-        scheduleWrite(get, set, apiKey);
+        // Debounced encrypted cloud write-back. The write re-encrypts via the
+        // session KEK and never needs the plaintext key, so it isn't passed in —
+        // the decrypted key isn't retained beyond this provider call.
+        scheduleWrite(get, set);
       },
 
       // ------------------------------------------------------------------
@@ -524,8 +524,8 @@ export const useAiStore = create<AiStore>()(
         set({ conversation: emptyCov });
         try {
           const envelope = await encryptConversation(emptyCov);
-          await putConversation(envelope, undefined);
-          set({ _conversationEtag: null });
+          const clearEtag = await putConversation(envelope, undefined);
+          set({ _conversationEtag: clearEtag });
         } catch {
           notifyAiCloudSyncFailed();
         }
@@ -546,6 +546,12 @@ export const useAiStore = create<AiStore>()(
       // Sign-out: wipe local state only; S3 stays encrypted
       // ------------------------------------------------------------------
       clearForSignOut: () => {
+        // Cancel any pending cloud write so it can't fire post-sign-out (when the
+        // session KEK is gone) and surface a spurious sync-failed toast.
+        if (_writeDebounce) {
+          clearTimeout(_writeDebounce);
+          _writeDebounce = null;
+        }
         clearSessionKek();
         clearKek().catch(() => {});
         set({
@@ -578,7 +584,6 @@ let _writeDebounce: ReturnType<typeof setTimeout> | null = null;
 function scheduleWrite(
   get: () => AiStore,
   set: (partial: Partial<AiStore>) => void,
-  apiKey: string,
 ) {
   if (_writeDebounce) clearTimeout(_writeDebounce);
   _writeDebounce = setTimeout(async () => {
@@ -586,18 +591,20 @@ function scheduleWrite(
     if (!keyBlob) return;
     try {
       const envelope = await encryptConversation(conversation);
-      // Use the current ETag for conditional write
-      await putConversation(envelope, _conversationEtag ?? null);
+      // Conditional update when we have an etag; unconditional fallback when we don't
+      // (never null/create-only here — the object already exists after setup)
+      const newEtag = await putConversation(envelope, _conversationEtag ?? undefined);
+      set({ _conversationEtag: newEtag });
     } catch (err) {
       if (isPreconditionFailed(err)) {
-        // Concurrent write from another device: re-fetch, merge, retry
+        // Genuine concurrent write from another device: re-fetch, merge, retry
         try {
           const { envelope: remoteEnv, etag: remoteEtag } = await getConversation();
           if (!remoteEnv || !keyBlob) return;
           const remote = await decryptConversation(remoteEnv, keyBlob.keyEpoch);
           if (remote === 'epoch_mismatch' || remote === 'decrypt_error') return;
 
-          // Merge: keep remote messages, append any local messages added after the base
+          // Merge: keep remote messages, append any local messages not yet in remote
           const { conversation: currentConv } = get();
           const remoteIds = new Set(remote.messages.map((m) => m.id));
           const newLocal = currentConv.messages.filter((m) => !remoteIds.has(m.id));
@@ -608,8 +615,8 @@ function scheduleWrite(
           };
 
           const mergedEnvelope = await encryptConversation(merged);
-          await putConversation(mergedEnvelope, remoteEtag);
-          set({ conversation: merged, _conversationEtag: remoteEtag });
+          const mergedEtag = await putConversation(mergedEnvelope, remoteEtag);
+          set({ conversation: merged, _conversationEtag: mergedEtag ?? remoteEtag });
         } catch {
           notifyAiCloudSyncFailed();
         }
@@ -617,6 +624,5 @@ function scheduleWrite(
         notifyAiCloudSyncFailed();
       }
     }
-    void apiKey; // included for future use (analytics, etc.)
   }, 1500);
 }

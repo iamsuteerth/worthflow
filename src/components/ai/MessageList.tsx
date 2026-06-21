@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Alert, Box, Group, Loader, Stack, Text } from '@mantine/core';
 import { IconAlertCircle, IconSparkles, IconUser } from '@tabler/icons-react';
 import type { Message } from '@/ai/chat/conversation.types';
+import { Markdown } from '@/components/ai/Markdown';
 
 interface Props {
   messages: Message[];
@@ -41,14 +42,16 @@ function MessageBubble({ message }: { message: Message }) {
 
         {message.streaming && !message.text ? (
           <Loader size="xs" color={isUser ? 'white' : 'brand'} type="dots" />
-        ) : (
-          <Text
-            size="sm"
-            style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.5 }}
-          >
+        ) : isUser ? (
+          // User text is literal — render plain so stray Markdown chars aren't eaten.
+          <Text size="sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.5 }}>
             {message.text}
-            {message.streaming && <span style={{ opacity: 0.5 }}>▋</span>}
           </Text>
+        ) : (
+          <Box style={{ wordBreak: 'break-word' }}>
+            <Markdown>{message.text}</Markdown>
+            {message.streaming && <Text span size="sm" style={{ opacity: 0.5 }}>▋</Text>}
+          </Box>
         )}
 
         {message.error && (

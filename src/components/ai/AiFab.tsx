@@ -6,14 +6,13 @@ import { useAiStore } from '@/store/aiStore';
 import { usePlannerStore } from '@/store/plannerStore';
 import { useUiStore } from '@/store/uiStore';
 import { ThemeContext } from '@/app/theme-context';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import ChatPanel from '@/components/ai/ChatPanel';
 
 const FAB_SIZE = 56;
-const FAB_INSET = 24;     // distance from viewport right/bottom edge
-const PANEL_WIDTH = 400;
-const PANEL_GAP = 12;     // gap between FAB top and panel bottom
+const FAB_INSET = 24;
+const PANEL_GAP = 12;
 
-// 11 thresholds give ~10% granularity — smooth enough with the CSS transition
 const IO_THRESHOLDS = Array.from({ length: 11 }, (_, i) => i / 10);
 
 const panelTransition = {
@@ -24,6 +23,7 @@ const panelTransition = {
 };
 
 export default function AiFab() {
+  // ── All hooks unconditionally first ──────────────────────────────────────
   const ctx = useContext(ThemeContext);
   const isDark = ctx?.colorScheme === 'dark';
 
@@ -33,40 +33,53 @@ export default function AiFab() {
   const aiPanelOpened = useUiStore((s) => s.aiPanelOpened);
   const openAiPanel = useUiStore((s) => s.openAiPanel);
   const closeAiPanel = useUiStore((s) => s.closeAiPanel);
+  const scenarioDrawerOpened = useUiStore((s) => s.scenarioDrawerOpened);
 
-  // How many px the FAB is lifted above its resting position to clear the footer
+  const isMobile = useIsMobile();
   const [liftPx, setLiftPx] = useState(0);
 
+  // Footer intersection observer — lifts FAB when footer scrolls into view
   useEffect(() => {
     const footer = document.getElementById('app-footer');
     if (!footer) return;
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          // How far the footer has scrolled into the viewport from the bottom
-          const visibleHeight = window.innerHeight - entry.boundingClientRect.top;
-          setLiftPx(Math.max(0, visibleHeight));
+          setLiftPx(Math.max(0, window.innerHeight - entry.boundingClientRect.top));
         } else {
           setLiftPx(0);
         }
       },
       { threshold: IO_THRESHOLDS },
     );
-
     observer.observe(footer);
     return () => observer.disconnect();
   }, []);
 
+  // Close AI panel when the mobile scenario drawer opens — they can't coexist
+  useEffect(() => {
+    if (isMobile && scenarioDrawerOpened && aiPanelOpened) {
+      closeAiPanel();
+    }
+  }, [isMobile, scenarioDrawerOpened, aiPanelOpened, closeAiPanel]);
+
+  // ── Conditional render gates (after all hooks) ────────────────────────────
   if (!authenticated || activeView !== 'forecast') return null;
+  if (isMobile && scenarioDrawerOpened) return null;
 
   const isOpen = aiPanelOpened;
   const hasKey = keyStatus !== 'absent';
 
+  // Panel dimensions — larger on desktop, near-fullscreen on mobile
+  const panelWidth = isMobile ? undefined : 480;
+  const panelHeight = isMobile
+    ? 'calc(100dvh - 104px)'
+    : 'min(720px, calc(100vh - 140px))';
+  const panelInset = isMobile ? 16 : FAB_INSET;
+
   const fabBottom = FAB_INSET + liftPx;
   const panelBottom = fabBottom + FAB_SIZE + PANEL_GAP;
-  // Keep panel from clipping the left viewport edge when it's narrower than PANEL_WIDTH
-  const panelRight = Math.min(FAB_INSET, window.innerWidth - PANEL_WIDTH - 8);
+  const panelRight = Math.min(panelInset, window.innerWidth - (panelWidth ?? 0) - 8);
 
   const bg = isDark
     ? 'linear-gradient(145deg, #818cf8 0%, #6366f1 100%)'
@@ -77,7 +90,7 @@ export default function AiFab() {
 
   return (
     <>
-      {/* Floating chat panel — anchored above the FAB */}
+      {/* Floating chat panel */}
       <Transition
         mounted={isOpen}
         transition={panelTransition}
@@ -88,15 +101,16 @@ export default function AiFab() {
           <Paper
             shadow="xl"
             radius="lg"
-            withBorder
+            // Border only on desktop — avoids "border soup" stacking on mobile
+            withBorder={!isMobile}
             style={{
               ...styles,
               position: 'fixed',
               bottom: panelBottom,
               right: panelRight,
-              width: PANEL_WIDTH,
-              height: 'min(620px, calc(100vh - 120px))',
-              maxWidth: 'calc(100vw - 48px)',
+              width: panelWidth,
+              height: panelHeight,
+              maxWidth: 'calc(100vw - 32px)',
               zIndex: 200,
               display: 'flex',
               flexDirection: 'column',
@@ -109,7 +123,7 @@ export default function AiFab() {
         )}
       </Transition>
 
-      {/* FAB — lifts smoothly when the footer scrolls into view */}
+      {/* FAB */}
       <button
         onClick={() => { if (isOpen) { closeAiPanel(); } else { openAiPanel(); } }}
         aria-label={isOpen ? 'Close AI assistant' : hasKey ? 'Open AI assistant' : 'Set up AI assistant'}
@@ -129,13 +143,11 @@ export default function AiFab() {
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 201,
-          // `bottom` transition creates the footer-avoidance lift; box-shadow for open/close state
           transition: 'bottom 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease',
           animation: !hasKey ? 'ai-fab-pulse 2.6s ease-in-out infinite' : undefined,
           userSelect: 'none',
         }}
       >
-        {/* Sparkles ↔ X crossfade */}
         <div style={{ position: 'relative', width: 24, height: 24 }}>
           <span
             aria-hidden

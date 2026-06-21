@@ -12,10 +12,16 @@ function eventAmount(rows: { events: FinancialEvent[] }[], type: string): number
   throw new Error(`No ${type} event found`);
 }
 
+// FD quarterly-compounded maturity: principal × (1 + rate/400)^(months/3).
+const fdValue = (principal: number, rate: number, months: number) =>
+  principal * Math.pow(1 + rate / 400, months / 3);
+
 describe("fdMaturityValue", () => {
-  it("matches principal × (1 + rate)^(years)", () => {
-    expect(fdMaturityValue(100_000, 12, 12)).toBeCloseTo(112_000, 4);
-    expect(fdMaturityValue(50_000, 10, 24)).toBeCloseTo(60_500, 4);
+  it("matches the quarterly-compounded bank maturity formula", () => {
+    // 100k @ 12% / 12mo → 100k × 1.03^4 ≈ 112,551
+    expect(fdMaturityValue(100_000, 12, 12)).toBeCloseTo(fdValue(100_000, 12, 12), 4);
+    // 50k @ 10% / 24mo → 50k × 1.025^8 ≈ 60,920
+    expect(fdMaturityValue(50_000, 10, 24)).toBeCloseTo(fdValue(50_000, 10, 24), 4);
   });
 });
 
@@ -40,8 +46,8 @@ describe("projectInstrument", () => {
       id: "fd1", type: "FD", name: "FD", principal: 100_000, rate: 12, startMonth: m("2025-01"), durationMonths: 12,
     });
     expect(p.principal).toBe(100_000);
-    expect(p.maturityValue).toBeCloseTo(112_000, 4);
-    expect(p.interest).toBeCloseTo(12_000, 4);
+    expect(p.maturityValue).toBeCloseTo(fdValue(100_000, 12, 12), 4);
+    expect(p.interest).toBeCloseTo(fdValue(100_000, 12, 12) - 100_000, 4);
   });
 
   it("projects an RD's total contribution, maturity value and interest", () => {

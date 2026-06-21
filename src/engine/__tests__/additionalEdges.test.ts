@@ -101,7 +101,8 @@ describe("createHistoricalFdPosition", () => {
       { ...baseFd, startMonth: m("2024-01"), durationMonths: 24 },
       m("2025-01")
     );
-    expect(pos.currentValue).toBeCloseTo(110_000, 4); // 1 year @ 10%
+    // 12 months @ 10%, quarterly compounded → 100k × 1.025^4 ≈ 110,381.
+    expect(pos.currentValue).toBeCloseTo(100_000 * Math.pow(1 + 10 / 400, 12 / 3), 4);
     expect(pos.maturityMonth).toBe("2026-01");
     expect(pos.active).toBe(true);
   });

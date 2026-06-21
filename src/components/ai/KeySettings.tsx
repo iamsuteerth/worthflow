@@ -295,8 +295,9 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
           </Alert>
 
           <Text size="xs" c="dimmed">
-            What the AI sees: your forecast totals, a sampled monthly series, account and FD/RD summaries,
-            and your active scenario in plain language. Never your credentials or internal IDs.
+            What the AI sees: your forecast totals, a month-by-month series (condensed to year-end
+            snapshots for very long plans), account and FD/RD summaries, and your active scenario in
+            plain language. Never your credentials or internal IDs.
           </Text>
 
           <HardeningTips />

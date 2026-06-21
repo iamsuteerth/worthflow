@@ -2,6 +2,19 @@ import type { FixedDeposit } from "@/types/instrument";
 import type { MonthKey } from "@/types/simulation";
 import { addMonths } from "@/engine/dateUtils";
 
+// Indian fixed deposits compound quarterly (the bank convention): the rate is
+// divided into four quarterly periods (rate/400) and applied once per elapsed
+// quarter (elapsedMonths / 3). This mirrors the RD convention in rdMath.ts so
+// both instruments value consistently. Accrual is elapsed-based and continuous
+// in months, so a mid-quarter valuation grows proportionally.
+export function fdValueAfterMonths(
+  principal: number,
+  rate: number,
+  elapsedMonths: number
+): number {
+  return principal * Math.pow(1 + rate / 400, elapsedMonths / 3);
+}
+
 export interface FdPosition {
   id: string;
 
@@ -76,18 +89,14 @@ export function updateFdPosition(
         `${position.startMonth}-01`
       ).getMonth());
 
-  const years =
-    elapsedMonths / 12;
-
   return {
     ...position,
 
-    currentValue:
-      position.principal *
-      Math.pow(
-        1 + position.rate / 100,
-        years
-      ),
+    currentValue: fdValueAfterMonths(
+      position.principal,
+      position.rate,
+      elapsedMonths
+    ),
   };
 }
 
@@ -122,9 +131,6 @@ export function createHistoricalFdPosition(
       forecastStart
     );
 
-  const years =
-    elapsedMonths / 12;
-
   return {
     id: fd.id,
 
@@ -132,12 +138,11 @@ export function createHistoricalFdPosition(
 
     principal: fd.principal,
 
-    currentValue:
-      fd.principal *
-      Math.pow(
-        1 + fd.rate / 100,
-        years
-      ),
+    currentValue: fdValueAfterMonths(
+      fd.principal,
+      fd.rate,
+      elapsedMonths
+    ),
 
     rate: fd.rate,
 

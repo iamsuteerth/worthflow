@@ -8,6 +8,10 @@ import { baseConfig, account, m, rdBankMaturity } from "./factories";
 const rdAges = (c: number, rate: number, ages: number[]) =>
   ages.reduce((sum, age) => sum + c * Math.pow(1 + rate / 400, age / 3), 0);
 
+// FD quarterly-compounded value after `months`: principal × (1 + rate/400)^(months/3).
+const fdValue = (principal: number, rate: number, months: number) =>
+  principal * Math.pow(1 + rate / 400, months / 3);
+
 describe("simulate — fixed deposits (end to end)", () => {
   it("debits the principal at creation and credits the matured value", () => {
     const config = baseConfig({
@@ -26,11 +30,12 @@ describe("simulate — fixed deposits (end to end)", () => {
     expect(rows[0].assets.fdValue).toBeCloseTo(100_000, 4);
     expect(rows[0].assets.netWorth).toBeCloseTo(500_000, 4);
 
-    // Matures at 2026-01 (index 12) → 100k × 1.12 = 112k back into cash.
+    // Matures at 2026-01 (index 12) → 100k × 1.03^4 ≈ 112,551 back into cash.
     const maturityRow = rows[12];
+    const maturity = fdValue(100_000, 12, 12);
     expect(maturityRow.events.some((e) => e.type === "FD_MATURED")).toBe(true);
-    expect(maturityRow.assets.cash).toBeCloseTo(512_000, 2);
-    expect(summary.finalNetWorth).toBeCloseTo(512_000, 2);
+    expect(maturityRow.assets.cash).toBeCloseTo(400_000 + maturity, 2);
+    expect(summary.finalNetWorth).toBeCloseTo(400_000 + maturity, 2);
     expect(summary.xirr).toBeNull();
   });
 
@@ -53,15 +58,16 @@ describe("simulate — fixed deposits (end to end)", () => {
 
     // Seeded at 6 months of growth, with no cash debit (principal paid pre-forecast).
     expect(rows[0].assets.cash).toBe(0);
-    expect(rows[0].assets.fdValue).toBeCloseTo(100_000 * Math.pow(1.12, 6 / 12), 2);
+    expect(rows[0].assets.fdValue).toBeCloseTo(fdValue(100_000, 12, 6), 2);
 
-    // 2025-07: 100k × 1.12 = 112k credited to cash; FD removed afterwards.
+    // 2025-07: 100k × 1.03^4 ≈ 112,551 credited to cash; FD removed afterwards.
+    const maturity = fdValue(100_000, 12, 12);
     const maturityRow = rows[6];
     expect(maturityRow.month).toBe("2025-07");
     expect(maturityRow.events.some((e) => e.type === "FD_MATURED")).toBe(true);
-    expect(maturityRow.assets.cash).toBeCloseTo(112_000, 2);
+    expect(maturityRow.assets.cash).toBeCloseTo(maturity, 2);
     expect(maturityRow.assets.fdValue).toBeCloseTo(0, 6);
-    expect(summary.finalNetWorth).toBeCloseTo(112_000, 2);
+    expect(summary.finalNetWorth).toBeCloseTo(maturity, 2);
   });
 });
 

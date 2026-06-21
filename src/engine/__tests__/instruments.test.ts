@@ -11,6 +11,11 @@ import { rdBankMaturity } from "./factories";
 const rdAges = (c: number, rate: number, ages: number[]) =>
   ages.reduce((sum, age) => sum + c * Math.pow(1 + rate / 400, age / 3), 0);
 
+// FDs compound quarterly too: principal·(1 + rate/400)^(months/3). Independent
+// closed-form reference for the engine's elapsed-based valuation.
+const fdValue = (principal: number, rate: number, months: number) =>
+  principal * Math.pow(1 + rate / 400, months / 3);
+
 // ─── Position factories ──────────────────────────────────────────────────────
 
 describe("createFdPosition", () => {
@@ -53,16 +58,16 @@ function makeFd(overrides: Partial<FdPosition> = {}): FdPosition {
 }
 
 describe("updateFdPosition", () => {
-  it("grows to exact principal × (1 + rate/100) after exactly 12 months", () => {
-    // 100,000 @ 7.2% for 1 year = 100,000 × 1.072 = 107,200
+  it("grows by quarterly compounding after exactly 12 months", () => {
+    // 100,000 @ 7.2% for 1 year, compounded quarterly = 100,000 × (1.018)^4 ≈ 107,396
     const result = updateFdPosition(makeFd(), "2026-01");
-    expect(result.currentValue).toBeCloseTo(107_200, 0);
+    expect(result.currentValue).toBeCloseTo(fdValue(100_000, 7.2, 12), 6);
   });
 
   it("applies compound interest proportionally at 6 months (half-year)", () => {
-    // 100,000 × 1.072^0.5 = 100,000 × √1.072 ≈ 103,537.4
+    // 100,000 × (1.018)^(6/3) = 100,000 × 1.018^2 ≈ 103,632
     const result = updateFdPosition(makeFd(), "2025-07");
-    expect(result.currentValue).toBeCloseTo(103_537, 0);
+    expect(result.currentValue).toBeCloseTo(fdValue(100_000, 7.2, 6), 6);
   });
 
   it("returns the principal unchanged at the start month (0 elapsed)", () => {
@@ -80,10 +85,10 @@ describe("updateFdPosition", () => {
   });
 
   it("scales correctly for a different rate (10% for 24 months)", () => {
-    // 50,000 × 1.10^2 = 50,000 × 1.21 = 60,500
+    // 50,000 × (1.025)^8 ≈ 60,920 (quarterly compounding)
     const fd = makeFd({ principal: 50_000, currentValue: 50_000, rate: 10, startMonth: "2025-01", maturityMonth: "2027-01" });
     const result = updateFdPosition(fd, "2027-01");
-    expect(result.currentValue).toBeCloseTo(60_500, 0);
+    expect(result.currentValue).toBeCloseTo(fdValue(50_000, 10, 24), 6);
   });
 });
 
