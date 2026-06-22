@@ -205,7 +205,8 @@ function checkEditFeasibility(
       (ev.type === 'FD' ? ev.principal : ev.type === 'RD' ? ev.monthlyContribution : ev.amount);
 
     if (ev.type === 'INVESTMENT_WITHDRAWAL') {
-      const acct = baseConfig.investments.accounts.find((a) => a.id === ev.accountId);
+      // Look up against the effective config (cfg includes scenario-created accounts).
+      const acct = cfg.investments.accounts.find((a) => a.id === ev.accountId);
       if (acct && month < acct.startMonth) {
         return no(`That month is before ${acct.name} starts (${formatMonth(acct.startMonth)}).`);
       }
@@ -215,7 +216,7 @@ function checkEditFeasibility(
       }
     } else {
       if (ev.type === 'INVESTMENT_DEPOSIT') {
-        const acct = baseConfig.investments.accounts.find((a) => a.id === ev.accountId);
+        const acct = cfg.investments.accounts.find((a) => a.id === ev.accountId);
         if (acct && month < acct.startMonth) {
           return no(`That month is before ${acct.name} starts (${formatMonth(acct.startMonth)}).`);
         }

@@ -49,7 +49,7 @@ resource "aws_cognito_user_pool" "main" {
           <div style="background-color: #f0f3ff; border-radius: 10px; padding: 20px 0; text-align: center; margin: 0 0 28px;">
             <span style="font-size: 38px; font-weight: 800; letter-spacing: 10px; color: #4263eb;">{####}</span>
           </div>
-          <p style="font-size: 13px; color: #8e8e93; margin: 0;">This code expires in 15 minutes. If you didn&apos;t request this, you can safely ignore this email.</p>
+          <p style="font-size: 13px; color: #8e8e93; margin: 0;">This code expires in 24 Hours. If you didn&apos;t request this, you can safely ignore this email.</p>
         </div>
       </body>
       </html>

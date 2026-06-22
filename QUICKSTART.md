@@ -122,3 +122,4 @@ Full details of the cognito path — Terraform, env variables, deployment — ar
 - 📖 [README.md](./README.md) — product overview and features
 - 📘 [MANUAL.md](./MANUAL.md) — end-user guide
 - 🏗️ [INFRA.md](./INFRA.md) — cloud infrastructure, Terraform, and deployment
+- 🔒 [SECURITY.md](./SECURITY.md) — auth, cloud isolation, and the AI key vault

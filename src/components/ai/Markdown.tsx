@@ -3,10 +3,12 @@ import { Anchor, Table, Text } from '@mantine/core';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Components } from 'react-markdown';
+import { safeUrl } from '@/components/ai/markdownUrl';
 
 // Renders assistant chat text as GitHub-flavoured Markdown, mapped onto Mantine
 // primitives so it inherits the app's theme (spacing, colours, dark mode).
-// react-markdown does not use dangerouslySetInnerHTML, so this is XSS-safe.
+// react-markdown does not use dangerouslySetInnerHTML, and links are run through
+// safeUrl (see markdownUrl.ts), so this is XSS-safe.
 
 const components: Components = {
   p: ({ children }) => (
@@ -101,7 +103,7 @@ const components: Components = {
 
 function MarkdownImpl({ children }: { children: string }) {
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+    <ReactMarkdown remarkPlugins={[remarkGfm]} urlTransform={safeUrl} components={components}>
       {children}
     </ReactMarkdown>
   );

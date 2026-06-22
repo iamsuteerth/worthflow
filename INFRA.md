@@ -45,6 +45,9 @@ prefix, so a user can only ever touch their own objects:
 arn:aws:s3:::worth-flow-saves/users/${cognito-identity.amazonaws.com:sub}/*
 ```
 
+> The full security model — SRP sign-in, OTP account creation, password reset, this IAM
+> isolation, and the zero-knowledge AI key vault — is documented in **[SECURITY.md](./SECURITY.md)**.
+
 ### S3 object layout
 
 ```
@@ -265,4 +268,5 @@ isolation of the real Identity Pool.
 
 - [QUICKSTART.md](./QUICKSTART.md) — run the app locally in mock mode (no AWS)
 - [README.md](./README.md) — product overview and features
+- [SECURITY.md](./SECURITY.md) — auth, per-user isolation, AI key vault, reporting
 - [MANUAL.md](./MANUAL.md) — end-user guide (accounts, cloud saves, forecasting)

@@ -11,6 +11,8 @@ import {
   decryptWithSessionKek,
   resolveKeyStatus,
 } from '@/ai/keyVault/keyVault';
+import { deriveKek, aesGcmEncrypt, randomBase64 } from '@/ai/keyVault/crypto';
+import { AI_KDF_ITERATIONS } from '@/ai/config';
 import type { KeyBlob } from '@/ai/cloud/aiCloud';
 
 type PartialBlob = Awaited<ReturnType<typeof encryptNewKey>>['blob'];
@@ -92,5 +94,32 @@ describe('keyVault', () => {
     const { blob } = await encryptNewKey('AIzaX', 'passphrase1');
     clearSessionKek();
     expect(await resolveKeyStatus(full(blob))).toEqual({ status: 'locked', kekLoaded: false });
+  });
+
+  it('records the current KDF iteration count when minting a key', async () => {
+    const { blob } = await encryptNewKey('AIzaX', 'passphrase1');
+    expect(blob.kdf.iterations).toBe(AI_KDF_ITERATIONS);
+  });
+
+  it('unlock honours a blob minted with a non-default iteration count', async () => {
+    // Hand-mint a blob with a legacy/different iteration count, then prove unlock
+    // derives with THAT count (not the compile-time constant) and still decrypts.
+    const salt = randomBase64(16);
+    const iterations = 120_000;
+    const kek = await deriveKek('legacypass', salt, iterations);
+    const { iv, ciphertext } = await aesGcmEncrypt(kek, 'AIzaLEGACY');
+    const blob: KeyBlob = {
+      v: 1,
+      providerId: 'gemini',
+      keyEpoch: 'epoch-legacy',
+      kdf: { algo: 'PBKDF2', hash: 'SHA-256', iterations },
+      salt,
+      iv,
+      ciphertext,
+      createdAt: '2026-01-01',
+      updatedAt: '2026-01-01',
+    };
+    clearSessionKek();
+    expect(await unlockWithPassphrase(blob, 'legacypass')).toBe('AIzaLEGACY');
   });
 });

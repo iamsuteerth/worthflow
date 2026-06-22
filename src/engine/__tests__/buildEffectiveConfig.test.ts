@@ -33,6 +33,37 @@ describe("buildEffectiveConfig — scalar overrides", () => {
   });
 });
 
+describe("buildEffectiveConfig — scenario accounts (what-if)", () => {
+  it("materialises overrides.scenarioAccounts into the effective account list", () => {
+    const config = baseConfig({
+      investments: { accounts: [account({ id: "base-1", name: "Base" })], amountOverrides: [], returnOverrides: [] },
+    });
+    const overrides: PlannerOverrides = {
+      scenarioAccounts: [account({ id: "scn-1", name: "What-If SIP", startMonth: m("2025-01"), defaultMonthlyContribution: 5_000 })],
+    };
+    const result = buildEffectiveConfig(config, overrides);
+    expect(result.investments.accounts.map((a) => a.id)).toEqual(["base-1", "scn-1"]);
+    // The base config is never mutated — the account leaks nowhere near the Builder.
+    expect(config.investments.accounts).toHaveLength(1);
+  });
+
+  it("lets an account override target a scenario-created account (materialised first)", () => {
+    const config = baseConfig({
+      investments: { accounts: [], amountOverrides: [], returnOverrides: [] },
+    });
+    const overrides: PlannerOverrides = {
+      scenarioAccounts: [account({ id: "scn-1", name: "SIP", startMonth: m("2025-01"), defaultMonthlyContribution: 5_000 })],
+      runtimeEvents: [
+        { id: "ao-1", type: "ACCOUNT_AMOUNT_OVERRIDE", accountId: "scn-1", startMonth: m("2025-02"), endMonth: m("2025-03"), amount: 9_000 },
+      ],
+    };
+    const result = buildEffectiveConfig(config, overrides);
+    expect(result.investments.amountOverrides).toContainEqual(
+      expect.objectContaining({ accountId: "scn-1", amount: 9_000 }),
+    );
+  });
+});
+
 describe("buildEffectiveConfig — runtime events", () => {
   it("appends one-off, credit-card and bonus/salary/recurring events", () => {
     const overrides: PlannerOverrides = {

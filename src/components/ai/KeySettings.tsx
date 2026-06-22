@@ -324,11 +324,18 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
             <Text size="xs">Your API key is encrypted and stored. The AI assistant is active.</Text>
           </Alert>
 
-          <Text size="xs" c="dimmed">
-            What the AI sees: your forecast totals, a month-by-month series (condensed to year-end
-            snapshots for very long plans), account and FD/RD summaries, and your active scenario in
-            plain language. Never your credentials or internal IDs.
-          </Text>
+          <Stack gap={4}>
+            <Text size="xs" fw={500}>What the AI sees</Text>
+            <List size="xs" spacing={2} c="dimmed">
+              <List.Item>
+                Your forecast totals and a month-by-month series (condensed to year-end snapshots for
+                very long plans)
+              </List.Item>
+              <List.Item>Account and FD/RD summaries</List.Item>
+              <List.Item>Your active scenario, in plain language</List.Item>
+            </List>
+            <Text size="xs" c="dimmed">Never your credentials or internal IDs.</Text>
+          </Stack>
 
           <HardeningTips />
 
@@ -336,14 +343,15 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
 
           <Group gap="xs">
             <Button
-              variant="subtle"
+              variant="light"
               size="xs"
+              leftSection={<IconKey size={12} />}
               onClick={() => setChangeMode(true)}
             >
               Change passphrase
             </Button>
             <Button
-              variant="subtle"
+              variant="light"
               color="red"
               size="xs"
               leftSection={<IconTrash size={12} />}

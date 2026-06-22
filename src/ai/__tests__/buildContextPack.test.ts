@@ -132,6 +132,20 @@ describe('buildContextPack — scenario effect (base vs scenario, grounded)', ()
     expect(eff.scenarioFinalNetWorth).toBeLessThan(eff.baseFinalNetWorth);
   });
 
+  it('renders an opening-cash override with its real amount, not ₹0', () => {
+    // Regression: buildScenarioChanges previously read overrides.openingBalance (never
+    // set by the addTransient flow) instead of the event's own amount, so the model
+    // was told every opening-cash override was ₹0.
+    const overrides: PlannerOverrides = {
+      runtimeEvents: [{ id: 'oc-1', type: 'OPENING_CASH_OVERRIDE', amount: 750_000 }],
+    };
+    const p = buildPack(cfg, overrides);
+    const line = p.scenarioChanges.find((s) => s.toLowerCase().includes('opening cash'));
+    expect(line).toBeDefined();
+    expect(line).toContain('7,50,000'); // en-IN formatted, real amount
+    expect(line).not.toContain('₹0');
+  });
+
   it('numbers scenarioChanges 1-based, in runtimeEvents order', () => {
     const overrides: PlannerOverrides = {
       runtimeEvents: [

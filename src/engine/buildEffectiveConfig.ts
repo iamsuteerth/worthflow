@@ -18,6 +18,15 @@ export function buildEffectiveConfig(
     config.forecast.totalMonths = overrides.forecastMonths;
   }
 
+  // Scenario-created accounts ("what-if" accounts) are materialised into the account
+  // list BEFORE runtime events, so an ACCOUNT_AMOUNT/RETURN_OVERRIDE or deposit that
+  // targets one resolves correctly. They behave identically to a base account from here.
+  if (overrides.scenarioAccounts?.length) {
+    for (const acct of overrides.scenarioAccounts) {
+      config.investments.accounts.push({ ...acct });
+    }
+  }
+
   if (!overrides.runtimeEvents) return config;
 
   for (const event of overrides.runtimeEvents) {

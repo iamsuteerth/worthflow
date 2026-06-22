@@ -28,6 +28,12 @@ interface PlannerStore {
   activeView: AppView;
   baselineAccountIds: string[];
   pristineSnapshot: string;
+  // The base config as of the last load/save — the true baseline a scenario sits
+  // on. Unlike overrides, creating/deleting an investment account mutates baseConfig,
+  // so resetOverrides needs this snapshot to fully restore the baseline (remove
+  // accounts added in the scenario, bring back ones deleted). Kept in lockstep with
+  // pristineSnapshot (set at every load/save).
+  baselineConfig: PlannerConfig;
 
   setActiveView: (view: AppView) => void;
 
@@ -192,6 +198,7 @@ export const usePlannerStore = create<PlannerStore>()(
       activeView: "builder",
       baselineAccountIds: captureBaselineAccountIds(initialConfig),
       pristineSnapshot: initialPristine,
+      baselineConfig: initialConfig,
 
       setActiveView: (activeView) => set({ activeView }),
 
@@ -317,7 +324,10 @@ export const usePlannerStore = create<PlannerStore>()(
             return s;
           }
 
-          const existingNames = s.baseConfig.investments.accounts.map((a) => a.name);
+          // A scenario-created account is a "what-if": it lives in overrides.scenarioAccounts,
+          // never in baseConfig, so it stays out of the Plan Builder and is cleared by Reset.
+          // Uniquify against the EFFECTIVE accounts (base + already-added scenario accounts).
+          const existingNames = s.config.investments.accounts.map((a) => a.name);
           const id = crypto.randomUUID();
           const newAccount: InvestmentAccount = {
             ...account,
@@ -325,10 +335,9 @@ export const usePlannerStore = create<PlannerStore>()(
             name: uniquifyAccountName(account.name.trim(), existingNames),
           };
 
-          const baseConfig = structuredClone(s.baseConfig);
-          baseConfig.investments.accounts.push(newAccount);
+          const scenarioAccounts = [...(s.overrides.scenarioAccounts ?? []), newAccount];
           newAccountId = id;
-          return rebuild(baseConfig, s.overrides);
+          return rebuild(s.baseConfig, { ...s.overrides, scenarioAccounts });
         });
         return newAccountId;
       },
@@ -358,7 +367,13 @@ export const usePlannerStore = create<PlannerStore>()(
             return true;
           });
 
-          return rebuild(baseConfig, { ...s.overrides, runtimeEvents });
+          // The account may be a base account (removed from baseConfig above) or a
+          // scenario-created one (removed here). Either way its overrides are cascaded.
+          const scenarioAccounts = (s.overrides.scenarioAccounts ?? []).filter(
+            (a) => a.id !== accountId
+          );
+
+          return rebuild(baseConfig, { ...s.overrides, scenarioAccounts, runtimeEvents });
         }),
 
       addTransientAccountAmountOverride: (accountId, startMonth, endMonth, amount) =>
@@ -464,6 +479,7 @@ export const usePlannerStore = create<PlannerStore>()(
           config: buildEffectiveConfig(baseConfig, overrides),
           baselineAccountIds: captureBaselineAccountIds(baseConfig),
           pristineSnapshot: serializePristine(baseConfig, overrides, scenarios),
+          baselineConfig: structuredClone(baseConfig),
         });
       },
 
@@ -480,21 +496,32 @@ export const usePlannerStore = create<PlannerStore>()(
           config: buildEffectiveConfig(baseConfig, {}),
           baselineAccountIds: captureBaselineAccountIds(baseConfig),
           pristineSnapshot: "",
+          baselineConfig: structuredClone(baseConfig),
         }),
 
+      // Reset the scenario: clear all overrides AND restore the base plan to its
+      // baseline, so investment accounts created during the scenario are removed and
+      // any deleted baseline accounts return. Fully restores the last loaded/saved plan.
       resetOverrides: () =>
-        set((s) => ({
-          overrides: {},
-          config: buildEffectiveConfig(s.baseConfig, {}),
-        })),
+        set((s) => {
+          const baseConfig = structuredClone(s.baselineConfig);
+          return {
+            baseConfig,
+            overrides: {},
+            config: buildEffectiveConfig(baseConfig, {}),
+            baselineAccountIds: captureBaselineAccountIds(baseConfig),
+          };
+        }),
 
       resetAll: () =>
         set({
           baseConfig: initialConfig,
           overrides: {},
           config: initialConfig,
+          savedScenarios: [],
           baselineAccountIds: captureBaselineAccountIds(initialConfig),
-          pristineSnapshot: serializePristine(initialConfig, {}, get().savedScenarios),
+          pristineSnapshot: serializePristine(initialConfig, {}, []),
+          baselineConfig: initialConfig,
         }),
 
       resetForSignOut: () => {
@@ -506,14 +533,20 @@ export const usePlannerStore = create<PlannerStore>()(
           baselineAccountIds: captureBaselineAccountIds(initialConfig),
           activeView: 'builder',
           pristineSnapshot: initialPristine,
+          baselineConfig: initialConfig,
         })
         usePlannerStore.persist.clearStorage()
       },
 
       // Marks the current plan as the saved baseline (call after a successful cloud save).
+      // The current base config becomes the new baseline a later reset restores to, so an
+      // account created and then SAVED is permanent (reset no longer removes it).
       markSaved: () => {
         const s = get()
-        set({ pristineSnapshot: serializePristine(s.baseConfig, s.overrides, s.savedScenarios) })
+        set({
+          pristineSnapshot: serializePristine(s.baseConfig, s.overrides, s.savedScenarios),
+          baselineConfig: structuredClone(s.baseConfig),
+        })
       },
 
       // True when the live plan differs from the last loaded/saved baseline.
@@ -557,6 +590,7 @@ export const usePlannerStore = create<PlannerStore>()(
         activeView: s.activeView,
         baselineAccountIds: s.baselineAccountIds,
         pristineSnapshot: s.pristineSnapshot,
+        baselineConfig: s.baselineConfig,
       }),
       merge: (persisted, current) => {
         const p = persisted as Partial<PlannerStore>;
@@ -567,6 +601,9 @@ export const usePlannerStore = create<PlannerStore>()(
         // Pre-existing persisted state (before this field) is treated as clean.
         const pristineSnapshot =
           p.pristineSnapshot ?? serializePristine(baseConfig, overrides, savedScenarios);
+        // Pre-existing persisted state (before this field) treats the current base as
+        // its own baseline, so a reset is a no-op rather than wiping the plan.
+        const baselineConfig = p.baselineConfig ?? baseConfig;
         return {
           ...current,
           ...p,
@@ -575,6 +612,7 @@ export const usePlannerStore = create<PlannerStore>()(
           savedScenarios,
           baselineAccountIds,
           pristineSnapshot,
+          baselineConfig,
           config: buildEffectiveConfig(baseConfig, overrides),
         };
       },

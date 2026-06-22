@@ -98,6 +98,22 @@ describe("processAccountMonth", () => {
     ]);
   });
 
+  it("pins the begin-of-month convention: opening grows in its start month, contribution does not", () => {
+    // Documents the intentional difference from an FD (whose fresh principal accrues
+    // only from elapsed months): an account's opening models money already invested,
+    // so it earns its start month; the same month's contribution is added AFTER growth.
+    const config = baseConfig({
+      investments: {
+        accounts: [account({ startMonth: m("2025-01"), openingBalance: 100_000, defaultAnnualReturn: 12, defaultMonthlyContribution: 9_000 })],
+        amountOverrides: [],
+        returnOverrides: [],
+      },
+    });
+    const result = processAccountMonth(config, { "acc-1": 0 }, m("2025-01"), [], []);
+    // opening * one-month factor, THEN + contribution (which earns nothing this month).
+    expect(result.accountBalances["acc-1"]).toBeCloseTo(100_000 * MONTHLY_FACTOR(12) + 9_000, 4);
+  });
+
   it("applies one month of compounded growth to an existing balance", () => {
     const config = baseConfig({
       investments: {

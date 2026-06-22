@@ -25,7 +25,14 @@ export function randomBase64(length: number): string {
   return bytesToBase64(randomBytes(length));
 }
 
-export async function deriveKek(passphrase: string, saltB64: string): Promise<CryptoKey> {
+// `iterations` defaults to the current AI_KDF_ITERATIONS for minting NEW keys, but
+// callers unlocking an EXISTING blob MUST pass that blob's own `kdf.iterations` so
+// raising the constant later never orphans already-encrypted keys.
+export async function deriveKek(
+  passphrase: string,
+  saltB64: string,
+  iterations: number = AI_KDF_ITERATIONS,
+): Promise<CryptoKey> {
   const enc = new TextEncoder();
   const passphraseKey = await crypto.subtle.importKey(
     'raw',
@@ -38,7 +45,7 @@ export async function deriveKek(passphrase: string, saltB64: string): Promise<Cr
     {
       name: 'PBKDF2',
       salt: base64ToBytes(saltB64),
-      iterations: AI_KDF_ITERATIONS,
+      iterations,
       hash: 'SHA-256',
     },
     passphraseKey,

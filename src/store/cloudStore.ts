@@ -161,36 +161,50 @@ export const useCloudStore = create<CloudStore>((set) => ({
     })
 
     let objectUploaded = false
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const { entries, etag } = await loadManifestWithETag()
+    try {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const { entries, etag } = await loadManifestWithETag()
 
-      // Authoritative cap check against the fresh manifest (the in-memory count may be stale).
-      if (!overwriteKey && entries.length >= SAVE_LIMIT) {
-        throw new Error(SAVE_LIMIT_ERROR)
+        // Authoritative cap check against the fresh manifest (the in-memory count may be stale).
+        if (!overwriteKey && entries.length >= SAVE_LIMIT) {
+          throw new Error(SAVE_LIMIT_ERROR)
+        }
+
+        // Upload the plan object once, only after the cap check passes.
+        if (!objectUploaded) {
+          await uploadSave(key, content)
+          objectUploaded = true
+        }
+
+        const exists = overwriteKey && entries.some((s) => s.key === overwriteKey)
+        const updated = exists
+          ? entries.map((s) => (s.key === overwriteKey ? entry(overwriteKey) : s))
+          : [entry(key), ...entries] // new save, or overwrite target removed elsewhere
+
+        try {
+          await saveManifest(updated, etag)
+          set({ saves: updated })
+          usePlannerStore.getState().markSaved()
+          return
+        } catch (err) {
+          if (isPreconditionFailed(err) && attempt < 2) continue
+          throw err
+        }
       }
-
-      // Upload the plan object once, only after the cap check passes.
-      if (!objectUploaded) {
-        await uploadSave(key, content)
-        objectUploaded = true
+      throw new Error('Could not update saves. Please try again.')
+    } catch (err) {
+      // A brand-new save object was uploaded but never referenced by a committed
+      // manifest — delete it so it doesn't orphan in S3. (Never for an overwrite: that
+      // key is an existing save we must not remove.)
+      if (objectUploaded && !overwriteKey) {
+        try {
+          await storageDeleteSave(key)
+        } catch {
+          // Best-effort cleanup; surface the original failure regardless.
+        }
       }
-
-      const exists = overwriteKey && entries.some((s) => s.key === overwriteKey)
-      const updated = exists
-        ? entries.map((s) => (s.key === overwriteKey ? entry(overwriteKey) : s))
-        : [entry(key), ...entries] // new save, or overwrite target removed elsewhere
-
-      try {
-        await saveManifest(updated, etag)
-        set({ saves: updated })
-        usePlannerStore.getState().markSaved()
-        return
-      } catch (err) {
-        if (isPreconditionFailed(err) && attempt < 2) continue
-        throw err
-      }
+      throw err
     }
-    throw new Error('Could not update saves. Please try again.')
   },
 
   loadSave: async (key) => {

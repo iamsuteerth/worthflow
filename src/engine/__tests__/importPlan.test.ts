@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import { importPlan } from "@/engine/importPlan";
 import { calculateChecksum } from "@/engine/checksum";
 import { encodeBase64 } from "@/engine/base64";
+import { m } from "@/engine/__tests__/factories";
+import type { RuntimeEvent } from "@/types/runtimeEvent";
 
 const validPlan = {
   baseConfig: {
@@ -122,5 +124,81 @@ describe("importPlan — rejections", () => {
     const wrapper = { app: "something-else", version: 1, exportedAt: "now", payload: "x", checksum: "y" };
     const file = new File([JSON.stringify(wrapper)], "plan.wfplan");
     await expect(importPlan(file)).rejects.toThrow();
+  });
+});
+
+describe("importPlan — runtime-event round trip (regression: the import union must not drift)", () => {
+  // One representative of EVERY RuntimeEvent type. Typing this as a full Record
+  // makes it a COMPILE-TIME exhaustiveness guard: add a new RuntimeEvent kind and
+  // this object stops type-checking until it's added here (and, by extension, until
+  // the import schema in importPlan.ts is updated to accept it).
+  const oneOfEach: Record<RuntimeEvent["type"], RuntimeEvent> = {
+    ONE_OFF_EXPENSE: { id: "e1", type: "ONE_OFF_EXPENSE", month: m("2025-02"), amount: 1_000, label: "x" },
+    CREDIT_CARD_EXPENSE: { id: "e2", type: "CREDIT_CARD_EXPENSE", month: m("2025-02"), amount: 1_000, label: "x" },
+    RECURRING_EXPENSE: { id: "e3", type: "RECURRING_EXPENSE", name: "x", amount: 1_000, startMonth: m("2025-02"), endMonth: m("2025-05"), frequency: "MONTHLY" },
+    BONUS_INCOME: { id: "e4", type: "BONUS_INCOME", month: m("2025-03"), amount: 5_000, description: "x" },
+    SALARY_CHANGE: { id: "e5", type: "SALARY_CHANGE", effectiveMonth: m("2025-04"), newMonthlyIncome: 120_000, description: "x" },
+    ACCOUNT_AMOUNT_OVERRIDE: { id: "e6", type: "ACCOUNT_AMOUNT_OVERRIDE", accountId: "acc-1", startMonth: m("2025-02"), endMonth: m("2025-05"), amount: 2_000 },
+    ACCOUNT_RETURN_OVERRIDE: { id: "e7", type: "ACCOUNT_RETURN_OVERRIDE", accountId: "acc-1", startMonth: m("2025-02"), endMonth: m("2025-05"), annualReturn: 8 },
+    INVESTMENT_DEPOSIT: { id: "e8", type: "INVESTMENT_DEPOSIT", accountId: "acc-1", month: m("2025-03"), amount: 3_000 },
+    INVESTMENT_WITHDRAWAL: { id: "e9", type: "INVESTMENT_WITHDRAWAL", accountId: "acc-1", month: m("2025-04"), amount: 1_000 },
+    FD: { id: "e10", type: "FD", name: "FD", principal: 50_000, rate: 7, startMonth: m("2025-02"), durationMonths: 12 },
+    RD: { id: "e11", type: "RD", name: "RD", monthlyContribution: 5_000, rate: 7, startMonth: m("2025-02"), durationMonths: 12 },
+    SPENDING_OVERRIDE: { id: "e12", type: "SPENDING_OVERRIDE", startMonth: m("2025-02"), endMonth: m("2025-06"), amount: 40_000 },
+    OPENING_CASH_OVERRIDE: { id: "e13", type: "OPENING_CASH_OVERRIDE", amount: 99_999 },
+  };
+
+  it("round-trips a plan that uses every runtime-event type", async () => {
+    const events = Object.values(oneOfEach);
+    const file = await makeWfPlanFile({ ...validPlan, overrides: { runtimeEvents: events } });
+    const result = await importPlan(file);
+    expect(result.overrides.runtimeEvents).toHaveLength(events.length);
+    const types = (result.overrides.runtimeEvents ?? []).map((e) => e.type).sort();
+    expect(types).toEqual([...events.map((e) => e.type)].sort());
+  });
+
+  it("round-trips a SPENDING_OVERRIDE (the H-1 regression)", async () => {
+    const file = await makeWfPlanFile({
+      ...validPlan,
+      overrides: { runtimeEvents: [oneOfEach.SPENDING_OVERRIDE] },
+    });
+    const result = await importPlan(file);
+    expect(result.overrides.runtimeEvents).toEqual([oneOfEach.SPENDING_OVERRIDE]);
+  });
+
+  it("round-trips an OPENING_CASH_OVERRIDE (the H-1 regression)", async () => {
+    const file = await makeWfPlanFile({
+      ...validPlan,
+      overrides: { runtimeEvents: [oneOfEach.OPENING_CASH_OVERRIDE] },
+    });
+    const result = await importPlan(file);
+    expect(result.overrides.runtimeEvents).toEqual([oneOfEach.OPENING_CASH_OVERRIDE]);
+  });
+
+  it("still rejects a runtime event with an unknown type", async () => {
+    const file = await makeWfPlanFile({
+      ...validPlan,
+      overrides: { runtimeEvents: [{ id: "bad", type: "NOT_A_REAL_TYPE", amount: 1 }] },
+    });
+    await expect(importPlan(file)).rejects.toThrow("Invalid Plan File");
+  });
+
+  it("round-trips a scenario-created (what-if) account in overrides.scenarioAccounts", async () => {
+    const scenarioAccount = {
+      id: "scn-1",
+      name: "What-If SIP",
+      startMonth: "2025-03",
+      openingBalance: 0,
+      defaultAnnualReturn: 12,
+      defaultMonthlyContribution: 5_000,
+    };
+    const file = await makeWfPlanFile({
+      ...validPlan,
+      overrides: { scenarioAccounts: [scenarioAccount] },
+    });
+    const result = await importPlan(file);
+    expect(result.overrides.scenarioAccounts).toEqual([scenarioAccount]);
+    // It must NOT have been folded into the base plan on load.
+    expect(result.baseConfig.investments.accounts.map((a) => a.id)).not.toContain("scn-1");
   });
 });

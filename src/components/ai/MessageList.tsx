@@ -30,7 +30,7 @@ function MessageBubble({ message }: { message: Message }) {
           borderRadius: isUser ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
           background: isUser
             ? 'var(--mantine-color-brand-6)'
-            : 'var(--mantine-color-default-border)',
+            : 'var(--mantine-color-default-hover)',
           color: isUser ? 'white' : 'inherit',
         }}
       >
@@ -74,10 +74,20 @@ function MessageBubble({ message }: { message: Message }) {
 }
 
 export default function MessageList({ messages, summary, sending }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  // Follow the latest message only while the user is already at the bottom, so a
+  // streaming reply doesn't repeatedly yank them down if they've scrolled up to read.
+  const pinnedRef = useRef(true);
+
+  const handleScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    pinnedRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+  };
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (pinnedRef.current) bottomRef.current?.scrollIntoView({ block: 'end' });
   }, [messages, sending]);
 
   if (messages.length === 0 && !summary) {
@@ -102,7 +112,11 @@ export default function MessageList({ messages, summary, sending }: Props) {
   }
 
   return (
-    <Box style={{ flex: 1, overflowY: 'auto', padding: '8px 12px' }}>
+    <Box
+      ref={containerRef}
+      onScroll={handleScroll}
+      style={{ flex: 1, overflowY: 'auto', padding: '8px 12px' }}
+    >
       {summary && (
         <Alert color="blue" variant="light" mb={12} radius="md">
           <Text size="xs" c="dimmed">

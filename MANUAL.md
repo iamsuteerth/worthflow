@@ -94,7 +94,7 @@ Examples:
 * New FD
 * New RD
 
-Scenarios allow you to explore possibilities without permanently changing the Base Plan. They live independently and can be saved, reloaded, reset, exported, and imported.
+Scenarios let you explore possibilities on top of the Base Plan. A **saved scenario** is a named snapshot of your *currently active* changes, kept **inside your plan** — not a separate file. Saving, exporting, or importing always captures the whole plan as one snapshot (base plan + the changes currently active + every saved scenario), so a reloaded plan comes back in exactly the same condition. **Reset** clears the active changes and restores the baseline.
 
 ## Forecast Horizon
 
@@ -354,7 +354,9 @@ Whenever you have an active scenario, a banner appears above the dashboard summa
 
 ## Resetting
 
-The **Reset** button in the Scenario Lab clears all active scenario modifications and returns you to your unmodified Base Plan. Your Base Plan itself is never changed by scenario activity.
+The **Reset** button in the Scenario Lab restores your plan to its last loaded/saved baseline: it clears every active scenario modification *and* removes any investment accounts you created during the scenario (and brings back any baseline account you deleted).
+
+An account you create in the Scenario Lab is a **what-if**: it travels with the plan when you save or export (reloading the plan brings it back), but it is **not** part of your base plan, so **Reset always clears it** — even after a save. To make an account a permanent part of your base plan, add it in the **Plan Builder** instead.
 
 # 8. Scenario Planning
 

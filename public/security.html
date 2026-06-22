@@ -55,11 +55,14 @@
     <h2>Authentication</h2>
     <p>
       Accounts use <strong>email + password</strong> via Amazon Cognito. Worth Flow never handles or stores
-      your password directly - Cognito manages credentials with Secure Remote Password (SRP) protocol.
+      your password directly - Cognito manages credentials with the Secure Remote Password (SRP) protocol,
+      so your password is never sent over the wire.
     </p>
     <p>
-      Password reset is via an emailed code sent from <code>noreply@worthflow.in</code>, delivered through
-      Amazon SES with DKIM and SPF authentication.
+      Creating an account requires verifying your email with a <strong>6-digit code</strong> (valid for
+      24 hours). Passwords must be at least 8 characters with an uppercase letter, a lowercase letter,
+      and a number. Both account verification and password reset use codes emailed from
+      <code>noreply@worthflow.in</code>, delivered through Amazon SES with DKIM and SPF authentication.
     </p>
 
     <h2>Per-user data isolation</h2>

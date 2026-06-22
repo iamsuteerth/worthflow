@@ -179,10 +179,13 @@ export function EditEventModal({
 
   const baseConfig = usePlannerStore((s) => s.baseConfig);
   const overrides = usePlannerStore((s) => s.overrides);
+  const config = usePlannerStore((s) => s.config);
 
+  // Resolve against the EFFECTIVE config so deposits/withdrawals into a scenario-created
+  // account (which lives in overrides, not baseConfig) still find their account.
   const eventAccount =
     "accountId" in event
-      ? baseConfig.investments.accounts.find((a) => a.id === event.accountId)
+      ? config.investments.accounts.find((a) => a.id === event.accountId)
       : undefined;
 
   // Cap edited amounts exactly as the creation forms do: FD principal / RD

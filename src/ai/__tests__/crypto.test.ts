@@ -57,6 +57,18 @@ describe('crypto', () => {
     expect(kek.extractable).toBe(false);
   });
 
+  it('honours the iteration count: same count interoperates, a different count does not', async () => {
+    const salt = randomBase64(16);
+    const a = await deriveKek('pp', salt, 50_000);
+    const b = await deriveKek('pp', salt, 50_000);
+    const enc = await aesGcmEncrypt(a, 'AIzaSecret');
+    // Same passphrase + salt + iterations → interoperable.
+    expect(await aesGcmDecrypt(b, enc.iv, enc.ciphertext)).toBe('AIzaSecret');
+    // A different iteration count derives a different key and cannot decrypt.
+    const other = await deriveKek('pp', salt, 60_000);
+    await expect(aesGcmDecrypt(other, enc.iv, enc.ciphertext)).rejects.toBeTruthy();
+  });
+
   it('randomBytes / randomBase64 return the requested size', () => {
     expect(randomBytes(16).length).toBe(16);
     // 16 bytes → 24 base64 chars (with padding)

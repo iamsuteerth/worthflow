@@ -8,6 +8,7 @@ import type {
   RuntimeBonusIncome,
   RuntimeSalaryChange,
   RuntimeSpendingOverride,
+  RuntimeOpeningCashOverride,
   RuntimeInvestmentDeposit,
   RuntimeInvestmentWithdrawal,
   RuntimeAccountAmountOverride,
@@ -132,7 +133,10 @@ function buildScenarioChanges(
         break;
       }
       case 'OPENING_CASH_OVERRIDE':
-        lines.push(`Opening cash override: ${formatMoney(overrides.openingBalance ?? 0)}`);
+        // The amount lives on the event (applied to config.cash.openingBalance by
+        // buildEffectiveConfig), NOT on overrides.openingBalance — reading the latter
+        // always reported ₹0 to the model.
+        lines.push(`Opening cash override: ${formatMoney((e as RuntimeOpeningCashOverride).amount)}`);
         break;
       case 'INVESTMENT_DEPOSIT': {
         const dep = e as RuntimeInvestmentDeposit;

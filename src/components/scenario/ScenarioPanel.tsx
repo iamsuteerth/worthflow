@@ -172,7 +172,11 @@ export default function ScenarioPanel() {
       size="sm"
     >
       <Stack gap="md">
-        <Text size="sm">This will clear all scenario modifications. This cannot be undone.</Text>
+        <Text size="sm">
+          This restores your plan to its baseline — clearing every scenario change and removing
+          any investment accounts you created (or bringing back ones you deleted) since your last
+          save. This cannot be undone.
+        </Text>
         <Group justify="flex-end">
           <Button variant="subtle" onClick={() => setResetConfirmOpen(false)}>Cancel</Button>
           <Button color="red" onClick={() => { reset(); setResetConfirmOpen(false); }}>Reset</Button>

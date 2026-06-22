@@ -87,16 +87,20 @@ function buildCandidate(
   const events = overrides.runtimeEvents ?? [];
 
   if (action.kind === 'CREATE_INVESTMENT_ACCOUNT') {
-    const base = structuredClone(baseConfig);
-    base.investments.accounts.push({
+    // Mirror the store: a scenario account is a what-if held in overrides.scenarioAccounts,
+    // not baseConfig. buildEffectiveConfig materialises it for the dry-run simulation.
+    const newAccount = {
       id: crypto.randomUUID(),
       name: action.name,
       startMonth: action.startMonth,
       openingBalance: action.openingBalance,
       defaultAnnualReturn: action.defaultAnnualReturn,
       defaultMonthlyContribution: action.defaultMonthlyContribution,
-    });
-    return { base, ov: overrides };
+    };
+    return {
+      base: baseConfig,
+      ov: { ...overrides, scenarioAccounts: [...(overrides.scenarioAccounts ?? []), newAccount] },
+    };
   }
 
   if (action.kind === 'EDIT_SCENARIO_EVENT') {

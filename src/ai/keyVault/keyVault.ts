@@ -1,5 +1,6 @@
 import { randomBase64, deriveKek, aesGcmEncrypt, aesGcmDecrypt } from '@/ai/keyVault/crypto';
 import { cacheKek, loadKek, clearKek } from '@/ai/keyVault/kekCache';
+import { AI_KDF_ITERATIONS } from '@/ai/config';
 import { AiError } from '@/ai/provider/types';
 import type { KeyBlob } from '@/ai/cloud/aiCloud';
 
@@ -63,7 +64,7 @@ export async function resolveKeyStatus(blob: KeyBlob | null): Promise<{ status: 
 }
 
 export async function unlockWithPassphrase(blob: KeyBlob, passphrase: string): Promise<string> {
-  const kek = await deriveKek(passphrase, blob.salt);
+  const kek = await deriveKek(passphrase, blob.salt, blob.kdf.iterations);
   try {
     const plaintext = await aesGcmDecrypt(kek, blob.iv, blob.ciphertext);
     await persistKek(kek, blob.keyEpoch);
@@ -88,10 +89,17 @@ export interface EncryptKeyResult {
 export async function encryptNewKey(plaintextApiKey: string, passphrase: string): Promise<EncryptKeyResult> {
   const salt = randomBase64(16);
   const keyEpoch = crypto.randomUUID();
-  const kek = await deriveKek(passphrase, salt);
+  const kek = await deriveKek(passphrase, salt, AI_KDF_ITERATIONS);
   const { iv, ciphertext } = await aesGcmEncrypt(kek, plaintextApiKey);
   return {
-    blob: { v: 1, keyEpoch, kdf: { algo: 'PBKDF2', hash: 'SHA-256', iterations: 600_000 }, salt, iv, ciphertext },
+    blob: {
+      v: 1,
+      keyEpoch,
+      kdf: { algo: 'PBKDF2', hash: 'SHA-256', iterations: AI_KDF_ITERATIONS },
+      salt,
+      iv,
+      ciphertext,
+    },
     kek,
   };
 }
@@ -101,8 +109,8 @@ export async function reEncryptKeyWithNewPassphrase(
   oldPassphrase: string,
   newPassphrase: string,
 ): Promise<KeyBlob> {
-  // Decrypt with old passphrase
-  const oldKek = await deriveKek(oldPassphrase, blob.salt);
+  // Decrypt with old passphrase (using the blob's own iteration count)
+  const oldKek = await deriveKek(oldPassphrase, blob.salt, blob.kdf.iterations);
   let plaintext: string;
   try {
     plaintext = await aesGcmDecrypt(oldKek, blob.iv, blob.ciphertext);
@@ -110,14 +118,17 @@ export async function reEncryptKeyWithNewPassphrase(
     throw new AiError('WRONG_PASSPHRASE', "Old passphrase is incorrect.");
   }
 
-  // Re-encrypt with new passphrase (new salt, same keyEpoch — no re-keying)
+  // Re-encrypt with new passphrase (new salt, same keyEpoch — no re-keying). The
+  // rewrap derives with the current constant, so record it in the blob's kdf so a
+  // later unlock derives with the same count.
   const newSalt = randomBase64(16);
-  const newKek = await deriveKek(newPassphrase, newSalt);
+  const newKek = await deriveKek(newPassphrase, newSalt, AI_KDF_ITERATIONS);
   const { iv: newIv, ciphertext: newCiphertext } = await aesGcmEncrypt(newKek, plaintext);
 
   await persistKek(newKek, blob.keyEpoch);
   return {
     ...blob,
+    kdf: { ...blob.kdf, iterations: AI_KDF_ITERATIONS },
     salt: newSalt,
     iv: newIv,
     ciphertext: newCiphertext,

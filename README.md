@@ -50,7 +50,7 @@ A **Scenario Banner** keeps you oriented: it summarizes how many modifications a
 
 The **Scenario Lab** is organized into six sections — **Expenses**, **Cash**, **Investments**, **FD**, **RD**, and **Events** — so each type of modification has a focused home.
 
-Instantly compare results against your original plan, then save, switch between, import, or export scenarios whenever you like.
+Instantly compare results against your original plan. Save named scenarios within your plan and switch between them; saving, exporting, or importing always captures the **whole plan** (base plan + active changes + every saved scenario) as one snapshot.
 
 ### 📊 Track Investments
 
@@ -168,7 +168,7 @@ Examples:
 * Investment deposit
 * Return override
 
-Scenarios allow experimentation without changing the underlying plan. They can be saved, reloaded, reset, exported, and imported independently of the Base Plan.
+Scenarios live **inside** your plan, not as separate files. **Save scenario** snapshots your *currently active* set of changes under a name; **Reset** clears all active changes and restores the plan to its last loaded/saved baseline (removing investment accounts you created in the session, or restoring ones you deleted). When you save or export, the **whole plan state** is captured as one snapshot — the base plan, the changes currently active, *and* every named scenario — so loading it back restores all of them in exactly the same condition.
 
 ### Investment Accounts
 
@@ -239,13 +239,15 @@ Restore previously exported plans with built-in validation. (Cloud saves use the
 
 ## 🔒 Accounts & Data Privacy
 
-Worth Flow uses individual **email + password accounts** (Amazon Cognito):
+Individual **email + password accounts** via Amazon Cognito: sign up, verify your email with a
+one-time code, and sign in (Secure Remote Password — your password never crosses the wire).
+Forgot-password resets via an emailed code. The app never stores a password.
 
-* Sign up with your email, verify it with a one-time code, and sign in
-* **Forgot-password** reset via emailed code
-* No passwords are ever stored by the app — authentication is handled by Cognito
-
-Your plans are computed **entirely in your browser** — there is no application server doing the math. When you save, the `.wfplan` file is written **directly to private cloud storage scoped to your account**; no other user (or the app itself) can read it. Signing out clears your plan from the browser, so nothing of yours is left behind on a shared computer.
+Plans are computed **entirely in your browser** — no application server does the math. Saves are
+written **directly to private cloud storage scoped to your account** (enforced by IAM, not the
+client), so no other user or the app itself can read them. Signing out clears your plan from the
+browser. The full model — auth, isolation, and the zero-knowledge AI key vault — is in
+**[SECURITY.md](./SECURITY.md)**.
 
 > Worth Flow can also run in a local **mock mode** with no cloud account, for development. See [INFRA.md](./INFRA.md).
 
@@ -291,6 +293,7 @@ This README is the product overview and feature tour. Each companion guide has o
 | ⚡ **[QUICKSTART.md](./QUICKSTART.md)** | Developers | Run the app locally in mock mode (no AWS) — setup, tests, scripts |
 | 👉 **[MANUAL.md](./MANUAL.md)** | End users | Every feature — accounts, plans, scenarios, saves, reports |
 | 🏗️ **[INFRA.md](./INFRA.md)** | Operators | Cloud architecture, Terraform provisioning, and deployment |
+| 🔒 **[SECURITY.md](./SECURITY.md)** | Operators | Auth & OTP, per-user cloud isolation, the zero-knowledge AI key vault, reporting |
 
 ## 🛠️ Built With
 

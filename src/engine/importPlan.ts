@@ -174,6 +174,29 @@ const RuntimeSalaryChangeSchema = z.object({
   description: z.string(),
 });
 
+const RuntimeSpendingOverrideSchema = z
+  .object({
+    id: z.string(),
+    type: z.literal("SPENDING_OVERRIDE"),
+    startMonth: MonthKeySchema,
+    endMonth: MonthKeySchema,
+    amount: z.number().nonnegative(),
+  })
+  .refine((value) => value.startMonth <= value.endMonth, {
+    message: "Spending override start month must be before end month",
+  });
+
+const RuntimeOpeningCashOverrideSchema = z.object({
+  id: z.string(),
+  type: z.literal("OPENING_CASH_OVERRIDE"),
+  // Negative is intentional — models starting a scenario in overdraft.
+  amount: z.number().finite(),
+});
+
+// MUST list every RuntimeEvent["type"] in @/types/runtimeEvent. A missing member
+// here silently rejects any saved/exported plan that uses it (the whole import
+// throws "Invalid Plan File"), so an exhaustiveness test locks this union — see
+// importPlan.test.ts "covers every runtime-event type".
 const RuntimeEventSchema = z.discriminatedUnion("type", [
   RuntimeOneOffExpenseSchema,
   RuntimeFixedDepositSchema,
@@ -186,10 +209,23 @@ const RuntimeEventSchema = z.discriminatedUnion("type", [
   RuntimeInvestmentDepositSchema,
   RuntimeInvestmentWithdrawalSchema,
   RuntimeRecurringExpenseSchema,
+  RuntimeSpendingOverrideSchema,
+  RuntimeOpeningCashOverrideSchema,
 ]);
+
+// A scenario-created ("what-if") investment account — same shape as a base account.
+const ScenarioAccountSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  startMonth: MonthKeySchema,
+  openingBalance: z.number().nonnegative(),
+  defaultAnnualReturn: z.number().min(-99.99).max(1000),
+  defaultMonthlyContribution: z.number().nonnegative(),
+});
 
 const PlannerOverridesSchema = z.object({
   runtimeEvents: z.array(RuntimeEventSchema).optional(),
+  scenarioAccounts: z.array(ScenarioAccountSchema).optional(),
 });
 
 const SavedScenarioSchema = z.object({
