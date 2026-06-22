@@ -56,13 +56,19 @@
     <p>
       Accounts use <strong>email + password</strong> via Amazon Cognito. Worth Flow never handles or stores
       your password directly - Cognito manages credentials with the Secure Remote Password (SRP) protocol,
-      so your password is never sent over the wire.
+      so your password is never sent over the wire. Creating an account requires verifying your email with a 
+      <strong>6-digit code</strong> (valid for 24 hours). 
     </p>
-    <p>
-      Creating an account requires verifying your email with a <strong>6-digit code</strong> (valid for
-      24 hours). Passwords must be at least 8 characters with an uppercase letter, a lowercase letter,
-      and a number. Both account verification and password reset use codes emailed from
-      <code>noreply@worthflow.in</code>, delivered through Amazon SES with DKIM and SPF authentication.
+    <h2>Password Policy</h2>
+      <ul>
+        <li>At least 8 characters</li>
+        <li>With an uppercase letter</li>
+        <li>A lowercase letter</li>
+        <li>And a number</li>
+      </ul>
+    <p>  
+      Both account verification and password reset use codes emailed from&ensp;<code>noreply@worthflow.in</code>, 
+      delivered through Amazon SES with DKIM and SPF authentication.
     </p>
 
     <h2>Per-user data isolation</h2>
@@ -88,7 +94,7 @@ arn:aws:s3:::worth-flow-saves/users/&lt;your-identity-id&gt;/*</pre>
       <li><strong>No server in the path.</strong> Requests go <strong>browser-direct to Google</strong> with
         your key - Worth Flow runs no proxy and never sees your key or your prompts.</li>
       <li><strong>Tight egress.</strong> The Content-Security-Policy allows the assistant to connect only to
-        <code>generativelanguage.googleapis.com</code> (alongside AWS and Cognito) - nothing else.</li>
+        <code>generativelanguage.googleapis.com</code>&ensp;(alongside AWS and Cognito) - nothing else.</li>
       <li><strong>Least data.</strong> Only forecast figures and plan summaries are sent; credentials and
         internal IDs are never included.</li>
     </ul>

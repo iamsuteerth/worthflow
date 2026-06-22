@@ -14,7 +14,7 @@
   <div class="wrap">
     <a class="back" href="/">&#8592; Back to Worth Flow</a>
     <h1>Privacy Policy</h1>
-    <p class="meta">Last updated: June 2026 (AI assistant disclosure added) &mdash; Worth Flow is a personal hobby project, not a commercial service.</p>
+    <p class="meta">Last updated: June 2026 (AI Assistant disclosure Added) &mdash; Worth Flow is a personal hobby project, not a commercial service.</p>
 
     <div class="callout">
       All financial calculations run <strong>entirely in your browser</strong>. No financial data is ever sent to an application server, and Worth Flow itself never reads your saved plans.
@@ -23,7 +23,12 @@
     <h2>What we collect</h2>
     <ul>
       <li><strong>Email address</strong> - collected by Amazon Cognito when you create an account. Used only for authentication and password-reset emails.</li>
-      <li><strong>Financial plan data</strong> - stored in Amazon S3 only if you explicitly save your plan. Your data is written to a private cloud storage prefix that is scoped exclusively to your account; no other user or the application can access it.</li>
+      <li>
+        <strong>Financial plan data</strong> - stored in Amazon S3 only if you explicitly save your plan. Your data is written to a private cloud storage prefix that is scoped exclusively to your account; no other user or the application can access it.
+         <div class="callout">
+          <em><strong>Note:</strong> The initial base scenario created during onboarding is automatically saved once it has been generated so that your starting plan can be restored later.</em>
+        </div>
+      </li>
       <li><strong>Auth tokens</strong> - short-lived session tokens stored in your browser's memory / localStorage by aws-amplify, used to authenticate S3 requests. They are cleared when you sign out.</li>
     </ul>
 

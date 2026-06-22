@@ -118,7 +118,9 @@ See where money comes from and where it goes.
 
 ### 🔎 Filter by Month Range
 
-A single, global **month-range filter** sits above the dashboard. Set a "From"/"To" window and every time-series table and timeline narrows to that range together — clear it to instantly return to the full forecast horizon. (Available-cash checks for new FDs/RDs/deposits always use the full forecast, regardless of this filter.)
+A single, global **month-range filter** sits above the dashboard. Set a "From"/"To" window and every time-series table and timeline narrows to that range together
+
+*(Available-cash checks for new FDs/RDs/deposits always use the full forecast, regardless of this filter.)*
 
 ### 📈 Visualize Your Future
 
@@ -130,7 +132,7 @@ Interactive dashboards help you understand:
 * Financial Events
 * Scenario Impact
 
-### 🤖 Ask the AI Assistant (optional)
+### 🤖 Ask the AI Assistant (Requires SETUP)
 
 An optional, **bring-your-own-key** assistant (Google Gemini) you can chat with about your forecast:
 

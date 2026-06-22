@@ -128,8 +128,7 @@ export default function ProposedActionCard({ message }: Props) {
           <Box>
             <Button
               size="xs"
-              variant="light"
-              color="gray"
+              variant="default"
               leftSection={<IconArrowBackUp size={13} />}
               onClick={() => undoProposedAction(message.id)}
             >
