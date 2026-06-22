@@ -1,7 +1,7 @@
 import { generateMonths } from "@/engine/dateUtils";
 
 import type { AssetSnapshot } from "@/types/assets";
-import type { MonthlyCashflow, SimulationRow, SimulationSummary } from "@/types/simulation";
+import type { MonthlyCashflow, SimulationRow, SimulationSummary, MonthKey } from "@/types/simulation";
 import type { PlannerConfig } from "@/types/config";
 
 import {
@@ -63,14 +63,24 @@ export function simulate(
   let lowestCash = state.cash;
   let lowestCashMonth = months[0];
 
+  // A deposit/withdrawal only counts when its account exists and has started — matching
+  // the per-month live-account filter below, so an orphaned reference (deleted account,
+  // stale import) never inflates these totals either.
+  const refersToLiveAccount = (accountId: string, month: MonthKey): boolean =>
+    accounts.some((a) => a.id === accountId && month >= a.startMonth);
+
   const investmentDepositsTotal =
     overrides?.runtimeEvents
-      ?.filter((e): e is RuntimeInvestmentDeposit => e.type === "INVESTMENT_DEPOSIT")
+      ?.filter((e): e is RuntimeInvestmentDeposit =>
+        e.type === "INVESTMENT_DEPOSIT" && refersToLiveAccount(e.accountId, e.month)
+      )
       .reduce((sum, e) => sum + e.amount, 0) ?? 0;
 
   const investmentWithdrawalsTotal =
     overrides?.runtimeEvents
-      ?.filter((e): e is RuntimeInvestmentWithdrawal => e.type === "INVESTMENT_WITHDRAWAL")
+      ?.filter((e): e is RuntimeInvestmentWithdrawal =>
+        e.type === "INVESTMENT_WITHDRAWAL" && refersToLiveAccount(e.accountId, e.month)
+      )
       .reduce((sum, e) => sum + e.amount, 0) ?? 0;
 
   for (const month of months) {
@@ -90,16 +100,21 @@ export function simulate(
     state.cash -= flatExpense + creditCardExpense + oneOffExpense + recurringExpense;
     cashFloor = Math.min(cashFloor, state.cash);
 
+    // Only act on a deposit/withdrawal whose account actually exists and has started.
+    // Otherwise a deposit's cash would be deducted below without ever being credited
+    // (processAccountMonth skips it), destroying cash. Using the same refersToLiveAccount
+    // check keeps the cash effect and the account effect in lockstep, so an orphaned
+    // reference (a stale imported event, or one pointing at a deleted account) is a no-op.
     const monthDeposits =
       overrides?.runtimeEvents?.filter(
         (e): e is RuntimeInvestmentDeposit =>
-          e.type === "INVESTMENT_DEPOSIT" && e.month === month
+          e.type === "INVESTMENT_DEPOSIT" && e.month === month && refersToLiveAccount(e.accountId, month)
       ) ?? [];
 
     const monthWithdrawals =
       overrides?.runtimeEvents?.filter(
         (e): e is RuntimeInvestmentWithdrawal =>
-          e.type === "INVESTMENT_WITHDRAWAL" && e.month === month
+          e.type === "INVESTMENT_WITHDRAWAL" && e.month === month && refersToLiveAccount(e.accountId, month)
       ) ?? [];
 
     // Preview this month's total contributions so deposits can be clamped

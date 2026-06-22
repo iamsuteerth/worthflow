@@ -212,4 +212,21 @@ describe("importPlan — runtime-event round trip (regression: the import union 
     // The base account itself is still present in baseConfig (just hidden by the override).
     expect(result.baseConfig.investments.accounts.map((a) => a.id)).toContain("acc-1");
   });
+
+  it("round-trips the full override stack together (scenarioAccounts + deletedAccountIds + events)", async () => {
+    const overrides = {
+      scenarioAccounts: [
+        { id: "scn", name: "SIP", startMonth: "2025-03", openingBalance: 0, defaultAnnualReturn: 10, defaultMonthlyContribution: 4_000 },
+      ],
+      deletedAccountIds: ["acc-1"],
+      runtimeEvents: [
+        { id: "dep", type: "INVESTMENT_DEPOSIT", accountId: "scn", month: "2025-04", amount: 5_000 },
+        { id: "so", type: "SPENDING_OVERRIDE", startMonth: "2025-02", endMonth: "2025-05", amount: 30_000 },
+        { id: "oc", type: "OPENING_CASH_OVERRIDE", amount: 12_345 },
+      ],
+    };
+    const file = await makeWfPlanFile({ ...validPlan, overrides });
+    const result = await importPlan(file);
+    expect(result.overrides).toEqual(overrides);
+  });
 });

@@ -124,6 +124,22 @@ describe('plannerStore — cascade + deletion', () => {
     // A scenario account is removed outright — it never enters deletedAccountIds.
     expect(usePlannerStore.getState().overrides.deletedAccountIds ?? []).toHaveLength(0);
   });
+
+  it('deleting a BASE account cascades its scenario deposits and overrides', () => {
+    usePlannerStore.getState().addTransientInvestmentDeposit('acc-1', m('2025-03'), 10_000);
+    usePlannerStore.getState().addTransientAccountAmountOverride('acc-1', m('2025-02'), m('2025-05'), 8_000);
+    expect(events().some((e) => 'accountId' in e && e.accountId === 'acc-1')).toBe(true);
+
+    usePlannerStore.getState().deleteInvestmentAccount('acc-1');
+
+    // Hidden via override, dependent scenario events cascaded away, nothing dangling.
+    expect(usePlannerStore.getState().overrides.deletedAccountIds).toEqual(['acc-1']);
+    expect(events().some((e) => 'accountId' in e && e.accountId === 'acc-1')).toBe(false);
+    expect(effectiveAccounts()).toHaveLength(0);
+    // …and Reset brings the base account back.
+    usePlannerStore.getState().resetOverrides();
+    expect(effectiveAccounts().map((a) => a.id)).toEqual(['acc-1']);
+  });
 });
 
 describe('plannerStore — resetAll', () => {
