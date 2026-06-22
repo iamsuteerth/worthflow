@@ -14,7 +14,7 @@
   <div class="wrap">
     <a class="back" href="/">&#8592; Back to Worth Flow</a>
     <h1>Privacy Policy</h1>
-    <p class="meta">Last updated: June 2026 &mdash; Worth Flow is a personal hobby project, not a commercial service.</p>
+    <p class="meta">Last updated: June 2026 (AI assistant disclosure added) &mdash; Worth Flow is a personal hobby project, not a commercial service.</p>
 
     <div class="callout">
       All financial calculations run <strong>entirely in your browser</strong>. No financial data is ever sent to an application server, and Worth Flow itself never reads your saved plans.
@@ -30,9 +30,9 @@
     <h2>What we do not collect</h2>
     <ul>
       <li>No analytics or tracking cookies.</li>
-      <li>No advertising or third-party data sharing.</li>
+      <li>No advertising. We never sell or share your data with third parties for their own use. (The one outbound flow is the optional AI assistant - and only if <em>you</em> turn it on with your own key; see below.)</li>
       <li>No passwords - authentication is handled entirely by Amazon Cognito.</li>
-      <li>No financial values, projection results, or any content of your plans (beyond the encrypted file you choose to save).</li>
+      <li>No financial values, projection results, or any content of your plans - beyond the encrypted file you choose to save, and, if you enable the AI assistant, the forecast figures you choose to send to Google with your own key (see below).</li>
     </ul>
 
     <h2>Third-party services</h2>
@@ -43,6 +43,25 @@
       <li><strong>Amazon SES</strong> - delivery of Cognito transactional emails (sign-up verification, password reset).</li>
     </ul>
     <p>These services are governed by <a href="https://aws.amazon.com/privacy/" target="_blank" rel="noopener noreferrer">AWS's privacy policy</a>.</p>
+
+    <h2>AI assistant (optional, bring-your-own-key)</h2>
+    <p>
+      Worth Flow has an <strong>optional</strong> AI assistant powered by Google Gemini. It is <strong>off by
+      default</strong> and only works if you add <strong>your own</strong> Google API key. When you use it:
+    </p>
+    <ul>
+      <li>Your forecast figures, account/instrument summaries, and active scenario are sent <strong>directly
+        from your browser to Google</strong> under your own API key. <strong>No Worth Flow server is involved</strong> -
+        there is no application server in this path.</li>
+      <li>Your account credentials and internal record IDs are <strong>never</strong> sent.</li>
+      <li>Your API key and your chat history are <strong>end-to-end encrypted in your browser</strong> with a
+        passphrase only you know (zero-knowledge). Worth Flow stores only the encrypted form and can never read
+        either - see the <a href="/security">Security</a> page.</li>
+      <li>Google's handling of the data you send is governed by the
+        <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer">Gemini API terms</a>.</li>
+      <li>You can remove the key and wipe the stored chat at any time from the assistant's key settings
+        (<em>Remove key &amp; chat</em>).</li>
+    </ul>
 
     <h2>Data retention &amp; deletion</h2>
     <ul>

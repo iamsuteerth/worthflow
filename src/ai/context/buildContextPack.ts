@@ -171,7 +171,11 @@ function buildScenarioChanges(
     }
   }
 
-  return lines;
+  // Number each entry (1-based) in runtimeEvents order. The model uses this number
+  // as the `ref` when editing/deleting a change, and it keeps "what's active" lists
+  // unambiguous. MUST stay index-aligned with overrides.runtimeEvents (and with the
+  // scenarioEventIds the store passes to validateAction).
+  return lines.map((line, i) => `${i + 1}. ${line}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -184,6 +188,7 @@ export function buildContextPack(
   overrides: PlannerOverrides,
   baselineAccountIds: string[],
   focusWindow?: { from: string; to: string },
+  baseResult?: SimulationResult,
 ): ContextPack {
   const { summary } = result;
   const hasActiveScenario = (overrides.runtimeEvents?.length ?? 0) > 0;
@@ -238,6 +243,19 @@ export function buildContextPack(
     accounts,
     instruments,
     scenarioChanges: buildScenarioChanges(config, overrides),
+    // Base-vs-scenario effect, grounded in a real base-plan simulation. Only when a
+    // scenario is active AND the caller supplied the base run (see aiStore).
+    scenarioEffect:
+      hasActiveScenario && baseResult
+        ? {
+            baseFinalNetWorth: Math.round(baseResult.summary.finalNetWorth),
+            scenarioFinalNetWorth: Math.round(summary.finalNetWorth),
+            baseLowestCash: Math.round(baseResult.summary.lowestBalance),
+            scenarioLowestCash: Math.round(summary.lowestBalance),
+            baseLowestCashMonth: baseResult.summary.lowestBalanceMonth,
+            scenarioLowestCashMonth: summary.lowestBalanceMonth,
+          }
+        : undefined,
     focusWindow,
   };
 

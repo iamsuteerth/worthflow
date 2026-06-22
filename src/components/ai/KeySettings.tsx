@@ -11,6 +11,7 @@ import {
   Title,
   Collapse,
   Anchor,
+  List,
 } from '@mantine/core';
 import { IconAlertTriangle, IconCheck, IconKey, IconShieldCheck, IconTrash } from '@tabler/icons-react';
 import { useAiStore } from '@/store/aiStore';
@@ -41,13 +42,26 @@ function HardeningTips() {
         {open ? 'Hide' : 'Show'} key hardening tips
       </Anchor>
       <Collapse expanded={open}>
-        <Stack gap={4} p="xs" style={{ background: 'var(--mantine-color-default)', borderRadius: 8 }}>
+        <Stack gap={6} p="xs" style={{ background: 'var(--mantine-color-default)', borderRadius: 8 }}>
           <Text size="xs" c="dimmed">
-            To limit the blast radius of a leaked key:
+            To limit the blast radius of a leaked key, lock it to your site (about 2 minutes):
           </Text>
-          <Text size="xs">• In Google AI Studio, restrict the key to the <b>Generative Language API</b> only.</Text>
-          <Text size="xs">• Add an <b>HTTP referrer restriction</b> to your app origin.</Text>
-          <Text size="xs">• Use a <b>dedicated key</b> for Worth Flow so you can revoke it independently.</Text>
+          <List type="ordered" size="xs" spacing={2}>
+            <List.Item>
+              Open <b>Google Cloud Console</b> &rarr; <b>APIs &amp; Services &rarr; Credentials</b>, and click your API key.
+            </List.Item>
+            <List.Item>
+              Under <b>Application restrictions</b>, choose <b>HTTP referrers</b> and add your site
+              (e.g. <code>https://worthflow.in/*</code>; add <code>http://localhost:*</code> only while developing).
+            </List.Item>
+            <List.Item>
+              Under <b>API restrictions</b>, choose <b>Restrict key</b> and select the <b>Generative Language API</b> only.
+            </List.Item>
+            <List.Item>Click <b>Save</b> — now the key works only from your site, only for Gemini.</List.Item>
+          </List>
+          <Text size="xs">
+            Tip: use a <b>dedicated key</b> for Worth Flow so you can revoke it independently.
+          </Text>
           <Text size="xs" c="dimmed" mt={4}>
             Your key is encrypted with your passphrase before it ever leaves your browser. We store only the
             encrypted form and can never read it.
@@ -234,10 +248,26 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
       {(!hasKey || forgotMode) && (
         <>
           <Text size="xs" c="dimmed">
-            Paste your Gemini API key from{' '}
-            <b>Google AI Studio</b>. It never leaves your device in plaintext — it's encrypted with
-            your passphrase before being stored.
+            Your key never leaves your device in plaintext — it's encrypted with your passphrase
+            before being stored.
           </Text>
+
+          <Stack gap={4} p="xs" style={{ background: 'var(--mantine-color-default)', borderRadius: 8 }}>
+            <Text size="xs" fw={500}>Get a free key:</Text>
+            <List type="ordered" size="xs" spacing={2}>
+              <List.Item>
+                Open{' '}
+                <Anchor href="https://aistudio.google.com/api-keys" target="_blank" rel="noopener noreferrer">
+                  Google AI Studio &rarr; API keys
+                </Anchor>.
+              </List.Item>
+              <List.Item>Click <b>Create API key</b> (create a new project if asked).</List.Item>
+              <List.Item>
+                <b>Copy</b> the key (it starts with <code>AIza…</code>) and paste it below.
+              </List.Item>
+            </List>
+            <Text size="xs" c="dimmed">The default free tier is enough for this assistant.</Text>
+          </Stack>
 
           <TextInput
             label="Gemini API Key"

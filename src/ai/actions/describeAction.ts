@@ -1,8 +1,10 @@
 import { money } from '@/format/money';
 import { formatMonth } from '@/engine/monthFormatting';
 import { usePlannerStore } from '@/store/plannerStore';
+import { buildEditChanges } from '@/ai/actions/editMapping';
 import type { RuntimeEvent } from '@/types/runtimeEvent';
 import type { InvestmentAccount } from '@/types/investmentAccount';
+import type { MonthKey } from '@/types/simulation';
 import type { ResolvedProposedAction } from '@/ai/actions/actionSchema';
 
 // Compact plain-language description of an existing runtime event (for edit/delete
@@ -85,12 +87,35 @@ export function describeAction(action: ResolvedProposedAction): string {
     case 'ADD_ACCOUNT_RETURN_OVERRIDE':
       return `Set ${action.accountName}'s annual return to ${action.annualReturn}% from ${formatMonth(action.startMonth)} to ${formatMonth(action.endMonth)}.`;
     case 'EDIT_SCENARIO_EVENT': {
+      // Describe ONLY the fields that actually apply to the target event's type —
+      // i.e. exactly what applyAction will change. buildEditChanges is the shared
+      // truth, so the preview text can never promise a field that gets dropped.
+      const state = usePlannerStore.getState();
+      const event = (state.overrides.runtimeEvents ?? []).find((e) => e.id === action.targetEventId);
+      const applied = (event ? buildEditChanges(event, action) : {}) as {
+        amount?: number;
+        newMonthlyIncome?: number;
+        principal?: number;
+        monthlyContribution?: number;
+        month?: MonthKey;
+        startMonth?: MonthKey;
+        effectiveMonth?: MonthKey;
+        rate?: number;
+        durationMonths?: number;
+        annualReturn?: number;
+      };
       const changes: string[] = [];
-      if (action.amount !== undefined) changes.push(`amount to ${money(action.amount)}`);
-      if (action.month !== undefined) changes.push(`month to ${formatMonth(action.month)}`);
-      if (action.rate !== undefined) changes.push(`rate to ${action.rate}%`);
-      if (action.durationMonths !== undefined) changes.push(`duration to ${action.durationMonths} months`);
-      if (action.annualReturn !== undefined) changes.push(`return to ${action.annualReturn}%`);
+      if (applied.amount !== undefined) changes.push(`amount to ${money(applied.amount)}`);
+      if (applied.newMonthlyIncome !== undefined) changes.push(`salary to ${money(applied.newMonthlyIncome)}`);
+      if (applied.principal !== undefined) changes.push(`amount to ${money(applied.principal)}`);
+      if (applied.monthlyContribution !== undefined) changes.push(`amount to ${money(applied.monthlyContribution)}`);
+      if (applied.month !== undefined) changes.push(`month to ${formatMonth(applied.month)}`);
+      if (applied.startMonth !== undefined) changes.push(`month to ${formatMonth(applied.startMonth)}`);
+      if (applied.effectiveMonth !== undefined) changes.push(`effective month to ${formatMonth(applied.effectiveMonth)}`);
+      if (applied.rate !== undefined) changes.push(`rate to ${applied.rate}%`);
+      if (applied.durationMonths !== undefined) changes.push(`duration to ${applied.durationMonths} months`);
+      if (applied.annualReturn !== undefined) changes.push(`return to ${applied.annualReturn}%`);
+      if (changes.length === 0) return `Edit ${targetDescription(action.targetEventId)} (no applicable change).`;
       return `Edit ${targetDescription(action.targetEventId)} — set ${changes.join(', ')}.`;
     }
     case 'DELETE_SCENARIO_EVENT':

@@ -43,25 +43,31 @@ export function translateError(err: unknown): AiError {
 }
 
 export function buildContents(req: AiRequest): Content[] {
-  const contents: Content[] = [];
-
   // Pin the context block as the first exchange so it's always in scope.
-  // Gemini requires alternating user/model turns.
-  contents.push({ role: 'user', parts: [{ text: `[Financial Context]\n${req.contextBlock}` }] });
-  contents.push({
-    role: 'model',
-    parts: [{ text: "I have your financial context. I'm ready to help." }],
-  });
+  const turns: Array<{ role: 'user' | 'model'; text: string }> = [];
+  turns.push({ role: 'user', text: `[Financial Context]\n${req.contextBlock}` });
+  turns.push({ role: 'model', text: "I have your financial context. I'm ready to help." });
 
   for (const h of req.history) {
-    contents.push({
-      role: h.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: h.text }],
-    });
+    turns.push({ role: h.role === 'assistant' ? 'model' : 'user', text: h.text });
   }
 
-  contents.push({ role: 'user', parts: [{ text: req.userMessage }] });
-  return contents;
+  turns.push({ role: 'user', text: req.userMessage });
+
+  // Gemini requires strictly alternating user/model turns. Collapse any adjacent
+  // same-role turns so a caller bug can never send two user (or model) turns in a
+  // row (which Gemini rejects / mishandles).
+  const merged: Array<{ role: 'user' | 'model'; text: string }> = [];
+  for (const t of turns) {
+    const last = merged[merged.length - 1];
+    if (last && last.role === t.role) {
+      last.text = `${last.text}\n${t.text}`;
+    } else {
+      merged.push({ ...t });
+    }
+  }
+
+  return merged.map((t) => ({ role: t.role, parts: [{ text: t.text }] }));
 }
 
 const geminiProvider: AIProvider = {

@@ -84,7 +84,7 @@ export default function ProposedActionCard({ message }: Props) {
         <Stack gap={2} mb={8}>
           <DeltaRow label="Lowest cash" before={delta.lowestCashBefore} after={delta.lowestCashAfter} />
           <DeltaRow label="Final net worth" before={delta.finalNetWorthBefore} after={delta.finalNetWorthAfter} />
-          <Text size="9px" c="dimmed">Estimated impact — applied only when you confirm.</Text>
+          <Text size="xs" c="dimmed">Estimated impact — applied only when you confirm.</Text>
         </Stack>
       )}
 
@@ -139,7 +139,7 @@ export default function ProposedActionCard({ message }: Props) {
         ) : (
           <Group gap={4} c="dimmed">
             <IconInfoCircle size={12} />
-            <Text size="9px">To revert this, load a saved plan.</Text>
+            <Text size="xs">To revert this, load a saved plan.</Text>
           </Group>
         )
       )}

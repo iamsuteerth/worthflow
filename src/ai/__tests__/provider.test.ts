@@ -63,6 +63,46 @@ describe('buildContents', () => {
     expect(last.role).toBe('user');
     expect(JSON.stringify(last)).toContain('the new question');
   });
+
+  it('never emits two consecutive same-role turns (Gemini alternation)', () => {
+    const cases: Array<{ history: { role: 'user' | 'assistant'; text: string }[] }> = [
+      { history: [] },
+      { history: [{ role: 'user', text: 'prev user' }] }, // history ends in a user turn
+      { history: [{ role: 'assistant', text: 'prev ai' }] }, // history ends in an assistant turn
+    ];
+    for (const c of cases) {
+      const contents = buildContents({
+        systemPrompt: 's',
+        contextBlock: 'ctx',
+        history: c.history,
+        userMessage: 'q',
+      });
+      for (let i = 1; i < contents.length; i++) {
+        expect(contents[i].role).not.toBe(contents[i - 1].role);
+      }
+      expect(contents[contents.length - 1].role).toBe('user');
+    }
+  });
+
+  it('collapses a duplicated trailing user turn (the old proposeAction bug)', () => {
+    // If the latest user message also appears as the last history entry, the two
+    // user turns must be merged — never sent back-to-back.
+    const contents = buildContents({
+      systemPrompt: 's',
+      contextBlock: 'ctx',
+      history: [
+        { role: 'assistant', text: 'a1' },
+        { role: 'user', text: 'the only question' },
+      ],
+      userMessage: 'the only question',
+    });
+    for (let i = 1; i < contents.length; i++) {
+      expect(contents[i].role).not.toBe(contents[i - 1].role);
+    }
+    const last = contents[contents.length - 1];
+    expect(last.role).toBe('user');
+    expect(JSON.stringify(last)).toContain('the only question');
+  });
 });
 
 describe('mockProvider', () => {

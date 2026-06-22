@@ -54,6 +54,24 @@ export interface ContextPackInstrument {
   maturityValue: number;
 }
 
+/**
+ * Aggregate effect of the active scenario, measured against the base plan. Present
+ * ONLY when a scenario is active. Both sides come straight from the engine
+ * (simulate) — the model must read these numbers verbatim, never compute the delta
+ * itself. Note: an investment account CREATED in-scenario is folded into the base
+ * config, so it is reflected on both sides here (and surfaced via
+ * `accounts[].addedInScenario`); these deltas capture the runtime events
+ * (expenses, deposits/withdrawals, FDs/RDs, overrides, opening-cash).
+ */
+export interface ContextPackScenarioEffect {
+  baseFinalNetWorth: number;
+  scenarioFinalNetWorth: number;
+  baseLowestCash: number;
+  scenarioLowestCash: number;
+  baseLowestCashMonth: string;
+  scenarioLowestCashMonth: string;
+}
+
 export interface ContextPack {
   meta: ContextPackMeta;
   headline: ContextPackHeadline;
@@ -61,5 +79,6 @@ export interface ContextPack {
   accounts: ContextPackAccount[];
   instruments: ContextPackInstrument[];
   scenarioChanges: string[];
+  scenarioEffect?: ContextPackScenarioEffect;
   focusWindow?: { from: string; to: string };
 }

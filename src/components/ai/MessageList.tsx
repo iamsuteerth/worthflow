@@ -37,7 +37,7 @@ function MessageBubble({ message }: { message: Message }) {
         <Group gap={4} align="center">
           {isUser ? <IconUser size={12} /> : <IconSparkles size={12} />}
           <Text size="xs" opacity={0.7}>
-            {isUser ? 'You' : 'AI'}
+            {isUser ? 'You' : 'AI Assistant'}
           </Text>
         </Group>
 

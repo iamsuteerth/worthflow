@@ -260,6 +260,55 @@ describe('aiStore — assisted actions (Phase 2)', () => {
     expect(msg.actionError).toBeTruthy();
     expect(usePlannerStore.getState().overrides.runtimeEvents ?? []).toHaveLength(0);
   });
+
+  it('renders a missing-info clarify (one change, missing fields) as plain text', async () => {
+    await useAiStore.getState().setupKey('AIzaTESTKEY', 'passphrase1');
+    const original = h.provider.proposeAction;
+    h.provider.proposeAction = async () => ({
+      text: 'json',
+      proposedActionJson: {
+        clarify: 'An FD needs an interest rate and a duration — what rate (% p.a.) and how many months?',
+      },
+      finishReason: 'stop' as const,
+    });
+    try {
+      await useAiStore.getState().proposeAction('create an FD of 1.6L in September');
+    } finally {
+      h.provider.proposeAction = original;
+    }
+    const msgs = useAiStore.getState().conversation.messages;
+    const last = msgs[msgs.length - 1];
+    expect(last.role).toBe('assistant');
+    expect(last.proposedAction).toBeUndefined();
+    expect(last.actionError).toBeUndefined();
+    expect(last.text).toContain('interest rate and a duration');
+    expect(usePlannerStore.getState().overrides.runtimeEvents ?? []).toHaveLength(0);
+  });
+
+  it('does not duplicate the latest user message into the request history', async () => {
+    await useAiStore.getState().setupKey('AIzaTESTKEY', 'passphrase1');
+    await useAiStore.getState().send('first question'); // seed a prior turn
+    let capturedHistory: { role: string; text: string }[] = [];
+    const original = h.provider.proposeAction;
+    h.provider.proposeAction = async (req?: { history?: { role: string; text: string }[] }) => {
+      capturedHistory = req?.history ?? [];
+      return {
+        text: 'json',
+        proposedActionJson: { kind: 'ADD_ONE_OFF_EXPENSE', month: '2025-01', amount: 50000, label: 'Mock' },
+        finishReason: 'stop' as const,
+      };
+    };
+    try {
+      await useAiStore.getState().proposeAction('please add a one-off expense');
+    } finally {
+      h.provider.proposeAction = original;
+    }
+    // The latest user message is passed as `userMessage`, NOT also in history
+    // (duplicating it produced two consecutive user turns — see §1).
+    expect(capturedHistory.some((x) => x.text === 'please add a one-off expense')).toBe(false);
+    // The prior turn is still present.
+    expect(capturedHistory.some((x) => x.text === 'first question')).toBe(true);
+  });
 });
 
 describe('mergeConversations (cross-device)', () => {

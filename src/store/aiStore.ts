@@ -145,12 +145,18 @@ function getContextBlock(
   config: PlannerConfig,
   overrides: PlannerOverrides,
   baselineAccountIds: string[],
+  baseConfig: PlannerConfig,
 ): { block: string; epoch: string } {
   if (_ctxCache && _ctxCache.configRef === config && _ctxCache.overridesRef === overrides) {
     return { block: _ctxCache.block, epoch: _ctxCache.epoch };
   }
   const result = simulate(config, overrides);
-  const pack = buildContextPack(result, config, overrides, baselineAccountIds);
+  // When a scenario is active, also simulate the pure base plan so the pack can carry
+  // a grounded base-vs-scenario effect (scenarioEffect). simulate(baseConfig, {}) is
+  // the base with no runtime events / overrides applied.
+  const hasScenario = (overrides.runtimeEvents?.length ?? 0) > 0;
+  const baseResult = hasScenario ? simulate(baseConfig, {}) : undefined;
+  const pack = buildContextPack(result, config, overrides, baselineAccountIds, undefined, baseResult);
   const block = serializeContextPack(pack);
   const epoch = crypto.randomUUID();
   _ctxCache = { configRef: config, overridesRef: overrides, block, epoch };
@@ -460,6 +466,7 @@ export const useAiStore = create<AiStore>()(
             plannerState.config,
             plannerState.overrides,
             plannerState.baselineAccountIds,
+            plannerState.baseConfig,
           );
           contextBlock = ctx.block;
           contextEpoch = ctx.epoch;
@@ -616,7 +623,7 @@ export const useAiStore = create<AiStore>()(
         let contextBlock: string;
         let contextEpoch: string;
         try {
-          const ctx = getContextBlock(plannerState.config, plannerState.overrides, plannerState.baselineAccountIds);
+          const ctx = getContextBlock(plannerState.config, plannerState.overrides, plannerState.baselineAccountIds, plannerState.baseConfig);
           contextBlock = ctx.block;
           contextEpoch = ctx.epoch;
         } catch {
@@ -628,7 +635,12 @@ export const useAiStore = create<AiStore>()(
           return;
         }
 
-        const history = pruneHistoryTokens(buildHistoryForRequest(get().conversation), MAX_HISTORY_TOKENS);
+        // Build history from the PRE-append snapshot (the `conversation` captured at the
+        // top of this method, before the user message was added to the store). Building it
+        // from get().conversation would include the just-added user turn AND we also pass
+        // it as `userMessage` below — duplicating it into two consecutive user turns, which
+        // breaks Gemini's required user/model alternation. This mirrors send().
+        const history = pruneHistoryTokens(buildHistoryForRequest(conversation), MAX_HISTORY_TOKENS);
 
         const controller = new AbortController();
         _abortController = controller;

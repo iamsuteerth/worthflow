@@ -16,7 +16,11 @@ function buildPack(config: PlannerConfig, overrides: PlannerOverrides = {}) {
   const effective = buildEffectiveConfig(config, overrides);
   const result = simulate(effective, overrides);
   const baselineIds = config.investments.accounts.map((a) => a.id);
-  return buildContextPack(result, effective, overrides, baselineIds);
+  // Mirror aiStore.getContextBlock: when a scenario is active, also run the pure
+  // base plan so the pack can carry a grounded base-vs-scenario effect.
+  const hasScenario = (overrides.runtimeEvents?.length ?? 0) > 0;
+  const baseResult = hasScenario ? simulate(config, {}) : undefined;
+  return buildContextPack(result, effective, overrides, baselineIds, undefined, baseResult);
 }
 
 const cfg = baseConfig({
@@ -98,6 +102,49 @@ describe('buildContextPack — instruments come from the engine', () => {
     expect(p.meta.hasActiveScenario).toBe(true);
     expect(p.instruments.some((i) => i.name === 'Scenario FD')).toBe(true);
     expect(p.scenarioChanges.some((s) => s.includes('Scenario FD'))).toBe(true);
+  });
+});
+
+describe('buildContextPack — scenario effect (base vs scenario, grounded)', () => {
+  it('omits scenarioEffect when no scenario is active', () => {
+    const p = buildPack(cfg);
+    expect(p.meta.hasActiveScenario).toBe(false);
+    expect(p.scenarioEffect).toBeUndefined();
+  });
+
+  it('reports base and scenario figures straight from the engine (no re-derivation)', () => {
+    const overrides: PlannerOverrides = {
+      runtimeEvents: [
+        { id: 'rt-1', type: 'ONE_OFF_EXPENSE', month: m('2025-06'), amount: 200_000, label: 'Big spend' },
+      ],
+    };
+    const p = buildPack(cfg, overrides);
+    expect(p.scenarioEffect).toBeDefined();
+    const eff = p.scenarioEffect!;
+    const base = simulate(cfg, {}); // the pure base plan
+    expect(eff.baseFinalNetWorth).toBe(Math.round(base.summary.finalNetWorth));
+    expect(eff.baseLowestCash).toBe(Math.round(base.summary.lowestBalance));
+    expect(eff.baseLowestCashMonth).toBe(base.summary.lowestBalanceMonth);
+    // Scenario side agrees with the pack headline exactly.
+    expect(eff.scenarioFinalNetWorth).toBe(p.headline.finalNetWorth);
+    expect(eff.scenarioLowestCash).toBe(p.headline.lowestCash);
+    // A ₹2 lakh one-off expense lowers final net worth vs the base.
+    expect(eff.scenarioFinalNetWorth).toBeLessThan(eff.baseFinalNetWorth);
+  });
+
+  it('numbers scenarioChanges 1-based, in runtimeEvents order', () => {
+    const overrides: PlannerOverrides = {
+      runtimeEvents: [
+        { id: 'rt-a', type: 'ONE_OFF_EXPENSE', month: m('2025-06'), amount: 1_000, label: 'A' },
+        { id: 'rt-b', type: 'BONUS_INCOME', month: m('2025-07'), amount: 5_000, description: 'B' },
+      ],
+    };
+    const p = buildPack(cfg, overrides);
+    expect(p.scenarioChanges).toHaveLength(2);
+    expect(p.scenarioChanges[0].startsWith('1. ')).toBe(true);
+    expect(p.scenarioChanges[1].startsWith('2. ')).toBe(true);
+    expect(p.scenarioChanges[0]).toContain('One-off expense');
+    expect(p.scenarioChanges[1]).toContain('Bonus income');
   });
 });
 

@@ -8,10 +8,7 @@ import { useUiStore } from '@/store/uiStore';
 import { ThemeContext } from '@/app/theme-context';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import ChatPanel from '@/components/ai/ChatPanel';
-
-const FAB_SIZE = 56;
-const FAB_INSET = 24;
-const PANEL_GAP = 12;
+import { computePanelGeometry, FAB_SIZE, FAB_INSET } from '@/components/ai/aiFabGeometry';
 
 const IO_THRESHOLDS = Array.from({ length: 11 }, (_, i) => i / 10);
 
@@ -37,6 +34,15 @@ export default function AiFab() {
 
   const isMobile = useIsMobile();
   const [liftPx, setLiftPx] = useState(0);
+  // Track viewport so panel geometry (right inset, max height) recomputes on resize
+  // / rotation — not just on scroll.
+  const [viewport, setViewport] = useState({ w: window.innerWidth, h: window.innerHeight });
+
+  useEffect(() => {
+    const onResize = () => setViewport({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   // Footer intersection observer — lifts FAB when footer scrolls into view
   useEffect(() => {
@@ -70,16 +76,19 @@ export default function AiFab() {
   const isOpen = aiPanelOpened;
   const hasKey = keyStatus !== 'absent';
 
-  // Panel dimensions — larger on desktop, near-fullscreen on mobile
-  const panelWidth = isMobile ? undefined : 480;
+  // Panel dimensions — larger on desktop, near-fullscreen on mobile. The desired
+  // height is capped by panelMaxHeight so the panel can never overflow the top of
+  // the viewport as the FAB lifts near the footer (see aiFabGeometry).
   const panelHeight = isMobile
     ? 'calc(100dvh - 104px)'
     : 'min(720px, calc(100vh - 140px))';
-  const panelInset = isMobile ? 16 : FAB_INSET;
 
-  const fabBottom = FAB_INSET + liftPx;
-  const panelBottom = fabBottom + FAB_SIZE + PANEL_GAP;
-  const panelRight = Math.min(panelInset, window.innerWidth - (panelWidth ?? 0) - 8);
+  const { fabBottom, panelBottom, panelRight, panelMaxHeight, panelWidth } = computePanelGeometry({
+    innerWidth: viewport.w,
+    innerHeight: viewport.h,
+    liftPx,
+    isMobile,
+  });
 
   const bg = isDark
     ? 'linear-gradient(145deg, #818cf8 0%, #6366f1 100%)'
@@ -110,6 +119,7 @@ export default function AiFab() {
               right: panelRight,
               width: panelWidth,
               height: panelHeight,
+              maxHeight: panelMaxHeight,
               maxWidth: 'calc(100vw - 32px)',
               zIndex: 200,
               display: 'flex',

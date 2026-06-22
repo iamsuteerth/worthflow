@@ -20,6 +20,7 @@ import { validateAction, resolveAccountName } from '@/ai/actions/validateAction'
 import { checkFeasibility } from '@/ai/actions/checkFeasibility';
 import { applyAction } from '@/ai/actions/applyAction';
 import { dryRun } from '@/ai/actions/dryRun';
+import { describeAction } from '@/ai/actions/describeAction';
 import { usePlannerStore } from '@/store/plannerStore';
 import { baseConfig, account, m } from '@/engine/__tests__/factories';
 import type { ResolvedProposedAction } from '@/ai/actions/actionSchema';
@@ -330,5 +331,53 @@ describe('dryRun (preview — never mutates the live store)', () => {
 
   it('returns null for an unresolvable account', () => {
     expect(dryRun({ kind: 'ADD_INVESTMENT_DEPOSIT', accountName: 'Ghost', month: m('2025-03'), amount: 1000 } as ResolvedProposedAction)).toBeNull();
+  });
+});
+
+// ===========================================================================
+describe('describeAction — EDIT describes only applicable fields', () => {
+  it('drops a field the target type cannot change (one-off expense + rate)', () => {
+    usePlannerStore.getState().addTransientOneOffExpense(m('2025-03'), 1000, 'Trip');
+    // A one-off expense maps amount/month only — rate must NOT appear in the preview.
+    const text = describeAction(valid({ kind: 'EDIT_SCENARIO_EVENT', ref: 1, amount: 2000, rate: 8 }));
+    expect(text).toContain('amount to');
+    expect(text.toLowerCase()).not.toContain('rate');
+  });
+
+  it('describes every applicable field for an FD edit', () => {
+    usePlannerStore.getState().addTransientFd(m('2025-02'), 50_000, 7, 12, 'FD');
+    const text = describeAction(valid({ kind: 'EDIT_SCENARIO_EVENT', ref: 1, amount: 60_000, rate: 8, durationMonths: 24 }));
+    expect(text).toContain('amount to');
+    expect(text).toContain('rate to 8%');
+    expect(text).toContain('duration to 24 months');
+  });
+
+  it('says "no applicable change" when the field does not apply to the target', () => {
+    usePlannerStore.getState().addTransientAccountReturnOverride('acc-1', m('2025-03'), m('2025-06'), 8);
+    // A return override only accepts annualReturn — a bare amount maps to nothing.
+    const text = describeAction(valid({ kind: 'EDIT_SCENARIO_EVENT', ref: 1, amount: 5 }));
+    expect(text.toLowerCase()).toContain('no applicable change');
+  });
+});
+
+// ===========================================================================
+describe('validateAction — ref resolution stays correct with numbered changes', () => {
+  it('resolves a 1-based ref to the matching runtime event id', () => {
+    const store = usePlannerStore.getState();
+    store.addTransientOneOffExpense(m('2025-03'), 1000, 'A'); // ref 1
+    store.addTransientBonusIncome(m('2025-04'), 2000, 'B');   // ref 2
+    const ids = events().map((e) => e.id);
+
+    const edit = validateAction({ kind: 'EDIT_SCENARIO_EVENT', ref: 2, amount: 3000 }, ctxFor());
+    expect(edit.ok).toBe(true);
+    if (edit.ok && edit.action.kind === 'EDIT_SCENARIO_EVENT') {
+      expect(edit.action.targetEventId).toBe(ids[1]);
+    }
+
+    const del = validateAction({ kind: 'DELETE_SCENARIO_EVENT', ref: 1 }, ctxFor());
+    expect(del.ok).toBe(true);
+    if (del.ok && del.action.kind === 'DELETE_SCENARIO_EVENT') {
+      expect(del.action.targetEventId).toBe(ids[0]);
+    }
   });
 });
