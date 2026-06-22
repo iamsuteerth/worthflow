@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ActionIcon, Group, Textarea, Tooltip } from '@mantine/core';
 import { IconSend, IconPlayerStopFilled, IconWand } from '@tabler/icons-react';
+import { looksLikeActionRequest } from '@/ai/actions/intentRouting';
 
 interface Props {
   onSend: (text: string) => void;
@@ -15,7 +16,13 @@ export default function MessageComposer({ onSend, onPropose, onStop, sending }: 
   function handleSend() {
     const trimmed = text.trim();
     if (!trimmed || sending) return;
-    onSend(trimmed);
+    // A clear "create / add / delete …" imperative routes straight to the action flow,
+    // like the wand; everything else is normal chat. The wand stays explicit.
+    if (looksLikeActionRequest(trimmed)) {
+      onPropose(trimmed);
+    } else {
+      onSend(trimmed);
+    }
     setText('');
   }
 

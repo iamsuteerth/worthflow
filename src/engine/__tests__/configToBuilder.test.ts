@@ -1,8 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { builderToConfig } from "@/engine/builderToConfig";
 import { configToBuilder } from "@/engine/configToBuilder";
+import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 import type { BuilderState } from "@/types/builder";
-import { m } from "./factories";
+import type { PlannerOverrides } from "@/types/overrides";
+import { baseConfig, account, m } from "./factories";
 
 const baseState: BuilderState = {
   startMonth: m("2025-01"),
@@ -20,6 +22,53 @@ const baseState: BuilderState = {
   recurringExpenses: [{ id: "re-1", name: "Netflix", amount: 500, startMonth: m("2025-01"), endMonth: m("2025-12"), frequency: "MONTHLY" }],
   instruments: [{ id: "fd-1", type: "FD", name: "HDFC FD", principal: 100_000, rate: 7.5, startMonth: m("2025-02"), durationMonths: 12 }],
 };
+
+describe('configToBuilder — "Keep my edits" promotion (effective config → builder draft)', () => {
+  it("carries scenario accounts, FDs and expenses, but drops baseline-unrepresentable overrides", () => {
+    const cfg = baseConfig({
+      forecast: { startMonth: m("2025-01"), totalMonths: 12 },
+      cash: { openingBalance: 300_000 },
+      investments: {
+        accounts: [account({ id: "base-acc", name: "Base", startMonth: m("2025-01"), defaultMonthlyContribution: 5_000 })],
+        amountOverrides: [],
+        returnOverrides: [],
+      },
+    });
+    const overrides: PlannerOverrides = {
+      scenarioAccounts: [account({ id: "scn", name: "What-If SIP", startMonth: m("2025-02"), openingBalance: 0, defaultMonthlyContribution: 4_000 })],
+      runtimeEvents: [
+        { id: "fd", type: "FD", name: "Scenario FD", principal: 50_000, rate: 7, startMonth: m("2025-03"), durationMonths: 12 },
+        { id: "oe", type: "ONE_OFF_EXPENSE", month: m("2025-04"), amount: 10_000, label: "Trip" },
+        // Override-layer + flows — NOT representable in the baseline-only builder.
+        { id: "ao", type: "ACCOUNT_AMOUNT_OVERRIDE", accountId: "base-acc", startMonth: m("2025-02"), endMonth: m("2025-05"), amount: 9_000 },
+        { id: "dep", type: "INVESTMENT_DEPOSIT", accountId: "base-acc", month: m("2025-03"), amount: 1_000 },
+      ],
+    };
+
+    const draft = configToBuilder(buildEffectiveConfig(cfg, overrides));
+
+    // Carried: the scenario account, the scenario FD, and the one-off expense.
+    expect(draft.investmentAccounts.map((a) => a.id).sort()).toEqual(["base-acc", "scn"]);
+    expect(draft.instruments.map((i) => i.name)).toContain("Scenario FD");
+    expect(draft.oneOffExpenses.map((e) => e.label)).toContain("Trip");
+
+    // Dropped (builder edits the baseline only): amount overrides and deposits.
+    const generated = builderToConfig(draft);
+    expect(generated.investments.amountOverrides).toHaveLength(0);
+  });
+
+  it("a deleted base account is absent from the promoted builder draft", () => {
+    const cfg = baseConfig({
+      investments: {
+        accounts: [account({ id: "keep", name: "Keep" }), account({ id: "gone", name: "Gone" })],
+        amountOverrides: [],
+        returnOverrides: [],
+      },
+    });
+    const draft = configToBuilder(buildEffectiveConfig(cfg, { deletedAccountIds: ["gone"] }));
+    expect(draft.investmentAccounts.map((a) => a.id)).toEqual(["keep"]);
+  });
+});
 
 describe("configToBuilder", () => {
   it("round-trips: builderToConfig(configToBuilder(builderToConfig(s))) equals builderToConfig(s)", () => {

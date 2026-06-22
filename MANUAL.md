@@ -60,7 +60,7 @@ The planner works in two phases:
 1. **Build** — use the **Plan Builder** to describe your current finances (income, expenses, cash, investments, FDs, RDs, and a forecast horizon). This becomes your **Base Plan**.
 2. **Forecast & Explore** — switch to the **Forecast** view to see your projections, then use the **Scenario Lab** to layer temporary "what if" changes on top without touching the Base Plan.
 
-You can switch between "Build Plan" and "Forecast" at any time using the tabs at the top of the app. Re-running the builder generates a brand-new plan from scratch.
+You can switch between "Build Plan" and "Forecast" at any time using the tabs at the top of the app. Re-running the builder generates a brand-new plan. If you have active Scenario Lab changes, opening **Build Plan** asks whether to **Start from base** (the baseline only) or **Keep my edits** (fold your changes into the builder so you can turn them into a new base plan). A few things can't carry over — the builder captures your baseline only, so date-range overrides (spending, contribution, return) and investment deposits/withdrawals are left behind.
 
 # 2. Core Concepts
 
@@ -351,12 +351,15 @@ Whenever you have an active scenario, a banner appears above the dashboard summa
 * A count of total modifications — click it to jump to the **Events** section, showing everything
 * A colored badge per event type (e.g. "Deposit ×2", "Spending Override ×1") — click a badge to jump to the Events section filtered to just that type (use **Show all** to clear the filter)
 * A green **"New account ×N"** badge if your scenario has created new investment accounts (informational only)
+* A red **"Removed base acc ×N"** badge if your scenario has deleted any of your original (base) accounts — a reversible what-if, restored by **Reset**
 
 ## Resetting
 
 The **Reset** button in the Scenario Lab restores your plan to its last loaded/saved baseline: it clears every active scenario modification *and* removes any investment accounts you created during the scenario (and brings back any baseline account you deleted).
 
 An account you create in the Scenario Lab is a **what-if**: it travels with the plan when you save or export (reloading the plan brings it back), but it is **not** part of your base plan, so **Reset always clears it** — even after a save. To make an account a permanent part of your base plan, add it in the **Plan Builder** instead.
+
+Deleting one of your **original (base) accounts** is also a reversible what-if: your base plan keeps the account, the scenario simply hides it (and its overrides, deposits, and withdrawals), and **Reset** brings it back. The Scenario Banner flags it as **"Removed base acc ×N"**.
 
 # 8. Scenario Planning
 
@@ -683,7 +686,7 @@ Good starting questions:
 Beyond answering questions, the assistant can **propose a change** to your scenario that you apply with one click — it never edits your plan on its own.
 
 1. Type what you'd like to try (e.g. *"Add a ₹2,00,000 one-off expense in March 2028"*, *"Create an FD of ₹5 lakh next month"*, or *"Change my spending override to ₹50,000"*).
-2. Click the **wand (✨ "Suggest a change")** button next to Send instead of sending a normal message.
+2. Click the **wand (✨ "Suggest a change")** button — or just **Send** a clear instruction and the assistant treats it as a change automatically. It recognises a leading action verb (*create, add, delete, remove, destroy, set, start, open, deposit, withdraw, change*) or a first-person intent (*"I want to add…"*, *"I'd like you to create…"*). Questions stay normal chat — anything ending in "?" or starting with *can / could / should / how / what / when* (e.g. *"Can I start an FD?"*). If a recognised change still needs a detail — an FD's rate, say — it asks, and warns up front if the amount won't fit that month.
 3. The assistant replies with a **proposed-change card** showing:
    * a plain-language summary of exactly what it would do;
    * an **estimated impact** — how your lowest projected cash and final net worth would change (a preview that does **not** touch your plan);

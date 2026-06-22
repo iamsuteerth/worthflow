@@ -16,11 +16,13 @@ export default function ScenarioBanner() {
   const events = usePlannerStore((s) => s.overrides.runtimeEvents) ?? [];
   const accounts = usePlannerStore((s) => s.config.investments.accounts);
   const baselineAccountIds = usePlannerStore((s) => s.baselineAccountIds);
+  const deletedAccountIds = usePlannerStore((s) => s.overrides.deletedAccountIds) ?? [];
   const navigateToEvents = useUiStore((s) => s.navigateToEvents);
 
   const newAccountCount = accounts.filter((a) => !baselineAccountIds.includes(a.id)).length;
+  const removedAccountCount = deletedAccountIds.length;
 
-  if (events.length === 0 && newAccountCount === 0) return null;
+  if (events.length === 0 && newAccountCount === 0 && removedAccountCount === 0) return null;
 
   const counts: Record<string, number> = {};
   for (const event of events) {
@@ -49,6 +51,11 @@ export default function ScenarioBanner() {
         {newAccountCount > 0 && (
           <Badge color="violet" variant="light" size="sm">
             New account ×{newAccountCount}
+          </Badge>
+        )}
+        {removedAccountCount > 0 && (
+          <Badge color="red" variant="light" size="sm">
+            Removed base acc ×{removedAccountCount}
           </Badge>
         )}
         {Object.entries(counts).map(([type, count]) => {

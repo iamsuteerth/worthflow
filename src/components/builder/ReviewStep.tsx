@@ -101,6 +101,7 @@ function MetricCard({
 
 export default function ReviewStep() {
   const state = useBuilderStore((store) => store.state);
+  const seedSource = useBuilderStore((store) => store.seedSource);
   const loadGeneratedPlan = usePlannerStore((store) => store.loadGeneratedPlan);
   const setActiveView = usePlannerStore((store) => store.setActiveView);
   const overrides = usePlannerStore((store) => store.overrides);
@@ -111,12 +112,23 @@ export default function ReviewStep() {
 
   const [confirmOpened, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
 
-  // What the active plan's override layer would lose on regeneration. Only present
-  // once the user has built up Scenario Lab changes — i.e. on a 2nd+ plan.
-  const droppedItems = useMemo(
-    () => summarizeDroppedScenarioData(overrides.runtimeEvents ?? [], savedScenarios.length),
-    [overrides.runtimeEvents, savedScenarios.length]
-  );
+  // What regeneration would actually drop. When the draft was seeded from the baseline
+  // (default), every override is discarded. When it was seeded from the effective plan
+  // ("Keep my edits"), the builder already carries baseline-representable items, so only
+  // the override-layer events it can't represent are truly lost.
+  const droppedItems = useMemo(() => {
+    const all = overrides.runtimeEvents ?? [];
+    const NON_CARRYING: RuntimeEvent["type"][] = [
+      "SPENDING_OVERRIDE",
+      "ACCOUNT_AMOUNT_OVERRIDE",
+      "ACCOUNT_RETURN_OVERRIDE",
+      "INVESTMENT_DEPOSIT",
+      "INVESTMENT_WITHDRAWAL",
+    ];
+    const events =
+      seedSource === "effective" ? all.filter((e) => NON_CARRYING.includes(e.type)) : all;
+    return summarizeDroppedScenarioData(events, savedScenarios.length);
+  }, [overrides.runtimeEvents, savedScenarios.length, seedSource]);
 
   const config = useMemo(() => builderToConfig(state), [state]);
 

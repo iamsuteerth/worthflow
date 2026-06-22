@@ -135,6 +135,8 @@ function ScheduleTimeline({
 
 function DeleteAccountAction({ accountId, accountName }: { accountId: string; accountName: string }) {
   const deleteAccount = usePlannerStore((s) => s.deleteInvestmentAccount);
+  const baselineAccountIds = usePlannerStore((s) => s.baselineAccountIds);
+  const isBaseAccount = baselineAccountIds.includes(accountId);
   const [opened, { open, close }] = useDisclosure(false);
 
   return (
@@ -142,8 +144,11 @@ function DeleteAccountAction({ accountId, accountName }: { accountId: string; ac
       <Modal opened={opened} onClose={close} title="Delete Account" centered size="sm">
         <Stack gap="sm">
           <Text size="sm">
-            Delete <Text span fw={700}>{accountName}</Text>? This removes all of its amount
-            overrides, return overrides, deposits, and withdrawals. This cannot be undone.
+            Delete <Text span fw={700}>{accountName}</Text>? This removes its amount overrides,
+            return overrides, deposits, and withdrawals.{" "}
+            {isBaseAccount
+              ? "It becomes a scenario change you can undo with Reset."
+              : "This account was added in a scenario, so it's removed for good."}
           </Text>
           <Group justify="flex-end" gap="xs" mt="xs">
             <Button variant="default" size="xs" onClick={close}>Cancel</Button>

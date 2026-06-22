@@ -47,6 +47,23 @@ describe("buildEffectiveConfig — scenario accounts (what-if)", () => {
     expect(config.investments.accounts).toHaveLength(1);
   });
 
+  it("filters a deleted base account (and its base overrides) out of the effective config", () => {
+    const config = baseConfig({
+      investments: {
+        accounts: [account({ id: "keep", name: "Keep" }), account({ id: "drop", name: "Drop" })],
+        amountOverrides: [
+          { id: "ao", accountId: "drop", startMonth: m("2025-02"), endMonth: m("2025-03"), amount: 1_000 },
+        ],
+        returnOverrides: [],
+      },
+    });
+    const result = buildEffectiveConfig(config, { deletedAccountIds: ["drop"] });
+    expect(result.investments.accounts.map((a) => a.id)).toEqual(["keep"]);
+    expect(result.investments.amountOverrides).toHaveLength(0); // its base override goes too
+    // baseConfig is never mutated.
+    expect(config.investments.accounts).toHaveLength(2);
+  });
+
   it("lets an account override target a scenario-created account (materialised first)", () => {
     const config = baseConfig({
       investments: { accounts: [], amountOverrides: [], returnOverrides: [] },

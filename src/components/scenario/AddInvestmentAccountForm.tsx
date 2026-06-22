@@ -10,6 +10,12 @@ import { forecastEndMonth } from "@/engine/dateUtils";
 import type { MonthKey } from "@/types/simulation";
 import MonthSelect from "@/components/common/MonthSelect";
 
+const labelStyle = {
+  minHeight: 42,
+  display: "flex",
+  alignItems: "flex-end",
+};
+
 export default function AddInvestmentAccountForm() {
   const config = usePlannerStore((s) => s.config);
   const overrides = usePlannerStore((s) => s.overrides);
@@ -80,6 +86,7 @@ export default function AddInvestmentAccountForm() {
         <Grid.Col span={6}>
           <NumberInput
             label="Default Monthly Contribution"
+            styles={{ label: labelStyle }}
             value={defaultMonthlyContribution}
             min={0}
             thousandSeparator=","
@@ -90,6 +97,7 @@ export default function AddInvestmentAccountForm() {
         <Grid.Col span={6}>
           <NumberInput
             label="Default Annual Return"
+            styles={{ label: labelStyle }}
             value={defaultAnnualReturn}
             min={-99.99}
             max={1000}

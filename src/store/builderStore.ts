@@ -33,6 +33,12 @@ const initialState: BuilderState = {
 interface BuilderStore {
   state: BuilderState;
 
+  // How the draft was seeded when entering the builder: "base" (from baseConfig, the
+  // default) or "effective" (base + active scenario changes folded in — "Keep my edits").
+  // ReviewStep reads this to describe exactly what a regenerate would drop.
+  seedSource: "base" | "effective";
+  setSeedSource: (source: "base" | "effective") => void;
+
   setForecast: (startMonth: MonthKey, totalMonths: number) => void;
 
   setBaseline: (
@@ -69,6 +75,9 @@ interface BuilderStore {
 
 export const useBuilderStore = create<BuilderStore>((set) => ({
   state: initialState,
+
+  seedSource: "base",
+  setSeedSource: (seedSource) => set({ seedSource }),
 
   setForecast: (startMonth, totalMonths) =>
     set((store) => ({ state: { ...store.state, startMonth, totalMonths } })),
@@ -226,5 +235,5 @@ export const useBuilderStore = create<BuilderStore>((set) => ({
   setState: (updater) =>
     set((store) => ({ state: { ...store.state, ...updater } })),
 
-  reset: () => set({ state: initialState }),
+  reset: () => set({ state: initialState, seedSource: "base" }),
 }));

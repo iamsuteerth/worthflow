@@ -201,4 +201,15 @@ describe("importPlan — runtime-event round trip (regression: the import union 
     // It must NOT have been folded into the base plan on load.
     expect(result.baseConfig.investments.accounts.map((a) => a.id)).not.toContain("scn-1");
   });
+
+  it("round-trips deletedAccountIds (a hidden base account)", async () => {
+    const file = await makeWfPlanFile({
+      ...validPlan,
+      overrides: { deletedAccountIds: ["acc-1"] },
+    });
+    const result = await importPlan(file);
+    expect(result.overrides.deletedAccountIds).toEqual(["acc-1"]);
+    // The base account itself is still present in baseConfig (just hidden by the override).
+    expect(result.baseConfig.investments.accounts.map((a) => a.id)).toContain("acc-1");
+  });
 });

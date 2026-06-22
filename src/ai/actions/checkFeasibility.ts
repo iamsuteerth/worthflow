@@ -4,6 +4,7 @@ import {
   getAccountValueAtMonth,
 } from '@/store/plannerStore';
 import { buildEffectiveConfig } from '@/engine/buildEffectiveConfig';
+import { generateMonths } from '@/engine/dateUtils';
 import { money } from '@/format/money';
 import { formatMonth } from '@/engine/monthFormatting';
 import { resolveAccountName } from '@/ai/actions/validateAction';
@@ -18,8 +19,6 @@ import type { MonthKey } from '@/types/simulation';
 import type { ResolvedProposedAction } from '@/ai/actions/actionSchema';
 
 // ---------------------------------------------------------------------------
-// checkFeasibility — layer 1.5 (PHASE2.dev.md §4 / §6 "pre-flag impossibility").
-//
 // Decides, against the LIVE plan, whether an applied action would actually take
 // effect — replicating the same caps the Scenario Lab forms enforce (available
 // cash, account balance, override overlap, an account's start month, edit caps).
@@ -151,6 +150,56 @@ export function checkFeasibility(action: ResolvedProposedAction): FeasibilityRes
     case 'EDIT_SCENARIO_EVENT':
       return checkEditFeasibility(action, events, baseConfig, overrides);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Early affordability hint (Q1) — ADVISORY ONLY.
+//
+// When the model clarifies a still-incomplete FD/RD/deposit/withdrawal/new-account
+// (e.g. it has the amount + month but still needs a rate/duration), it can include
+// an { kind, amount, month, accountName? } hint. We pre-flag affordability from just
+// the value + month so the user isn't asked for more details about something that
+// won't fit. This NEVER gates anything — checkFeasibility (above) and the store guards
+// remain the authority on a fully-formed action. Returns a warning string, or null
+// when affordable / not assessable (fail-open, so we never warn spuriously).
+//
+// Long-term this should become structured clarify fields rather than a model hint;
+// this interim keeps the deterministic feasibility checks authoritative.
+// ---------------------------------------------------------------------------
+export function affordabilityWarning(hint: unknown): string | null {
+  if (!hint || typeof hint !== 'object') return null;
+  const h = hint as { kind?: unknown; amount?: unknown; month?: unknown; accountName?: unknown };
+
+  const amount = typeof h.amount === 'number' ? h.amount : NaN;
+  const month = typeof h.month === 'string' ? h.month : '';
+  const kind = typeof h.kind === 'string' ? h.kind.toUpperCase() : '';
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return null;
+
+  const { config, overrides } = usePlannerStore.getState();
+  const months = generateMonths(config.forecast.startMonth, config.forecast.totalMonths);
+  if (!months.includes(month as MonthKey)) return null; // window is validateAction's job
+
+  // A withdrawal is gated by the account's balance, not free cash — needs the account.
+  if (kind.includes('WITHDRAW')) {
+    const name = typeof h.accountName === 'string' ? h.accountName : '';
+    const resolved = resolveAccountName(name, config.investments.accounts.map((a) => a.name));
+    if (!resolved.ok) return null;
+    const acct = config.investments.accounts.find((a) => a.name === resolved.name);
+    if (!acct) return null;
+    const cap = getAccountValueAtMonth(config, overrides, acct.id, month as MonthKey);
+    if (amount > cap) {
+      return `Heads up — ${acct.name} only holds about ${money(cap)} in ${formatMonth(month as MonthKey)}, so a ${money(amount)} withdrawal won't fit.`;
+    }
+    return null;
+  }
+
+  // FD principal / RD contribution / deposit / new-account opening → free cash that month.
+  const cap = getAvailableCash(config, overrides, month as MonthKey);
+  if (amount > cap) {
+    return `Heads up — only about ${money(cap)} is free in ${formatMonth(month as MonthKey)}, so ${money(amount)} may not fit.`;
+  }
+  return null;
 }
 
 function resolveAcct(

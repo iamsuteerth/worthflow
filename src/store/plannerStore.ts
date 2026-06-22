@@ -344,16 +344,19 @@ export const usePlannerStore = create<PlannerStore>()(
 
       deleteInvestmentAccount: (accountId) =>
         set((s) => {
-          const baseConfig = structuredClone(s.baseConfig);
-          baseConfig.investments.accounts = baseConfig.investments.accounts.filter(
+          // A scenario-created account is removed outright; a base ("original") account
+          // is HIDDEN via a reversible what-if (deletedAccountIds) — baseConfig is never
+          // mutated, so Reset can bring it back. Either way, cascade its scenario events.
+          const scenarioAccounts = (s.overrides.scenarioAccounts ?? []).filter(
             (a) => a.id !== accountId
           );
-          baseConfig.investments.amountOverrides = baseConfig.investments.amountOverrides.filter(
-            (o) => o.accountId !== accountId
-          );
-          baseConfig.investments.returnOverrides = baseConfig.investments.returnOverrides.filter(
-            (o) => o.accountId !== accountId
-          );
+
+          const isBaseAccount = s.baseConfig.investments.accounts.some((a) => a.id === accountId);
+          const prevDeleted = s.overrides.deletedAccountIds ?? [];
+          const deletedAccountIds =
+            isBaseAccount && !prevDeleted.includes(accountId)
+              ? [...prevDeleted, accountId]
+              : prevDeleted;
 
           const runtimeEvents = (s.overrides.runtimeEvents ?? []).filter((e) => {
             if (
@@ -367,13 +370,12 @@ export const usePlannerStore = create<PlannerStore>()(
             return true;
           });
 
-          // The account may be a base account (removed from baseConfig above) or a
-          // scenario-created one (removed here). Either way its overrides are cascaded.
-          const scenarioAccounts = (s.overrides.scenarioAccounts ?? []).filter(
-            (a) => a.id !== accountId
-          );
-
-          return rebuild(baseConfig, { ...s.overrides, scenarioAccounts, runtimeEvents });
+          return rebuild(s.baseConfig, {
+            ...s.overrides,
+            scenarioAccounts,
+            deletedAccountIds,
+            runtimeEvents,
+          });
         }),
 
       addTransientAccountAmountOverride: (accountId, startMonth, endMonth, amount) =>

@@ -27,6 +27,20 @@ export function buildEffectiveConfig(
     }
   }
 
+  // Base accounts hidden by a scenario: drop them and their base contribution/return
+  // overrides from the effective config. A reversible what-if — baseConfig is untouched,
+  // so Reset (which clears overrides) brings the account back.
+  if (overrides.deletedAccountIds?.length) {
+    const deleted = new Set(overrides.deletedAccountIds);
+    config.investments.accounts = config.investments.accounts.filter((a) => !deleted.has(a.id));
+    config.investments.amountOverrides = config.investments.amountOverrides.filter(
+      (o) => !deleted.has(o.accountId)
+    );
+    config.investments.returnOverrides = config.investments.returnOverrides.filter(
+      (o) => !deleted.has(o.accountId)
+    );
+  }
+
   if (!overrides.runtimeEvents) return config;
 
   for (const event of overrides.runtimeEvents) {

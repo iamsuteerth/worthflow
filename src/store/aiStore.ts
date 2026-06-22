@@ -38,6 +38,7 @@ import { SYSTEM_PROMPT, ACTION_CONTRACT } from '@/ai/config';
 
 import { validateAction } from '@/ai/actions/validateAction';
 import { applyAction } from '@/ai/actions/applyAction';
+import { affordabilityWarning } from '@/ai/actions/checkFeasibility';
 import { describeAction } from '@/ai/actions/describeAction';
 
 import {
@@ -659,10 +660,14 @@ export const useAiStore = create<AiStore>()(
             controller.signal,
           );
 
-          // The model may decline to pick one change when several were asked for.
+          // The model may decline to pick one change when several were asked for, or
+          // ask for a missing detail. When it clarifies an FD/RD/deposit/withdrawal/new
+          // account it can attach an affordability hint (value + month) so we can warn
+          // early that it won't fit — advisory only; the real gate is on the final action.
           const clarify = extractClarify(result.proposedActionJson);
           if (clarify) {
-            appendAssistant(set, get, { text: clarify }, contextEpoch);
+            const warning = affordabilityWarning(extractAffordability(result.proposedActionJson));
+            appendAssistant(set, get, { text: warning ? `${warning}\n\n${clarify}` : clarify }, contextEpoch);
             return;
           }
 
@@ -846,6 +851,15 @@ function extractClarify(json: unknown): string | null {
   if (json && typeof json === 'object' && !Array.isArray(json)) {
     const c = (json as { clarify?: unknown }).clarify;
     if (typeof c === 'string' && c.trim()) return c.trim();
+  }
+  return null;
+}
+
+// The optional { kind, amount, month, accountName? } hint a clarify reply may carry, so
+// affordability can be pre-flagged before all fields are collected (see affordabilityWarning).
+function extractAffordability(json: unknown): unknown {
+  if (json && typeof json === 'object' && !Array.isArray(json)) {
+    return (json as { affordability?: unknown }).affordability ?? null;
   }
   return null;
 }

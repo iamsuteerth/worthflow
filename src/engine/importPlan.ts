@@ -226,6 +226,7 @@ const ScenarioAccountSchema = z.object({
 const PlannerOverridesSchema = z.object({
   runtimeEvents: z.array(RuntimeEventSchema).optional(),
   scenarioAccounts: z.array(ScenarioAccountSchema).optional(),
+  deletedAccountIds: z.array(z.string()).optional(),
 });
 
 const SavedScenarioSchema = z.object({

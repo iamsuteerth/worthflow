@@ -16,6 +16,12 @@ export interface PlannerOverrides {
   // them exactly like a base account. To make an account permanent, add it in the Builder.
   scenarioAccounts?: InvestmentAccount[];
 
+  // Base ("original") accounts hidden by a scenario, by id. A reversible what-if:
+  // baseConfig keeps the account, buildEffectiveConfig filters it (and its base
+  // overrides) out of the effective config, and Reset clears this list to bring it
+  // back. Symmetric with scenarioAccounts; surfaced as "Removed base acc ×N".
+  deletedAccountIds?: string[];
+
   monthlyExpenses?: Record<
     MonthKey,
     number

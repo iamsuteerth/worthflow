@@ -74,13 +74,17 @@ describe('plannerStore — resetOverrides fully restores the baseline', () => {
     expect(scenarioAccounts()).toHaveLength(0);
   });
 
-  it('brings back a baseline account deleted during the scenario', () => {
+  it('hides a deleted base account reversibly (baseConfig untouched) and Reset brings it back', () => {
     usePlannerStore.getState().deleteInvestmentAccount('acc-1');
-    expect(baseAccounts()).toHaveLength(0);
+    // Hidden from the effective config, but baseConfig is never mutated.
+    expect(effectiveAccounts()).toHaveLength(0);
+    expect(baseAccounts().map((a) => a.id)).toEqual(['acc-1']);
+    expect(usePlannerStore.getState().overrides.deletedAccountIds).toEqual(['acc-1']);
 
     usePlannerStore.getState().resetOverrides();
 
-    expect(baseAccounts().map((a) => a.id)).toEqual(['acc-1']);
+    expect(effectiveAccounts().map((a) => a.id)).toEqual(['acc-1']);
+    expect(usePlannerStore.getState().overrides.deletedAccountIds ?? []).toHaveLength(0);
   });
 
   it('clears all scenario overrides', () => {
@@ -117,6 +121,8 @@ describe('plannerStore — cascade + deletion', () => {
     expect(scenarioAccounts()).toHaveLength(0);
     expect(events().some((e) => 'accountId' in e && e.accountId === id)).toBe(false);
     expect(effectiveAccounts().map((a) => a.id)).toEqual(['acc-1']);
+    // A scenario account is removed outright — it never enters deletedAccountIds.
+    expect(usePlannerStore.getState().overrides.deletedAccountIds ?? []).toHaveLength(0);
   });
 });
 
