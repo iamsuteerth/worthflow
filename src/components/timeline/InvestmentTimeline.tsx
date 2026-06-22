@@ -12,6 +12,7 @@ import { money } from "@/format/money";
 import { EmptyState } from "@/components/ui";
 
 const INVESTMENT_TYPES = new Set([
+  "ACCOUNT_CREATED",
   "ACCOUNT_AMOUNT_OVERRIDE",
   "ACCOUNT_RETURN_OVERRIDE",
   "INVESTMENT_DEPOSIT",
@@ -63,6 +64,10 @@ export default function InvestmentTimeline() {
                       <Text fw={700} size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
                         {event.type === "ACCOUNT_RETURN_OVERRIDE"
                           ? `${event.amount.toFixed(2)}%`
+                          : event.type === "ACCOUNT_CREATED"
+                          ? event.amount > 0
+                            ? `Opening ${money(event.amount)}`
+                            : "Opened"
                           : money(event.amount)}
                       </Text>
                     </Stack>

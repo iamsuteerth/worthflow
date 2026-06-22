@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { simulate } from "@/engine/simulate";
+import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 import type { PlannerConfig } from "@/types/config";
 import type { PlannerOverrides } from "@/types/overrides";
 
@@ -19,6 +20,60 @@ function makeConfig(overrides: Partial<PlannerConfig> = {}): PlannerConfig {
     ...overrides,
   };
 }
+
+// ─── Account-created events ──────────────────────────────────────────────────
+
+describe("simulate — ACCOUNT_CREATED events", () => {
+  it("emits an ACCOUNT_CREATED event in an account's start month with its opening", () => {
+    const cfg = makeConfig({
+      cash: { openingBalance: 500_000 },
+      investments: {
+        accounts: [
+          { id: "a1", name: "Index Fund", startMonth: "2025-01", openingBalance: 100_000, defaultAnnualReturn: 12, defaultMonthlyContribution: 0 },
+        ],
+        amountOverrides: [],
+        returnOverrides: [],
+      },
+    });
+    const { rows } = simulate(cfg);
+    const created = rows.flatMap((r) => r.events).filter((e) => e.type === "ACCOUNT_CREATED");
+    expect(created).toHaveLength(1);
+    expect(created[0]).toMatchObject({ month: "2025-01", accountId: "a1", amount: 100_000, description: "Index Fund" });
+  });
+
+  it("uses the funded (clamped) opening for a future-dated account", () => {
+    const cfg = makeConfig({
+      forecast: { startMonth: "2025-01", totalMonths: 6 },
+      cash: { openingBalance: 30_000 },
+      income: { monthly: 0 },
+      expenses: { defaultMonthly: 0, overrides: {} },
+      investments: {
+        accounts: [
+          // Opening 100k but only 30k cash is available at the start month → funded clamps to 30k.
+          { id: "a1", name: "Future", startMonth: "2025-03", openingBalance: 100_000, defaultAnnualReturn: 0, defaultMonthlyContribution: 0 },
+        ],
+        amountOverrides: [],
+        returnOverrides: [],
+      },
+    });
+    const created = simulate(cfg).rows.flatMap((r) => r.events).find((e) => e.type === "ACCOUNT_CREATED");
+    expect(created).toMatchObject({ month: "2025-03", accountId: "a1", amount: 30_000 });
+  });
+
+  it("emits ACCOUNT_CREATED for a scenario-created (overrides.scenarioAccounts) account", () => {
+    const cfg = makeConfig({ cash: { openingBalance: 200_000 } });
+    const overrides: PlannerOverrides = {
+      scenarioAccounts: [
+        { id: "scn-1", name: "What-If SIP", startMonth: "2025-02", openingBalance: 0, defaultAnnualReturn: 10, defaultMonthlyContribution: 5_000 },
+      ],
+    };
+    // Mirror the real call path: the store passes the EFFECTIVE config (base + scenario
+    // accounts materialised by buildEffectiveConfig) into simulate.
+    const effective = buildEffectiveConfig(cfg, overrides);
+    const created = simulate(effective, overrides).rows.flatMap((r) => r.events).find((e) => e.type === "ACCOUNT_CREATED");
+    expect(created).toMatchObject({ month: "2025-02", accountId: "scn-1", description: "What-If SIP", amount: 0 });
+  });
+});
 
 // ─── Row count & month labels ────────────────────────────────────────────────
 

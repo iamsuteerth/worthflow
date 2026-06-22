@@ -567,6 +567,7 @@ Displays all financial events chronologically, with category filter chips.
 
 A read-only visual timeline of investment-related activity only:
 
+* Account creation (each account is marked in the month it opens, with its opening balance)
 * Deposits
 * Withdrawals
 * Amount Overrides
@@ -690,7 +691,8 @@ Beyond answering questions, the assistant can **propose a change** to your scena
 4. If a change *can't* be applied — say, an FD bigger than your available cash, or a spending override that overlaps an existing one — the card **flags it up front** with the reason and disables **Apply**, so you never hit a dead end. Adjust your request and try again.
 5. **Apply** makes the change through the *same checks the Scenario Lab uses*. It then appears in your Scenario Banner and Events list like any other scenario edit.
    * Newly **added** items offer one-click **Undo**.
-   * **Edits**, **removals**, and **new investment accounts** don't have an in-chat undo — if you want to roll them back, load a saved plan.
+   * **Edits** and **removals** of existing changes don't have an in-chat undo — to roll them back, load a saved plan.
+   * A **new investment account** appears in **Investment Accounts** with an "Added" badge — remove it there, or clear it with **Reset** (it's a what-if, not part of your base plan).
 6. **Dismiss** discards the suggestion; nothing changes.
 
 ### What it can do

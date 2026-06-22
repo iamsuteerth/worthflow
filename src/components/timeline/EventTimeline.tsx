@@ -15,7 +15,10 @@ import { getEventVisual } from "@/theme/eventVisuals";
 import { money } from "@/format/money";
 import { EmptyState } from "@/components/ui";
 
+// Account-level events belong to the dedicated Investment Timeline, not the
+// general chronological one (keeps this view about cash/income/instrument flow).
 const EXCLUDED_TYPES = new Set([
+  "ACCOUNT_CREATED",
   "ACCOUNT_AMOUNT_OVERRIDE",
   "ACCOUNT_RETURN_OVERRIDE",
 ]);

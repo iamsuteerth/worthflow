@@ -203,7 +203,7 @@ The dashboard offers eight focused views, all driven by a single global month-ra
 | **Instruments** | Every FD/RD — rate, duration, maturity month, principal, interest, maturity value |
 | **One-Offs** | All one-off expenses with month and amount |
 | **Timeline** | Chronological view of all financial events |
-| **Investment Timeline** | Timeline focused on investment-related activity (deposits, withdrawals, overrides) |
+| **Investment Timeline** | Timeline focused on investment-related activity (account creation, deposits, withdrawals, overrides) |
 | **Investment Accounts** | Per-account value, visual contribution/return schedule, overrides, XIRR, and deletion |
 
 ## 💾 Save, Import & Export

@@ -9,6 +9,7 @@ import {
   IconCoins,
   IconCurrencyRupee,
   IconPigMoney,
+  IconCirclePlus,
   IconRepeat,
   IconTrendingUp,
   IconWallet,
@@ -107,6 +108,12 @@ const VISUALS: Record<string, EventVisual> = {
     color: "teal",
     polarity: "positive",
     Icon: IconArrowUp,
+  },
+  ACCOUNT_CREATED: {
+    label: "Account Created",
+    color: "violet",
+    polarity: "neutral",
+    Icon: IconCirclePlus,
   },
   ACCOUNT_AMOUNT_OVERRIDE: {
     label: "Amount Override",

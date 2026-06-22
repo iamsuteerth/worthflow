@@ -288,8 +288,24 @@ export function simulate(
           rangeEnd: e.endMonth,
         })) ?? [];
 
+    // An account "opens" in its start month — surfaced as an event so the Investment
+    // Timeline reflects when each account (base or scenario-created) came into the plan.
+    // The amount is what was actually seeded: the funded opening for a future-dated
+    // account (clamped to cash), or the configured opening for one held from the start.
+    const accountCreatedEvents = accounts
+      .filter((account) => account.startMonth === month)
+      .map((account) => ({
+        id: `${account.id}-created`,
+        month,
+        type: "ACCOUNT_CREATED" as const,
+        amount: seededOpenings[account.id] ?? account.openingBalance,
+        accountId: account.id,
+        description: account.name,
+      }));
+
     const events = [
       ...buildCashflowEvents(config, month),
+      ...accountCreatedEvents,
       ...accountAmountOverrideEvents,
       ...accountReturnOverrideEvents,
       ...investmentDepositEvents,

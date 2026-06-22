@@ -19,8 +19,8 @@ const TABS: { value: DashboardTabValue; label: string }[] = [
   { value: "instruments", label: "Instruments" },
   { value: "expenses", label: "One-Offs" },
   { value: "timeline", label: "Timeline" },
-  { value: "investments", label: "Inv. Timeline" },
-  { value: "accounts", label: "Accounts" },
+  { value: "investments", label: "Investments Timeline" },
+  { value: "accounts", label: "Investment Accounts" },
 ];
 
 const PANELS: Record<DashboardTabValue, React.ReactNode> = {
