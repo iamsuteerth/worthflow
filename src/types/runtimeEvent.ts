@@ -110,7 +110,15 @@ export interface RuntimeOpeningCashOverride {
   amount: number;
 }
 
-export type RuntimeEvent =
+// Provenance stamped when an AI-proposed change is applied: the id of the chat
+// message that proposed it. The proposal card derives its "applied" state from the
+// plan carrying this tag — never from synced chat metadata — so the UI can't lie and
+// applying the same proposal twice is impossible. Optional: UI-created changes omit it.
+interface RuntimeEventProvenance {
+  sourceProposalId?: string;
+}
+
+export type RuntimeEvent = (
   | RuntimeOneOffExpense
   | RuntimeFixedDeposit
   | RuntimeRecurringDeposit
@@ -123,4 +131,5 @@ export type RuntimeEvent =
   | RuntimeInvestmentWithdrawal
   | RuntimeRecurringExpense
   | RuntimeSpendingOverride
-  | RuntimeOpeningCashOverride;
+  | RuntimeOpeningCashOverride
+) & RuntimeEventProvenance;

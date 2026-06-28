@@ -48,15 +48,7 @@ export function notifyAiChatCompacted() {
 export function notifyAiActionApplied() {
   notifications.show({
     color: 'teal',
-    message: 'Change applied to your scenario. You can undo it from the chat.',
+    message: 'Change applied to your scenario. Undo or redo it from the scenario bar.',
     autoClose: 5000,
-  });
-}
-
-export function notifyAiActionUndone() {
-  notifications.show({
-    color: 'gray',
-    message: 'Change undone.',
-    autoClose: 3000,
   });
 }

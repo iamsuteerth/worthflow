@@ -213,6 +213,36 @@ describe("importPlan — runtime-event round trip (regression: the import union 
     expect(result.baseConfig.investments.accounts.map((a) => a.id)).toContain("acc-1");
   });
 
+  it("preserves an AI provenance tag (sourceProposalId) on events and scenario accounts", async () => {
+    const overrides = {
+      scenarioAccounts: [
+        { id: "scn", name: "AI SIP", startMonth: "2025-03", openingBalance: 0, defaultAnnualReturn: 10, defaultMonthlyContribution: 4_000, sourceProposalId: "msg-acct" },
+      ],
+      runtimeEvents: [
+        { id: "e", type: "ONE_OFF_EXPENSE", month: "2025-03", amount: 1_000, label: "x", sourceProposalId: "msg-1" },
+      ],
+    };
+    const file = await makeWfPlanFile({ ...validPlan, overrides });
+    const result = await importPlan(file);
+    expect(result.overrides.runtimeEvents?.[0].sourceProposalId).toBe("msg-1");
+    expect(result.overrides.scenarioAccounts?.[0].sourceProposalId).toBe("msg-acct");
+  });
+
+  it("round-trips the undo/redo history so the timeline is identical on every device", async () => {
+    const history = {
+      past: [
+        {},
+        { runtimeEvents: [{ id: "e1", type: "ONE_OFF_EXPENSE", month: "2025-03", amount: 1_000, label: "A" }] },
+      ],
+      future: [
+        { runtimeEvents: [{ id: "e2", type: "BONUS_INCOME", month: "2025-04", amount: 5_000, description: "B" }] },
+      ],
+    };
+    const file = await makeWfPlanFile({ ...validPlan, history });
+    const result = await importPlan(file);
+    expect(result.history).toEqual(history);
+  });
+
   it("round-trips the full override stack together (scenarioAccounts + deletedAccountIds + events)", async () => {
     const overrides = {
       scenarioAccounts: [

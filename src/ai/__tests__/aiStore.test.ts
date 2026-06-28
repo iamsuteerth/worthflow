@@ -59,7 +59,6 @@ vi.mock('@/ai/aiNotifications', () => ({
   notifyIndexedDbUnavailable: () => {},
   notifyAiChatCompacted: () => {},
   notifyAiActionApplied: () => {},
-  notifyAiActionUndone: () => {},
 }));
 
 import { useAiStore, aiPersistPartialize, mergeConversations } from '@/store/aiStore';
@@ -79,7 +78,7 @@ beforeEach(() => {
   h.cloud.conversation = null;
   h.cloud.etag = null;
   useAiStore.getState().clearForSignOut();
-  usePlannerStore.setState({ baseConfig: planCfg, config: planCfg, overrides: {}, baselineAccountIds: [] });
+  usePlannerStore.setState({ baseConfig: planCfg, config: planCfg, overrides: {}, baselineAccountIds: [], history: { past: [], future: [] } });
 });
 
 afterEach(() => {
@@ -188,20 +187,30 @@ describe('aiStore — assisted actions (Phase 2)', () => {
     expect(usePlannerStore.getState().overrides.runtimeEvents ?? []).toHaveLength(0);
   });
 
-  it('applies on confirm (one runtime event) and undoes it exactly', async () => {
+  it('applies on confirm (one tagged runtime event), is idempotent, and undoes via the planner', async () => {
     await useAiStore.getState().setupKey('AIzaTESTKEY', 'passphrase1');
     await useAiStore.getState().proposeAction('add a big expense');
     const id = useAiStore.getState().conversation.messages.find((m) => m.proposedAction)!.id;
 
     useAiStore.getState().applyProposedAction(id);
-    const applied = useAiStore.getState().conversation.messages.find((m) => m.id === id)!;
-    expect(applied.actionStatus).toBe('applied');
-    expect(applied.appliedEventId).toBeTruthy();
+    // "applied" is derived from the plan — the event is tagged with the message id.
+    const evs = usePlannerStore.getState().overrides.runtimeEvents ?? [];
+    expect(evs).toHaveLength(1);
+    expect(evs[0].sourceProposalId).toBe(id);
+
+    // Re-applying the same proposal must never double-count (the bug this closes).
+    useAiStore.getState().applyProposedAction(id);
+    useAiStore.getState().applyProposedAction(id);
     expect(usePlannerStore.getState().overrides.runtimeEvents ?? []).toHaveLength(1);
 
-    useAiStore.getState().undoProposedAction(id);
+    // The scenario undo (shared across the app) reverts it in one step.
+    usePlannerStore.getState().undo();
     expect(usePlannerStore.getState().overrides.runtimeEvents ?? []).toHaveLength(0);
-    expect(useAiStore.getState().conversation.messages.find((m) => m.id === id)!.actionStatus).toBe('pending');
+    // Redo brings it back, tag intact.
+    usePlannerStore.getState().redo();
+    const after = usePlannerStore.getState().overrides.runtimeEvents ?? [];
+    expect(after).toHaveLength(1);
+    expect(after[0].sourceProposalId).toBe(id);
   });
 
   it('dismiss changes nothing', async () => {

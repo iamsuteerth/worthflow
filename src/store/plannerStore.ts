@@ -20,6 +20,17 @@ import { uniquifyAccountName } from "@/utils/uniquifyAccountName";
 
 export type AppView = "builder" | "forecast";
 
+// Undo/redo stacks for the scenario (override) layer. Each entry is a full snapshot of
+// `overrides` at a point in time. Capped so the history can't grow unbounded.
+export interface PlannerHistory {
+  past: PlannerOverrides[];
+  future: PlannerOverrides[];
+}
+
+export const HISTORY_LIMIT = 50;
+
+const emptyHistory: PlannerHistory = { past: [], future: [] };
+
 interface PlannerStore {
   baseConfig: PlannerConfig;
   overrides: PlannerOverrides;
@@ -34,6 +45,15 @@ interface PlannerStore {
   // accounts added in the scenario, bring back ones deleted). Kept in lockstep with
   // pristineSnapshot (set at every load/save).
   baselineConfig: PlannerConfig;
+
+  // Undo/redo for scenario changes. `past`/`future` are snapshots of `overrides`; every
+  // scenario mutation pushes the prior overrides onto `past` and clears `future` (a new
+  // action can't fork the timeline). Persisted with the plan so it travels across devices.
+  history: PlannerHistory;
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
 
   setActiveView: (view: AppView) => void;
 
@@ -97,6 +117,10 @@ interface PlannerStore {
   updateRuntimeEvent: (id: string, changes: Partial<RuntimeEvent>) => void;
   deleteRuntimeEvent: (id: string) => void;
 
+  // Stamp a just-created scenario change (runtime event or scenario account) with the
+  // id of the AI proposal that created it. Provenance only — see tagAppliedChange impl.
+  tagAppliedChange: (changeId: string, proposalId: string) => void;
+
   setOverrides: (overrides: Partial<PlannerOverrides>) => void;
   resetOverrides: () => void;
   resetAll: () => void;
@@ -106,7 +130,8 @@ interface PlannerStore {
   loadPlan: (
     baseConfig: PlannerConfig,
     overrides: PlannerOverrides,
-    scenarios?: SavedScenario[]
+    scenarios?: SavedScenario[],
+    history?: PlannerHistory
   ) => void;
   loadGeneratedPlan: (baseConfig: PlannerConfig) => void;
   saveScenario: (name: string) => void;
@@ -149,11 +174,29 @@ function serializePristine(
 
 const initialPristine = serializePristine(initialConfig, {}, []);
 
-function rebuild(
+// Apply a scenario mutation AND record it on the undo stack. Snapshots the PRIOR
+// overrides onto `past`, clears `future` (a new action can't fork the redo timeline),
+// and caps the stack. Every user-facing scenario change funnels through this; a no-op
+// mutation (one that early-returns `s` after a failed guard) never reaches it, so the
+// history only ever records real changes. baseConfig is constant across scenario
+// mutations, so snapshotting `overrides` alone fully captures an undoable step.
+function commit(
+  s: { baseConfig: PlannerConfig; overrides: PlannerOverrides; history: PlannerHistory },
   baseConfig: PlannerConfig,
   overrides: PlannerOverrides
-): { baseConfig: PlannerConfig; overrides: PlannerOverrides; config: PlannerConfig } {
-  return { baseConfig, overrides, config: buildEffectiveConfig(baseConfig, overrides) };
+): {
+  baseConfig: PlannerConfig;
+  overrides: PlannerOverrides;
+  config: PlannerConfig;
+  history: PlannerHistory;
+} {
+  const past = [...s.history.past, structuredClone(s.overrides)].slice(-HISTORY_LIMIT);
+  return {
+    baseConfig,
+    overrides,
+    config: buildEffectiveConfig(baseConfig, overrides),
+    history: { past, future: [] },
+  };
 }
 
 function appendEvent(
@@ -199,15 +242,52 @@ export const usePlannerStore = create<PlannerStore>()(
       baselineAccountIds: captureBaselineAccountIds(initialConfig),
       pristineSnapshot: initialPristine,
       baselineConfig: initialConfig,
+      history: emptyHistory,
 
       setActiveView: (activeView) => set({ activeView }),
+
+      // Undo: restore the previous overrides snapshot, pushing the current one onto
+      // `future` so it can be redone. baseConfig (and thus baselineAccountIds) is
+      // constant across scenario mutations, so only `overrides` needs restoring.
+      undo: () =>
+        set((s) => {
+          if (s.history.past.length === 0) return s;
+          const previous = s.history.past[s.history.past.length - 1];
+          const past = s.history.past.slice(0, -1);
+          const future = [structuredClone(s.overrides), ...s.history.future].slice(0, HISTORY_LIMIT);
+          const overrides = structuredClone(previous);
+          return {
+            overrides,
+            config: buildEffectiveConfig(s.baseConfig, overrides),
+            history: { past, future },
+          };
+        }),
+
+      // Redo: reapply the next overrides snapshot off `future`, pushing the current one
+      // back onto `past`. Mirror image of undo.
+      redo: () =>
+        set((s) => {
+          if (s.history.future.length === 0) return s;
+          const next = s.history.future[0];
+          const future = s.history.future.slice(1);
+          const past = [...s.history.past, structuredClone(s.overrides)].slice(-HISTORY_LIMIT);
+          const overrides = structuredClone(next);
+          return {
+            overrides,
+            config: buildEffectiveConfig(s.baseConfig, overrides),
+            history: { past, future },
+          };
+        }),
+
+      canUndo: () => get().history.past.length > 0,
+      canRedo: () => get().history.future.length > 0,
 
       addTransientOneOffExpense: (month, amount, label) =>
         set((s) => {
           const events = appendEvent(s.overrides.runtimeEvents ?? [], {
             id: crypto.randomUUID(), type: "ONE_OFF_EXPENSE", month, amount, label,
           });
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
       addTransientCreditCardExpense: (month, amount, label) =>
@@ -215,7 +295,7 @@ export const usePlannerStore = create<PlannerStore>()(
           const events = appendEvent(s.overrides.runtimeEvents ?? [], {
             id: crypto.randomUUID(), type: "CREDIT_CARD_EXPENSE", month, amount, label,
           });
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
       addTransientRecurringExpense: (name, amount, startMonth, endMonth, frequency) =>
@@ -231,7 +311,7 @@ export const usePlannerStore = create<PlannerStore>()(
             id: crypto.randomUUID(), type: "RECURRING_EXPENSE",
             name, amount, startMonth, endMonth, frequency,
           });
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
       addTransientBonusIncome: (month, amount, description) =>
@@ -239,7 +319,7 @@ export const usePlannerStore = create<PlannerStore>()(
           const events = appendEvent(s.overrides.runtimeEvents ?? [], {
             id: crypto.randomUUID(), type: "BONUS_INCOME", month, amount, description,
           });
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
       addTransientSalaryChange: (effectiveMonth, newMonthlyIncome, description) =>
@@ -248,7 +328,7 @@ export const usePlannerStore = create<PlannerStore>()(
             id: crypto.randomUUID(), type: "SALARY_CHANGE",
             effectiveMonth, newMonthlyIncome, description,
           });
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
       addTransientSpendingOverride: (startMonth, endMonth, amount) =>
@@ -272,7 +352,7 @@ export const usePlannerStore = create<PlannerStore>()(
             id: crypto.randomUUID(), type: "SPENDING_OVERRIDE",
             startMonth, endMonth, amount,
           });
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
       addTransientOpeningCashOverride: (amount) =>
@@ -282,7 +362,7 @@ export const usePlannerStore = create<PlannerStore>()(
           const events = appendEvent(filtered, {
             id: crypto.randomUUID(), type: "OPENING_CASH_OVERRIDE", amount,
           });
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
       addTransientFd: (month, principal, rate, durationMonths, name) =>
@@ -294,7 +374,7 @@ export const usePlannerStore = create<PlannerStore>()(
             id: crypto.randomUUID(), type: "FD",
             name, principal, rate, startMonth: month, durationMonths,
           });
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
       addTransientRd: (month, monthlyContribution, rate, durationMonths, name) =>
@@ -306,7 +386,7 @@ export const usePlannerStore = create<PlannerStore>()(
             id: crypto.randomUUID(), type: "RD",
             name, monthlyContribution, rate, startMonth: month, durationMonths,
           });
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
       createInvestmentAccount: (account) => {
@@ -337,7 +417,7 @@ export const usePlannerStore = create<PlannerStore>()(
 
           const scenarioAccounts = [...(s.overrides.scenarioAccounts ?? []), newAccount];
           newAccountId = id;
-          return rebuild(s.baseConfig, { ...s.overrides, scenarioAccounts });
+          return commit(s, s.baseConfig, { ...s.overrides, scenarioAccounts });
         });
         return newAccountId;
       },
@@ -370,7 +450,7 @@ export const usePlannerStore = create<PlannerStore>()(
             return true;
           });
 
-          return rebuild(s.baseConfig, {
+          return commit(s, s.baseConfig, {
             ...s.overrides,
             scenarioAccounts,
             deletedAccountIds,
@@ -398,7 +478,7 @@ export const usePlannerStore = create<PlannerStore>()(
             id: crypto.randomUUID(), type: "ACCOUNT_AMOUNT_OVERRIDE",
             accountId, startMonth, endMonth, amount,
           });
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
       addTransientAccountReturnOverride: (accountId, startMonth, endMonth, annualReturn) =>
@@ -421,7 +501,7 @@ export const usePlannerStore = create<PlannerStore>()(
             id: crypto.randomUUID(), type: "ACCOUNT_RETURN_OVERRIDE",
             accountId, startMonth, endMonth, annualReturn,
           });
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
       addTransientInvestmentDeposit: (accountId, month, amount) =>
@@ -436,7 +516,7 @@ export const usePlannerStore = create<PlannerStore>()(
             id: crypto.randomUUID(), type: "INVESTMENT_DEPOSIT",
             accountId, month, amount,
           });
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
       addTransientInvestmentWithdrawal: (accountId, month, amount) =>
@@ -450,7 +530,7 @@ export const usePlannerStore = create<PlannerStore>()(
             id: crypto.randomUUID(), type: "INVESTMENT_WITHDRAWAL",
             accountId, month, amount,
           });
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
       updateRuntimeEvent: (id, changes) =>
@@ -458,22 +538,53 @@ export const usePlannerStore = create<PlannerStore>()(
           const events = (s.overrides.runtimeEvents ?? []).map((e) =>
             e.id === id ? ({ ...e, ...changes } as RuntimeEvent) : e
           );
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
       deleteRuntimeEvent: (id) =>
         set((s) => {
           const events = (s.overrides.runtimeEvents ?? []).filter((e) => e.id !== id);
-          return rebuild(s.baseConfig, { ...s.overrides, runtimeEvents: events });
+          return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
+        }),
+
+      // Attach an AI proposal's id to the change it just created (event or scenario
+      // account). Unlike the mutations above this does NOT push a history entry: the
+      // tag is provenance metadata coalesced into the CURRENT step, so the AI's add and
+      // its tag undo together as one. The undo/redo snapshots therefore carry the tag,
+      // keeping the proposal card's derived "applied" state correct across undo/redo.
+      tagAppliedChange: (changeId, proposalId) =>
+        set((s) => {
+          let touched = false;
+          const runtimeEvents = s.overrides.runtimeEvents?.map((e) => {
+            if (e.id === changeId && e.sourceProposalId !== proposalId) {
+              touched = true;
+              return { ...e, sourceProposalId: proposalId };
+            }
+            return e;
+          });
+          const scenarioAccounts = s.overrides.scenarioAccounts?.map((a) => {
+            if (a.id === changeId && a.sourceProposalId !== proposalId) {
+              touched = true;
+              return { ...a, sourceProposalId: proposalId };
+            }
+            return a;
+          });
+          if (!touched) return s;
+          const overrides: PlannerOverrides = {
+            ...s.overrides,
+            ...(runtimeEvents ? { runtimeEvents } : {}),
+            ...(scenarioAccounts ? { scenarioAccounts } : {}),
+          };
+          return { overrides, config: buildEffectiveConfig(s.baseConfig, overrides) };
         }),
 
       setOverrides: (incoming) =>
         set((s) => {
           const overrides = { ...s.overrides, ...incoming };
-          return rebuild(s.baseConfig, overrides);
+          return commit(s, s.baseConfig, overrides);
         }),
 
-      loadPlan: (baseConfig, overrides, scenarios = []) => {
+      loadPlan: (baseConfig, overrides, scenarios = [], history = emptyHistory) => {
         set({
           baseConfig,
           overrides,
@@ -482,6 +593,7 @@ export const usePlannerStore = create<PlannerStore>()(
           baselineAccountIds: captureBaselineAccountIds(baseConfig),
           pristineSnapshot: serializePristine(baseConfig, overrides, scenarios),
           baselineConfig: structuredClone(baseConfig),
+          history,
         });
       },
 
@@ -499,6 +611,7 @@ export const usePlannerStore = create<PlannerStore>()(
           baselineAccountIds: captureBaselineAccountIds(baseConfig),
           pristineSnapshot: "",
           baselineConfig: structuredClone(baseConfig),
+          history: emptyHistory,
         }),
 
       // Reset the scenario: clear all overrides AND restore the base plan to its
@@ -512,6 +625,7 @@ export const usePlannerStore = create<PlannerStore>()(
             overrides: {},
             config: buildEffectiveConfig(baseConfig, {}),
             baselineAccountIds: captureBaselineAccountIds(baseConfig),
+            history: emptyHistory,
           };
         }),
 
@@ -524,6 +638,7 @@ export const usePlannerStore = create<PlannerStore>()(
           baselineAccountIds: captureBaselineAccountIds(initialConfig),
           pristineSnapshot: serializePristine(initialConfig, {}, []),
           baselineConfig: initialConfig,
+          history: emptyHistory,
         }),
 
       resetForSignOut: () => {
@@ -536,6 +651,7 @@ export const usePlannerStore = create<PlannerStore>()(
           activeView: 'builder',
           pristineSnapshot: initialPristine,
           baselineConfig: initialConfig,
+          history: emptyHistory,
         })
         usePlannerStore.persist.clearStorage()
       },
@@ -575,7 +691,7 @@ export const usePlannerStore = create<PlannerStore>()(
         set((s) => {
           const scenario = s.savedScenarios.find((sc) => sc.id === id);
           if (!scenario) return {};
-          return rebuild(s.baseConfig, scenario.overrides);
+          return commit(s, s.baseConfig, scenario.overrides);
         }),
 
       deleteScenario: (id) =>
@@ -593,6 +709,7 @@ export const usePlannerStore = create<PlannerStore>()(
         baselineAccountIds: s.baselineAccountIds,
         pristineSnapshot: s.pristineSnapshot,
         baselineConfig: s.baselineConfig,
+        history: s.history,
       }),
       merge: (persisted, current) => {
         const p = persisted as Partial<PlannerStore>;
@@ -606,6 +723,9 @@ export const usePlannerStore = create<PlannerStore>()(
         // Pre-existing persisted state (before this field) treats the current base as
         // its own baseline, so a reset is a no-op rather than wiping the plan.
         const baselineConfig = p.baselineConfig ?? baseConfig;
+        // Pre-existing persisted state (before undo/redo existed) starts with an empty
+        // history rather than a half-formed one.
+        const history = p.history ?? emptyHistory;
         return {
           ...current,
           ...p,
@@ -615,6 +735,7 @@ export const usePlannerStore = create<PlannerStore>()(
           baselineAccountIds,
           pristineSnapshot,
           baselineConfig,
+          history,
           config: buildEffectiveConfig(baseConfig, overrides),
         };
       },

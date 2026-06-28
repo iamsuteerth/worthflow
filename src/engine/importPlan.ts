@@ -197,21 +197,29 @@ const RuntimeOpeningCashOverrideSchema = z.object({
 // here silently rejects any saved/exported plan that uses it (the whole import
 // throws "Invalid Plan File"), so an exhaustiveness test locks this union — see
 // importPlan.test.ts "covers every runtime-event type".
-const RuntimeEventSchema = z.discriminatedUnion("type", [
-  RuntimeOneOffExpenseSchema,
-  RuntimeFixedDepositSchema,
-  RuntimeRecurringDepositSchema,
-  RuntimeBonusIncomeSchema,
-  RuntimeSalaryChangeSchema,
-  RuntimeCreditCardExpenseSchema,
-  RuntimeAccountAmountOverrideSchema,
-  RuntimeAccountReturnOverrideSchema,
-  RuntimeInvestmentDepositSchema,
-  RuntimeInvestmentWithdrawalSchema,
-  RuntimeRecurringExpenseSchema,
-  RuntimeSpendingOverrideSchema,
-  RuntimeOpeningCashOverrideSchema,
-]);
+// AI-applied changes carry a `sourceProposalId` (the proposing message's id) so the
+// proposal card can derive its applied state from the plan. It must survive a
+// save/load round trip, so the import schema preserves it for every event type — an
+// intersection keeps the discriminated union (which rejects unknown `type`s) intact
+// while accepting the optional provenance tag on top.
+const RuntimeEventSchema = z.intersection(
+  z.discriminatedUnion("type", [
+    RuntimeOneOffExpenseSchema,
+    RuntimeFixedDepositSchema,
+    RuntimeRecurringDepositSchema,
+    RuntimeBonusIncomeSchema,
+    RuntimeSalaryChangeSchema,
+    RuntimeCreditCardExpenseSchema,
+    RuntimeAccountAmountOverrideSchema,
+    RuntimeAccountReturnOverrideSchema,
+    RuntimeInvestmentDepositSchema,
+    RuntimeInvestmentWithdrawalSchema,
+    RuntimeRecurringExpenseSchema,
+    RuntimeSpendingOverrideSchema,
+    RuntimeOpeningCashOverrideSchema,
+  ]),
+  z.object({ sourceProposalId: z.string().optional() }),
+);
 
 // A scenario-created ("what-if") investment account — same shape as a base account.
 const ScenarioAccountSchema = z.object({
@@ -221,12 +229,21 @@ const ScenarioAccountSchema = z.object({
   openingBalance: z.number().nonnegative(),
   defaultAnnualReturn: z.number().min(-99.99).max(1000),
   defaultMonthlyContribution: z.number().nonnegative(),
+  // Provenance for an AI-created what-if account (see RuntimeEventSchema).
+  sourceProposalId: z.string().optional(),
 });
 
 const PlannerOverridesSchema = z.object({
   runtimeEvents: z.array(RuntimeEventSchema).optional(),
   scenarioAccounts: z.array(ScenarioAccountSchema).optional(),
   deletedAccountIds: z.array(z.string()).optional(),
+});
+
+// Undo/redo stacks travel with the plan so the timeline is identical on every device.
+// Each entry is a full overrides snapshot (same shape as overrides itself).
+const PlannerHistorySchema = z.object({
+  past: z.array(PlannerOverridesSchema),
+  future: z.array(PlannerOverridesSchema),
 });
 
 const SavedScenarioSchema = z.object({
@@ -313,6 +330,8 @@ const ImportedPlanSchema = z.object({
   savedScenarios: z.array(SavedScenarioSchema).optional(),
 
   overrides: PlannerOverridesSchema,
+
+  history: PlannerHistorySchema.optional(),
 });
 
 export type ImportedPlan = z.infer<typeof ImportedPlanSchema>;
@@ -321,6 +340,7 @@ export async function importPlan(file: File): Promise<{
   baseConfig: PlannerConfig;
   overrides: PlannerOverrides;
   savedScenarios?: SavedScenario[];
+  history?: { past: PlannerOverrides[]; future: PlannerOverrides[] };
 }> {
   if (!file.name.endsWith(".wfplan")) {
     throw new Error("Invalid plan file");
@@ -353,6 +373,7 @@ export async function importPlan(file: File): Promise<{
       baseConfig,
       overrides: result.overrides as PlannerOverrides,
       savedScenarios: result.savedScenarios as SavedScenario[],
+      history: result.history as { past: PlannerOverrides[]; future: PlannerOverrides[] } | undefined,
     };
   } catch {
     throw new Error("Invalid Plan File");

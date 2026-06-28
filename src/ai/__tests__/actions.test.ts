@@ -19,6 +19,7 @@ import { proposedActionSchema, isUndoableAdd } from '@/ai/actions/actionSchema';
 import { validateAction, resolveAccountName } from '@/ai/actions/validateAction';
 import { checkFeasibility } from '@/ai/actions/checkFeasibility';
 import { applyAction } from '@/ai/actions/applyAction';
+import { isProposalApplied } from '@/ai/actions/proposalState';
 import { dryRun } from '@/ai/actions/dryRun';
 import { describeAction } from '@/ai/actions/describeAction';
 import { usePlannerStore } from '@/store/plannerStore';
@@ -38,7 +39,7 @@ function setupPlan() {
       returnOverrides: [],
     },
   });
-  usePlannerStore.setState({ baseConfig: cfg, config: cfg, overrides: {}, baselineAccountIds: ['acc-1'], savedScenarios: [] });
+  usePlannerStore.setState({ baseConfig: cfg, config: cfg, overrides: {}, baselineAccountIds: ['acc-1'], savedScenarios: [], history: { past: [], future: [] } });
 }
 
 function ctxFor() {
@@ -248,58 +249,95 @@ describe('checkFeasibility (layer 1.5 — pre-flag against the live plan)', () =
 
 // ===========================================================================
 describe('applyAction (layer 2 — guarded store path)', () => {
-  it('adds exactly one runtime event and returns its id (undoable)', () => {
-    const r = applyAction(valid({ kind: 'ADD_ONE_OFF_EXPENSE', month: '2025-03', amount: 1000, label: 'Trip' }));
+  it('adds exactly one runtime event, returns its id, and stamps the proposal id', () => {
+    const r = applyAction(valid({ kind: 'ADD_ONE_OFF_EXPENSE', month: '2025-03', amount: 1000, label: 'Trip' }), 'p1');
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.eventId).toBeTruthy();
-      expect(events().some((e) => e.id === r.eventId)).toBe(true);
+      const ev = events().find((e) => e.id === r.eventId);
+      expect(ev).toBeTruthy();
+      expect(ev?.sourceProposalId).toBe('p1');
     }
   });
 
+  it('is idempotent — re-applying the same proposal never double-counts', () => {
+    const action = valid({ kind: 'ADD_ONE_OFF_EXPENSE', month: '2025-03', amount: 1000, label: 'Trip' });
+    expect(applyAction(action, 'p1').ok).toBe(true);
+    expect(applyAction(action, 'p1').ok).toBe(true); // no-op
+    expect(applyAction(action, 'p1').ok).toBe(true); // still no-op
+    expect(events()).toHaveLength(1);
+  });
+
   it('maps each account-targeted add through the right method', () => {
-    expect(applyAction(valid({ kind: 'ADD_INVESTMENT_DEPOSIT', accountName: 'Index Fund', month: '2025-03', amount: 5000 })).ok).toBe(true);
+    expect(applyAction(valid({ kind: 'ADD_INVESTMENT_DEPOSIT', accountName: 'Index Fund', month: '2025-03', amount: 5000 }), 'p1').ok).toBe(true);
     expect(events()[0]).toMatchObject({ type: 'INVESTMENT_DEPOSIT', accountId: 'acc-1', amount: 5000 });
   });
 
-  it('creates an investment account (no undo event id)', () => {
-    const r = applyAction(valid({ kind: 'CREATE_INVESTMENT_ACCOUNT', name: 'NPS', startMonth: '2025-01', openingBalance: 10000, defaultMonthlyContribution: 0, defaultAnnualReturn: 10 }));
+  it('creates an investment account (no undo event id) and stamps the proposal id', () => {
+    const r = applyAction(valid({ kind: 'CREATE_INVESTMENT_ACCOUNT', name: 'NPS', startMonth: '2025-01', openingBalance: 10000, defaultMonthlyContribution: 0, defaultAnnualReturn: 10 }), 'p1');
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.eventId).toBeUndefined();
+    const created = usePlannerStore.getState().overrides.scenarioAccounts?.find((a) => a.name === 'NPS');
+    expect(created?.sourceProposalId).toBe('p1');
     expect(usePlannerStore.getState().config.investments.accounts.some((a) => a.name === 'NPS')).toBe(true);
   });
 
   it('edits an existing event in place', () => {
     usePlannerStore.getState().addTransientOneOffExpense(m('2025-03'), 1000, 'Trip');
-    const r = applyAction(valid({ kind: 'EDIT_SCENARIO_EVENT', ref: 1, amount: 2500 }));
+    const r = applyAction(valid({ kind: 'EDIT_SCENARIO_EVENT', ref: 1, amount: 2500 }), 'p1');
     expect(r.ok).toBe(true);
-    expect(events()[0]).toMatchObject({ type: 'ONE_OFF_EXPENSE', amount: 2500 });
+    expect(events()[0]).toMatchObject({ type: 'ONE_OFF_EXPENSE', amount: 2500, sourceProposalId: 'p1' });
   });
 
   it('deletes an existing event', () => {
     usePlannerStore.getState().addTransientBonusIncome(m('2025-03'), 1000, 'B');
-    const r = applyAction(valid({ kind: 'DELETE_SCENARIO_EVENT', ref: 1 }));
+    const r = applyAction(valid({ kind: 'DELETE_SCENARIO_EVENT', ref: 1 }), 'p1');
     expect(r.ok).toBe(true);
     expect(events()).toHaveLength(0);
   });
 
   it('refuses an infeasible action (unaffordable FD) without adding anything', () => {
-    const r = applyAction(valid({ kind: 'ADD_FD', month: '2025-02', principal: 99_000_000, rate: 7, durationMonths: 12, name: 'Big' }));
+    const r = applyAction(valid({ kind: 'ADD_FD', month: '2025-02', principal: 99_000_000, rate: 7, durationMonths: 12, name: 'Big' }), 'p1');
     expect(r.ok).toBe(false);
     expect(events()).toHaveLength(0);
   });
 
   it('fails closed on an unknown account name', () => {
-    const r = applyAction({ kind: 'ADD_INVESTMENT_DEPOSIT', accountName: 'Ghost', month: m('2025-03'), amount: 5000 } as ResolvedProposedAction);
+    const r = applyAction({ kind: 'ADD_INVESTMENT_DEPOSIT', accountName: 'Ghost', month: m('2025-03'), amount: 5000 } as ResolvedProposedAction, 'p1');
     expect(r.ok).toBe(false);
     expect(events()).toHaveLength(0);
   });
 
   it('an applied add is undoable via deleteRuntimeEvent', () => {
-    const r = applyAction(valid({ kind: 'ADD_BONUS_INCOME', month: '2025-04', amount: 10000, description: 'Bonus' }));
+    const r = applyAction(valid({ kind: 'ADD_BONUS_INCOME', month: '2025-04', amount: 10000, description: 'Bonus' }), 'p1');
     expect(r.ok).toBe(true);
     if (r.ok && r.eventId) usePlannerStore.getState().deleteRuntimeEvent(r.eventId);
     expect(events()).toHaveLength(0);
+  });
+});
+
+// ===========================================================================
+describe('isProposalApplied (derived from the loaded plan — the cross-device truth)', () => {
+  it('is false before apply, true once the plan carries the tagged change', () => {
+    const action = valid({ kind: 'ADD_ONE_OFF_EXPENSE', month: '2025-03', amount: 1000, label: 'Trip' });
+    expect(isProposalApplied(action, 'p1', usePlannerStore.getState().overrides)).toBe(false);
+    applyAction(action, 'p1');
+    expect(isProposalApplied(action, 'p1', usePlannerStore.getState().overrides)).toBe(true);
+  });
+
+  it('derives applied per-device: the same proposal id reads false against a plan without the tag', () => {
+    const action = valid({ kind: 'ADD_ONE_OFF_EXPENSE', month: '2025-03', amount: 1000, label: 'Trip' });
+    applyAction(action, 'p1');
+    // A second device's plan (no tag) — the card there must NOT claim "applied".
+    expect(isProposalApplied(action, 'p1', {})).toBe(false);
+  });
+
+  it('a delete is applied once its target event is gone', () => {
+    usePlannerStore.getState().addTransientBonusIncome(m('2025-03'), 1000, 'B');
+    const action = valid({ kind: 'DELETE_SCENARIO_EVENT', ref: 1 });
+    expect(isProposalApplied(action, 'p1', usePlannerStore.getState().overrides)).toBe(false);
+    applyAction(action, 'p1');
+    expect(isProposalApplied(action, 'p1', usePlannerStore.getState().overrides)).toBe(true);
   });
 });
 

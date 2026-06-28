@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
-import { Alert, Badge, Box, Button, Group, Paper, Stack, Text } from '@mantine/core';
+import { Alert, Badge, Button, Group, Paper, Stack, Text } from '@mantine/core';
 import {
   IconAlertTriangle,
-  IconArrowBackUp,
   IconCheck,
   IconInfoCircle,
   IconWand,
@@ -13,6 +12,7 @@ import { usePlannerStore } from '@/store/plannerStore';
 import { dryRun } from '@/ai/actions/dryRun';
 import { checkFeasibility } from '@/ai/actions/checkFeasibility';
 import { describeAction } from '@/ai/actions/describeAction';
+import { isProposalApplied } from '@/ai/actions/proposalState';
 import { money } from '@/format/money';
 import type { Message } from '@/ai/chat/conversation.types';
 
@@ -44,25 +44,35 @@ export default function ProposedActionCard({ message }: Props) {
 
   const applyProposedAction = useAiStore((s) => s.applyProposedAction);
   const dismissProposedAction = useAiStore((s) => s.dismissProposedAction);
-  const undoProposedAction = useAiStore((s) => s.undoProposedAction);
 
-  // Re-evaluate feasibility + dry-run whenever the live plan changes. dryRun and
-  // checkFeasibility read the store via getState(); subscribing to these refs is
-  // what makes the memo recompute (they're the trigger, not the args).
+  // Re-evaluate feasibility + dry-run + applied-state whenever the live plan changes.
+  // dryRun/checkFeasibility read the store via getState(); subscribing to these refs is
+  // what makes the memos recompute (they're the trigger, not the args).
   const config = usePlannerStore((s) => s.config);
   const overrides = usePlannerStore((s) => s.overrides);
 
-  const pendingLike = status === 'pending' || status === 'failed';
+  // "Applied" is derived from the plan (never from synced chat state), so this card
+  // can't claim a change is in a plan that doesn't have it.
+  const applied = useMemo(
+    () => (action ? isProposalApplied(action, message.id, overrides) : false),
+    [action, message.id, overrides],
+  );
+
+  const dismissed = status === 'dismissed';
+  const failed = status === 'failed';
+  // Show the Apply/Dismiss controls only while the change isn't in the plan and the
+  // user hasn't dismissed it.
+  const actionable = !applied && !dismissed;
 
   const feasibility = useMemo(
-    () => (action && pendingLike ? checkFeasibility(action) : null),
+    () => (action && actionable ? checkFeasibility(action) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [action, pendingLike, config, overrides],
+    [action, actionable, config, overrides],
   );
   const delta = useMemo(
-    () => (action && pendingLike && feasibility?.feasible ? dryRun(action) : null),
+    () => (action && actionable && feasibility?.feasible ? dryRun(action) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [action, pendingLike, feasibility, config, overrides],
+    [action, actionable, feasibility, config, overrides],
   );
 
   if (!action) return null;
@@ -74,8 +84,8 @@ export default function ProposedActionCard({ message }: Props) {
       <Group gap={6} mb={6}>
         <IconWand size={14} />
         <Text size="xs" fw={600}>Proposed change</Text>
-        {status === 'applied' && <Badge size="xs" color="teal" variant="light">Applied</Badge>}
-        {status === 'dismissed' && <Badge size="xs" color="gray" variant="light">Dismissed</Badge>}
+        {applied && <Badge size="xs" color="teal" variant="light">Applied</Badge>}
+        {dismissed && !applied && <Badge size="xs" color="gray" variant="light">Dismissed</Badge>}
       </Group>
 
       <Text size="sm" mb={6}>{describeAction(action)}</Text>
@@ -89,19 +99,19 @@ export default function ProposedActionCard({ message }: Props) {
       )}
 
       {/* Pre-flag impossibility before the user even tries to Apply. */}
-      {pendingLike && infeasibleReason && (
+      {actionable && infeasibleReason && (
         <Alert color="orange" variant="light" icon={<IconAlertTriangle size={12} />} p={6} mb={8} radius="sm">
           <Text size="xs">{infeasibleReason}</Text>
         </Alert>
       )}
 
-      {status === 'failed' && message.actionError && !infeasibleReason && (
+      {actionable && failed && message.actionError && !infeasibleReason && (
         <Alert color="orange" variant="light" icon={<IconAlertTriangle size={12} />} p={6} mb={8} radius="sm">
           <Text size="xs">{message.actionError}</Text>
         </Alert>
       )}
 
-      {pendingLike && (
+      {actionable && (
         <Group gap={6}>
           <Button
             size="xs"
@@ -110,7 +120,7 @@ export default function ProposedActionCard({ message }: Props) {
             disabled={!!infeasibleReason}
             onClick={() => applyProposedAction(message.id)}
           >
-            {status === 'failed' ? 'Try again' : 'Apply'}
+            {failed ? 'Try again' : 'Apply'}
           </Button>
           <Button
             size="xs"
@@ -123,24 +133,11 @@ export default function ProposedActionCard({ message }: Props) {
         </Group>
       )}
 
-      {status === 'applied' && (
-        message.appliedEventId ? (
-          <Box>
-            <Button
-              size="xs"
-              variant="default"
-              leftSection={<IconArrowBackUp size={13} />}
-              onClick={() => undoProposedAction(message.id)}
-            >
-              Undo
-            </Button>
-          </Box>
-        ) : (
-          <Group gap={4} c="dimmed">
-            <IconInfoCircle size={12} />
-            <Text size="xs">To revert this, load a saved plan.</Text>
-          </Group>
-        )
+      {applied && (
+        <Group gap={4} c="dimmed">
+          <IconInfoCircle size={12} />
+          <Text size="xs">Applied to your plan — undo or redo it from the scenario bar.</Text>
+        </Group>
       )}
     </Paper>
   );

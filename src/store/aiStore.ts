@@ -49,7 +49,6 @@ import {
   notifyIndexedDbUnavailable,
   notifyAiChatCompacted,
   notifyAiActionApplied,
-  notifyAiActionUndone,
 } from '@/ai/aiNotifications';
 
 import { usePlannerStore } from '@/store/plannerStore';
@@ -100,7 +99,6 @@ interface AiStore {
   proposeAction(text: string): Promise<void>;
   applyProposedAction(messageId: string): void;
   dismissProposedAction(messageId: string): void;
-  undoProposedAction(messageId: string): void;
 }
 
 // ---------------------------------------------------------------------------
@@ -709,23 +707,28 @@ export const useAiStore = create<AiStore>()(
       },
 
       // ------------------------------------------------------------------
-      // Phase 2: apply a pending proposed action (the user's explicit click)
+      // Phase 2: apply a proposed action (the user's explicit click).
+      // applyAction is keyed by the message id and is idempotent: if the plan already
+      // carries this proposal's change it no-ops, so a stale Apply (e.g. on a second
+      // device) can never double-apply. "applied" is then derived from the plan — we
+      // store nothing on success beyond clearing a prior failure note.
       // ------------------------------------------------------------------
       applyProposedAction: (messageId) => {
         const msg = get().conversation.messages.find((m) => m.id === messageId);
-        // Apply from a fresh proposal, or retry one a store guard previously
-        // rejected (the plan may have changed since). Never re-apply an applied
-        // or dismissed one.
-        if (!msg?.proposedAction || (msg.actionStatus !== 'pending' && msg.actionStatus !== 'failed')) return;
+        if (!msg?.proposedAction || msg.actionStatus === 'dismissed') return;
 
-        const result = applyAction(msg.proposedAction);
+        const result = applyAction(msg.proposedAction, messageId);
         if (result.ok) {
-          updateMessage(set, get, messageId, { actionStatus: 'applied', appliedEventId: result.eventId, actionError: undefined });
           notifyAiActionApplied();
+          // Clear any stale failure note; the "applied" badge itself is derived.
+          if (msg.actionStatus === 'failed' || msg.actionError) {
+            updateMessage(set, get, messageId, { actionStatus: undefined, actionError: undefined });
+            scheduleWrite(get, set);
+          }
         } else {
           updateMessage(set, get, messageId, { actionStatus: 'failed', actionError: result.message });
+          scheduleWrite(get, set);
         }
-        scheduleWrite(get, set);
       },
 
       // ------------------------------------------------------------------
@@ -735,18 +738,6 @@ export const useAiStore = create<AiStore>()(
         const msg = get().conversation.messages.find((m) => m.id === messageId);
         if (!msg?.proposedAction) return;
         updateMessage(set, get, messageId, { actionStatus: 'dismissed' });
-        scheduleWrite(get, set);
-      },
-
-      // ------------------------------------------------------------------
-      // Phase 2: undo an applied action (delete exactly its runtime event)
-      // ------------------------------------------------------------------
-      undoProposedAction: (messageId) => {
-        const msg = get().conversation.messages.find((m) => m.id === messageId);
-        if (!msg || msg.actionStatus !== 'applied' || !msg.appliedEventId) return;
-        usePlannerStore.getState().deleteRuntimeEvent(msg.appliedEventId);
-        updateMessage(set, get, messageId, { actionStatus: 'pending', appliedEventId: undefined });
-        notifyAiActionUndone();
         scheduleWrite(get, set);
       },
 

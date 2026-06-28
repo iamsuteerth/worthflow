@@ -67,12 +67,12 @@ async function applySaveToPlanner(key: string): Promise<void> {
   const content = await downloadSave(key)
   const file = new File([content], key, { type: 'application/octet-stream' })
   const result = await importPlan(file)
-  usePlannerStore.getState().loadPlan(result.baseConfig, result.overrides, result.savedScenarios)
+  usePlannerStore.getState().loadPlan(result.baseConfig, result.overrides, result.savedScenarios, result.history)
 }
 
 async function serializePlan(): Promise<string> {
-  const { baseConfig, overrides, savedScenarios } = usePlannerStore.getState()
-  const data = { baseConfig, overrides, savedScenarios }
+  const { baseConfig, overrides, savedScenarios, history } = usePlannerStore.getState()
+  const data = { baseConfig, overrides, savedScenarios, history }
   const payload = encodeBase64(JSON.stringify(data))
   const checksum = await calculateChecksum(payload)
   return JSON.stringify(
