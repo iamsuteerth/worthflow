@@ -51,8 +51,9 @@ function HardeningTips() {
               Open <b>Google Cloud Console</b> &rarr; <b>APIs &amp; Services &rarr; Credentials</b>, and click your API key.
             </List.Item>
             <List.Item>
-              Under <b>Application restrictions</b>, choose <b>HTTP referrers</b> and add your site
-              (e.g. <code>https://worthflow.in/*</code>; add <code>http://localhost:*</code> only while developing).
+              Under <b>Application restrictions</b>, choose <b>HTTP referrers</b> and add the site(s)
+              you use — <code>https://worthflow.in/*</code> and <code>https://worthflow.vercel.app/*</code>
+              (add <code>http://localhost:*</code> only while developing).
             </List.Item>
             <List.Item>
               Under <b>API restrictions</b>, choose <b>Restrict key</b> and select the <b>Generative Language API</b> only.

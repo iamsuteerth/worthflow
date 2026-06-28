@@ -8,8 +8,7 @@ import {
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { formatMonthGrouped } from "@/engine/monthFormatting";
 import { getEventVisual } from "@/theme/eventVisuals";
-import { money } from "@/format/money";
-import { EmptyState } from "@/components/ui";
+import { EmptyState, AdaptiveMoney } from "@/components/ui";
 
 const INVESTMENT_TYPES = new Set([
   "ACCOUNT_CREATED",
@@ -62,13 +61,20 @@ export default function InvestmentTimeline() {
                   >
                     <Stack gap={4} mt={4}>
                       <Text fw={700} size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
-                        {event.type === "ACCOUNT_RETURN_OVERRIDE"
-                          ? `${event.amount.toFixed(2)}%`
-                          : event.type === "ACCOUNT_CREATED"
-                          ? event.amount > 0
-                            ? `Opening ${money(event.amount)}`
-                            : "Opened"
-                          : money(event.amount)}
+                        {event.type === "ACCOUNT_RETURN_OVERRIDE" ? (
+                          `${event.amount.toFixed(2)}%`
+                        ) : event.type === "ACCOUNT_CREATED" ? (
+                          event.amount > 0 ? (
+                            <>
+                              <Text span size="xs" c="dimmed">Opening </Text>
+                              <AdaptiveMoney value={event.amount} />
+                            </>
+                          ) : (
+                            "Opened"
+                          )
+                        ) : (
+                          <AdaptiveMoney value={event.amount} />
+                        )}
                       </Text>
                     </Stack>
                   </Timeline.Item>

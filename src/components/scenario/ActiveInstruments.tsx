@@ -14,7 +14,7 @@ import { IconBuildingBank, IconPigMoney } from "@tabler/icons-react";
 import { addMonths } from "@/engine/dateUtils";
 import { formatMonth } from "@/engine/monthFormatting";
 import { usePlannerStore } from "@/store/plannerStore";
-import { money, moneySigned } from "@/format/money";
+import { AdaptiveMoney } from "@/components/ui";
 import { projectInstrument } from "@/engine/instrumentProjection";
 
 export default function ActiveInstruments() {
@@ -84,13 +84,13 @@ export default function ActiveInstruments() {
               <div>
                 <Text size="xs" c="dimmed">{isFD ? "Principal" : "Total Contribution"}</Text>
                 <Text fw={600} size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
-                  {money(principal)}
+                  <AdaptiveMoney value={principal} />
                 </Text>
               </div>
               <div>
                 <Text size="xs" c="dimmed">Maturity Value</Text>
                 <Text fw={700} size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
-                  {money(maturityValue)}
+                  <AdaptiveMoney value={maturityValue} />
                 </Text>
               </div>
               <div>
@@ -101,7 +101,7 @@ export default function ActiveInstruments() {
                   c={interest >= 0 ? "teal" : "red"}
                   style={{ fontVariantNumeric: "tabular-nums" }}
                 >
-                  {moneySigned(interest)}
+                  <AdaptiveMoney value={interest} signed />
                 </Text>
               </div>
               <div>

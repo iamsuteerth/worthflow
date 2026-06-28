@@ -65,7 +65,7 @@ export function AdaptiveMoney({ value, signed = false, accounting = false }: Ada
   );
 
   return (
-    <span ref={wrapRef} style={{ display: "block", overflow: "hidden", maxWidth: "100%" }}>
+    <span ref={wrapRef} style={{ display: "block", position: "relative", overflow: "hidden", maxWidth: "100%" }}>
       {/* Always-present, out-of-flow full-text node used only for measurement. */}
       <span
         ref={measureRef}

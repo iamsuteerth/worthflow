@@ -13,7 +13,7 @@ import { dryRun } from '@/ai/actions/dryRun';
 import { checkFeasibility } from '@/ai/actions/checkFeasibility';
 import { describeAction } from '@/ai/actions/describeAction';
 import { isProposalApplied } from '@/ai/actions/proposalState';
-import { money } from '@/format/money';
+import { Money } from '@/components/ui';
 import type { Message } from '@/ai/chat/conversation.types';
 
 interface Props {
@@ -22,15 +22,17 @@ interface Props {
 
 function DeltaRow({ label, before, after }: { label: string; before: number; after: number }) {
   const changed = before !== after;
+  // The chat panel is narrow, so use the compact form (with a tooltip carrying the
+  // exact figure) — big rupee values would otherwise overflow the row.
   return (
     <Group justify="space-between" gap={6} wrap="nowrap">
-      <Text size="xs" c="dimmed">{label}</Text>
-      <Text size="xs" style={{ fontVariantNumeric: 'tabular-nums' }}>
-        {money(before)}
+      <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>{label}</Text>
+      <Text size="xs" style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+        <Money value={before} compact size="xs" c="inherit" />
         {changed && (
           <>
             {' → '}
-            <Text span fw={600} c={after >= before ? 'teal' : 'red'}>{money(after)}</Text>
+            <Money value={after} compact size="xs" span fw={600} c={after >= before ? 'teal' : 'red'} />
           </>
         )}
       </Text>

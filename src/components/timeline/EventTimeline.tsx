@@ -12,8 +12,7 @@ import { formatMonth, formatMonthGrouped } from "@/engine/monthFormatting";
 import { useFilterStore } from "@/store/filterStore";
 import { EVENT_CATEGORY_LIST, getEventCategory } from "@/engine/eventCategories";
 import { getEventVisual } from "@/theme/eventVisuals";
-import { money } from "@/format/money";
-import { EmptyState } from "@/components/ui";
+import { EmptyState, AdaptiveMoney } from "@/components/ui";
 
 // Account-level events belong to the dedicated Investment Timeline, not the
 // general chronological one (keeps this view about cash/income/instrument flow).
@@ -87,7 +86,7 @@ export default function EventTimeline() {
                             </Text>
                           )}
                           <Text fw={700} size="lg" style={{ fontVariantNumeric: "tabular-nums" }}>
-                            {money(event.amount)}
+                            <AdaptiveMoney value={event.amount} />
                           </Text>
                         </Stack>
                       </Timeline.Item>

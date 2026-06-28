@@ -216,8 +216,13 @@ VITE_S3_ENDPOINT=http://localhost:4566
 1. Set the six production `VITE_*` variables in **Project → Settings → Environment Variables**
    (Production scope).
 2. **Redeploy** — Vercel only picks up env-var changes on a new deployment.
-3. The production origin (`https://worthflow.in`) must be in the S3 bucket's CORS
-   `allowed_origins` (it is, via the `storage` module's `allowed_origins` input, derived from `domain`).
+3. Every browser origin that talks to S3 must be in the bucket's CORS `allowed_origins`
+   (set in [`terraform/main.tf`](./terraform/main.tf) on the `storage` module). It currently
+   lists `https://${var.domain}` (→ `https://worthflow.in`), `https://worthflow.vercel.app`,
+   and `http://localhost:5173`. **Adding or changing an origin only takes effect after a
+   `terraform apply`** — the bucket CORS in AWS doesn't update until then. The app's security
+   headers (CSP etc., in [`vercel.json`](./vercel.json)) use `'self'`, so they need no per-origin
+   change; Cognito uses SRP auth, so there are no callback/origin URLs to maintain either.
 4. The bucket's CORS **must keep `ETag` in `expose_headers`** (it does, in the `storage` module).
    Cloud saves use a manifest with optimistic-concurrency writes (`If-Match` / `If-None-Match`),
    and the browser SDK can only read an object's `ETag` to drive those conditional writes if CORS

@@ -26,7 +26,7 @@ import {
 } from "@tabler/icons-react";
 import { useMemo } from "react";
 import { builderToConfig } from "@/engine/builderToConfig";
-import { money } from "@/format/money";
+import { AdaptiveMoney } from "@/components/ui";
 import { exportPlan } from "@/engine/exportPlan";
 import { formatMonth } from "@/engine/monthFormatting";
 import { useBuilderStore } from "@/store/builderStore";
@@ -78,7 +78,7 @@ function MetricCard({
   color,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   icon: React.ReactNode;
   color: string;
 }) {
@@ -143,9 +143,9 @@ export default function ReviewStep() {
   const metrics = [
     { label: "Start Month", value: formatMonth(state.startMonth), icon: <IconCalendarMonth size={14} />, color: "brand" },
     { label: "Duration", value: `${state.totalMonths} mo`, icon: <IconChartLine size={14} />, color: "violet" },
-    { label: "Monthly Income", value: money(state.monthlyIncome), icon: <IconCash size={14} />, color: "teal" },
-    { label: "Monthly Expenses", value: money(state.defaultMonthlyExpense), icon: <IconBolt size={14} />, color: "red" },
-    { label: "Opening Cash", value: money(state.openingCash), icon: <IconWallet size={14} />, color: "brand" },
+    { label: "Monthly Income", value: <AdaptiveMoney value={state.monthlyIncome} />, icon: <IconCash size={14} />, color: "teal" },
+    { label: "Monthly Expenses", value: <AdaptiveMoney value={state.defaultMonthlyExpense} />, icon: <IconBolt size={14} />, color: "red" },
+    { label: "Opening Cash", value: <AdaptiveMoney value={state.openingCash} />, icon: <IconWallet size={14} />, color: "brand" },
     { label: "Investment Accounts", value: String(state.investmentAccounts.length), icon: <IconCoins size={14} />, color: "violet" },
     { label: "Instruments", value: String(state.instruments.length), icon: <IconBuildingBank size={14} />, color: "cyan" },
     { label: "Events", value: String(totalEvents), icon: <IconCalendarEvent size={14} />, color: "gray" },
