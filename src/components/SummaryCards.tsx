@@ -9,7 +9,7 @@ import {
 import { useSimulation } from "@/hooks/useSimulation";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
-import { StatCard } from "@/components/ui";
+import { AdaptiveMoney, StatCard } from "@/components/ui";
 
 export default function SummaryCards() {
   const result = useSimulation();
@@ -24,7 +24,7 @@ export default function SummaryCards() {
       <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
         <StatCard
           title="Net Worth"
-          value={money(finalRow.assets.netWorth)}
+          value={<AdaptiveMoney value={finalRow.assets.netWorth} />}
           sub="End of forecast"
           negative={finalRow.assets.netWorth < 0}
           icon={<IconChartLine size={18} />}
@@ -35,7 +35,7 @@ export default function SummaryCards() {
       <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
         <StatCard
           title="Cash"
-          value={money(finalRow.assets.cash)}
+          value={<AdaptiveMoney value={finalRow.assets.cash} />}
           sub={`Lowest: ${money(summary.lowestBalance)} (${formatMonth(summary.lowestBalanceMonth)})`}
           negative={finalRow.assets.cash < 0}
           icon={<IconWallet size={18} />}
@@ -46,7 +46,7 @@ export default function SummaryCards() {
       <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
         <StatCard
           title="Investments"
-          value={money(finalRow.assets.investmentCorpus)}
+          value={<AdaptiveMoney value={finalRow.assets.investmentCorpus} />}
           sub="End of forecast"
           negative={finalRow.assets.investmentCorpus < 0}
           icon={<IconCoins size={18} />}

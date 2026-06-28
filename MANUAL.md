@@ -349,6 +349,7 @@ A single, categorized list of **every active modification** in your current scen
 Whenever you have an active scenario, a banner appears above the dashboard summarizing it:
 
 * A count of total modifications — click it to jump to the **Events** section, showing everything
+* **Undo** and **Redo** buttons that step back and forth through your scenario changes one at a time. They work on *every* kind of change (events, account creation/removal, AI-applied changes), and the history travels with your plan — so undo/redo behaves identically on any device once you reload a saved plan. Starting a new change after an undo clears the redo trail, and **Reset** clears the history entirely.
 * A colored badge per event type (e.g. "Deposit ×2", "Spending Override ×1") — click a badge to jump to the Events section filtered to just that type (use **Show all** to clear the filter)
 * A green **"New account ×N"** badge if your scenario has created new investment accounts (informational only)
 * A red **"Removed base acc ×N"** badge if your scenario has deleted any of your original (base) accounts — a reversible what-if, restored by **Reset**
@@ -692,9 +693,9 @@ Beyond answering questions, the assistant can **propose a change** to your scena
    * an **estimated impact** — how your lowest projected cash and final net worth would change (a preview that does **not** touch your plan);
    * **Apply** and **Dismiss** buttons.
 4. If a change *can't* be applied — say, an FD bigger than your available cash, or a spending override that overlaps an existing one — the card **flags it up front** with the reason and disables **Apply**, so you never hit a dead end. Adjust your request and try again.
-5. **Apply** makes the change through the *same checks the Scenario Lab uses*. It then appears in your Scenario Banner and Events list like any other scenario edit.
-   * Newly **added** items offer one-click **Undo**.
-   * **Edits** and **removals** of existing changes don't have an in-chat undo — to roll them back, load a saved plan.
+5. **Apply** makes the change through the *same checks the Scenario Lab uses*. It then appears in your Scenario Banner and Events list like any other scenario edit, and the card shows an **Applied** badge.
+   * To roll it back, use **Undo** in the Scenario Banner (the same undo/redo that covers all scenario changes) — or remove it directly in the Events list.
+   * The **Applied** badge is read from your actual plan, not the chat, so it always matches what's really in the plan in front of you — even across devices. Applying the same suggestion twice never double-counts it, and if you've since changed your plan so the suggestion no longer fits, **Apply** shows a clear error instead of doing anything.
    * A **new investment account** appears in **Investment Accounts** with an "Added" badge — remove it there, or clear it with **Reset** (it's a what-if, not part of your base plan).
 6. **Dismiss** discards the suggestion; nothing changes.
 

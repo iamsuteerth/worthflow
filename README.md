@@ -46,7 +46,7 @@ Examples:
 * Contribution and return overrides
 * FD and RD creation
 
-A **Scenario Banner** keeps you oriented: it summarizes how many modifications are active, shows a badge per event type (click to jump straight to that group in the Events list), and flags any accounts created (**"New account"**) or hidden (**"Removed base acc"**) during the scenario.
+A **Scenario Banner** keeps you oriented: it summarizes how many modifications are active, offers **Undo/Redo** across all scenario changes (with history that travels with your saved plan, so it's consistent on any device), shows a badge per event type (click to jump straight to that group in the Events list), and flags any accounts created (**"New account"**) or hidden (**"Removed base acc"**) during the scenario.
 
 The **Scenario Lab** is organized into six sections — **Expenses**, **Cash**, **Investments**, **FD**, **RD**, and **Events** — so each type of modification has a focused home.
 

@@ -156,7 +156,7 @@ export default function ScenarioPanel() {
   const handleImport = async (file: File) => {
     try {
       const plan = await importPlan(file);
-      loadPlan(plan.baseConfig, plan.overrides, plan.savedScenarios);
+      loadPlan(plan.baseConfig, plan.overrides, plan.savedScenarios, plan.history);
       notifications.show({ color: "teal", title: "Plan imported", message: "Scenario restored successfully" });
     } catch {
       notifications.show({ color: "red", title: "Import failed", message: "Invalid plan file" });

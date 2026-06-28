@@ -68,6 +68,30 @@ describe("override robustness — orphaned references are ignored, never crash o
   });
 });
 
+describe("override robustness — a scenario salary change flows through to monthly income", () => {
+  it("applies a SALARY_CHANGE runtime event from its effective month onward", () => {
+    const cfg = baseConfig({
+      forecast: { startMonth: m("2025-01"), totalMonths: 6 },
+      income: { monthly: 100_000 },
+      cash: { openingBalance: 0 },
+      expenses: { defaultMonthly: 0, overrides: {} },
+      investments: { accounts: [], amountOverrides: [], returnOverrides: [] },
+    });
+    const ov: PlannerOverrides = {
+      runtimeEvents: [
+        { id: "sal", type: "SALARY_CHANGE", effectiveMonth: m("2025-04"), newMonthlyIncome: 200_000, description: "Raise" },
+      ],
+    };
+    const res = run(cfg, ov);
+    const incomeByMonth = Object.fromEntries(res.rows.map((r) => [r.month, r.cashflow.income]));
+    // Base income before the change, new income at and after the effective month.
+    expect(incomeByMonth["2025-03"]).toBe(100_000);
+    expect(incomeByMonth["2025-04"]).toBe(200_000);
+    expect(incomeByMonth["2025-06"]).toBe(200_000);
+    invariantHolds(res);
+  });
+});
+
 describe("override robustness — the full override stack simulates cleanly together", () => {
   it("scenario account + deleted base account + a deposit, all active at once", () => {
     const cfg = baseConfig({

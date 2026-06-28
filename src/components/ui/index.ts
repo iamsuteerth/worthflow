@@ -1,4 +1,5 @@
 export { Money } from "./Money";
+export { AdaptiveMoney } from "./AdaptiveMoney";
 export { ErrorBoundary } from "./ErrorBoundary";
 export { EmptyState } from "./EmptyState";
 export { StatCard } from "./StatCard";
