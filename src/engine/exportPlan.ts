@@ -22,6 +22,10 @@ export interface ExportedPlan {
   baseConfig: PlannerConfig;
   overrides: PlannerOverrides;
   savedScenarios?: SavedScenario[];
+  // Undo/redo stacks travel with the file so the scenario timeline is identical after
+  // a manual export → import, matching the cloud save path (cloudStore.serializePlan).
+  // importPlan validates this as optional; a freshly generated plan omits it.
+  history?: { past: PlannerOverrides[]; future: PlannerOverrides[] };
 }
 
 export async function exportPlan(

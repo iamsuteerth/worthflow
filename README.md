@@ -229,7 +229,7 @@ Store multiple scenario variations and switch between them instantly.
 
 ### Export Plans
 
-Export complete plans (base plan, active scenario, and saved scenarios) as a `.wfplan` file for:
+Export complete plans (base plan, active scenario, saved scenarios, and undo/redo history) as a `.wfplan` file for:
 
 * Backup
 * Sharing

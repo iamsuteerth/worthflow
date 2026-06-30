@@ -339,7 +339,8 @@ export function EditEventModal({
             label="Interest Rate (% p.a.)"
             value={localReturn}
             min={0}
-            max={50}
+            max={15}
+            clampBehavior="strict"
             decimalScale={2}
             suffix="%"
             onChange={(v) => setLocalReturn(Number(v))}
@@ -350,7 +351,8 @@ export function EditEventModal({
             label="Duration (months)"
             value={localDuration}
             min={1}
-            max={600}
+            max={120}
+            clampBehavior="strict"
             onChange={(v) => setLocalDuration(Number(v))}
           />
         )}

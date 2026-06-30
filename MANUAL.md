@@ -624,6 +624,7 @@ Exports a `.wfplan` file containing:
 * Base Plan
 * Active Scenario
 * Saved Scenarios
+* Undo/redo history (so the scenario timeline is identical after you re-import)
 
 Useful for:
 
@@ -778,9 +779,12 @@ It is generally more accurate than simple return percentages.
 
 ## What does Lowest Cash mean?
 
-Lowest Cash is the minimum projected cash balance reached during the forecast.
-
-This helps identify future liquidity problems before they occur.
+Lowest Cash is the **lowest your cash balance dips at any point within a month** across the whole
+forecast — the conservative liquidity low. Because it captures *intra-month* movements, it can be
+lower than every month-end figure you see in the tables: e.g. a month where a recurring
+contribution goes out before an FD/RD matures *that same month* dips mid-month, then recovers by
+the closing balance. The Cash card's tooltip notes this. It helps you spot future liquidity
+pinch-points before they occur.
 
 ## Does a Spending Override affect recurring expenses?
 

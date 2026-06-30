@@ -186,6 +186,19 @@ function buildScenarioChanges(
 // Main export
 // ---------------------------------------------------------------------------
 
+// A scenario is "active" if ANY override-layer change is present — not just runtime
+// events, but also a scenario-created what-if account or a hidden base account. Used to
+// set meta.hasActiveScenario / generatedFor and to gate scenarioEffect. Mirrors how the
+// UI (ScenarioBanner, ConfigBuilderPage) defines an active scenario, so the assistant
+// never says "no active scenario" when the plan genuinely differs from base. See P2 B-5.
+export function hasActiveScenario(overrides: PlannerOverrides): boolean {
+  return (
+    (overrides.runtimeEvents?.length ?? 0) > 0 ||
+    (overrides.scenarioAccounts?.length ?? 0) > 0 ||
+    (overrides.deletedAccountIds?.length ?? 0) > 0
+  );
+}
+
 export function buildContextPack(
   result: SimulationResult,
   config: PlannerConfig,
@@ -195,7 +208,7 @@ export function buildContextPack(
   baseResult?: SimulationResult,
 ): ContextPack {
   const { summary } = result;
-  const hasActiveScenario = (overrides.runtimeEvents?.length ?? 0) > 0;
+  const scenarioActive = hasActiveScenario(overrides);
 
   const finalRow = result.rows[result.rows.length - 1];
   const accounts = config.investments.accounts.map((acct) => {
@@ -230,8 +243,8 @@ export function buildContextPack(
       currency: 'INR',
       horizonMonths: config.forecast.totalMonths,
       startMonth: config.forecast.startMonth,
-      hasActiveScenario,
-      generatedFor: hasActiveScenario ? 'scenario' : 'base',
+      hasActiveScenario: scenarioActive,
+      generatedFor: scenarioActive ? 'scenario' : 'base',
     },
     headline: {
       finalNetWorth: Math.round(summary.finalNetWorth),
@@ -250,7 +263,7 @@ export function buildContextPack(
     // Base-vs-scenario effect, grounded in a real base-plan simulation. Only when a
     // scenario is active AND the caller supplied the base run (see aiStore).
     scenarioEffect:
-      hasActiveScenario && baseResult
+      scenarioActive && baseResult
         ? {
             baseFinalNetWorth: Math.round(baseResult.summary.finalNetWorth),
             scenarioFinalNetWorth: Math.round(summary.finalNetWorth),

@@ -1,4 +1,4 @@
-import { Grid } from "@mantine/core";
+import { Grid, Text, Tooltip } from "@mantine/core";
 import {
   IconChartLine,
   IconCoins,
@@ -36,7 +36,20 @@ export default function SummaryCards() {
         <StatCard
           title="Cash"
           value={<AdaptiveMoney value={finalRow.assets.cash} />}
-          sub={`Lowest: ${money(summary.lowestBalance)} (${formatMonth(summary.lowestBalanceMonth)})`}
+          sub={
+            <Tooltip
+              multiline
+              w={250}
+              withArrow
+              position="bottom"
+              events={{ hover: true, focus: true, touch: true }}
+              label="Lowest balance your cash touches at any point within a month. It can be lower than every month-end figure in the tables — e.g. a mid-month dip before an FD/RD matures that same month."
+            >
+              <Text span size="xs" c="dimmed" style={{ cursor: "help", borderBottom: "1px dotted currentColor" }}>
+                Lowest: {money(summary.lowestBalance)} ({formatMonth(summary.lowestBalanceMonth)})
+              </Text>
+            </Tooltip>
+          }
           negative={finalRow.assets.cash < 0}
           icon={<IconWallet size={18} />}
           iconColor="brand"

@@ -110,7 +110,7 @@ A saved plan is a `.wfplan` envelope:
 
 ```jsonc
 { "app": "wealth-forecast", "version": 3, "exportedAt": "…",
-  "payload": "<base64(JSON of baseConfig + overrides + savedScenarios)>",
+  "payload": "<base64(JSON of baseConfig + overrides + savedScenarios + undo/redo history)>",
   "checksum": "<SHA-256 of payload>" }
 ```
 

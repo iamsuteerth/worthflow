@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { simulate } from '@/engine/simulate';
-import { buildContextPack, serializeContextPack } from '@/ai/context/buildContextPack';
+import { buildContextPack, serializeContextPack, hasActiveScenario } from '@/ai/context/buildContextPack';
 import { MAX_CONTEXT_PACK_BYTES } from '@/ai/config';
 import { buildEffectiveConfig } from '@/engine/buildEffectiveConfig';
 import { fdMaturityValue } from '@/engine/instrumentProjection';
@@ -18,8 +18,7 @@ function buildPack(config: PlannerConfig, overrides: PlannerOverrides = {}) {
   const baselineIds = config.investments.accounts.map((a) => a.id);
   // Mirror aiStore.getContextBlock: when a scenario is active, also run the pure
   // base plan so the pack can carry a grounded base-vs-scenario effect.
-  const hasScenario = (overrides.runtimeEvents?.length ?? 0) > 0;
-  const baseResult = hasScenario ? simulate(config, {}) : undefined;
+  const baseResult = hasActiveScenario(overrides) ? simulate(config, {}) : undefined;
   return buildContextPack(result, effective, overrides, baselineIds, undefined, baseResult);
 }
 
@@ -80,6 +79,35 @@ describe('buildContextPack — series labels', () => {
     const last = p.series.months - 1;
     expect(p.headline.finalNetWorth).toBe(p.series.netWorth[last]);
     expect(p.headline.finalInvestmentCorpus).toBe(p.series.investments[last]);
+  });
+});
+
+describe('hasActiveScenario / scenario detection (P2 B-5)', () => {
+  it('is false for an empty override layer', () => {
+    expect(hasActiveScenario({})).toBe(false);
+    const p = buildPack(cfg, {});
+    expect(p.meta.hasActiveScenario).toBe(false);
+    expect(p.meta.generatedFor).toBe('base');
+    expect(p.scenarioEffect).toBeUndefined();
+  });
+
+  it('is true and carries a scenarioEffect when the only change is a what-if account', () => {
+    const overrides: PlannerOverrides = {
+      scenarioAccounts: [
+        account({ id: 'whatif-1', name: 'New SIP', startMonth: m('2025-01'), openingBalance: 0, defaultAnnualReturn: 10, defaultMonthlyContribution: 5_000 }),
+      ],
+    };
+    expect(hasActiveScenario(overrides)).toBe(true);
+    const p = buildPack(cfg, overrides);
+    expect(p.meta.hasActiveScenario).toBe(true);
+    expect(p.meta.generatedFor).toBe('scenario');
+    // The what-if account's effect shows on the scenario side only (base excludes it).
+    expect(p.scenarioEffect).toBeDefined();
+    expect(p.scenarioEffect!.scenarioFinalNetWorth).not.toBe(p.scenarioEffect!.baseFinalNetWorth);
+  });
+
+  it('is true when the only change is a hidden base account', () => {
+    expect(hasActiveScenario({ deletedAccountIds: ['acc-1'] })).toBe(true);
   });
 });
 

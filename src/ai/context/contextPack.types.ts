@@ -58,10 +58,11 @@ export interface ContextPackInstrument {
  * Aggregate effect of the active scenario, measured against the base plan. Present
  * ONLY when a scenario is active. Both sides come straight from the engine
  * (simulate) — the model must read these numbers verbatim, never compute the delta
- * itself. Note: an investment account CREATED in-scenario is folded into the base
- * config, so it is reflected on both sides here (and surfaced via
- * `accounts[].addedInScenario`); these deltas capture the runtime events
- * (expenses, deposits/withdrawals, FDs/RDs, overrides, opening-cash).
+ * itself. The base side is `simulate(baseConfig, {})`: a scenario-created what-if
+ * account lives in `overrides.scenarioAccounts` (NOT baseConfig), so its effect appears
+ * on the SCENARIO side only here (and is surfaced via `accounts[].addedInScenario`).
+ * The deltas thus capture every override-layer change — runtime events (expenses,
+ * deposits/withdrawals, FDs/RDs, overrides, opening-cash) plus what-if / removed accounts.
  */
 export interface ContextPackScenarioEffect {
   baseFinalNetWorth: number;

@@ -33,7 +33,7 @@ import { emptyConversation } from '@/ai/chat/conversation.types';
 import type { Conversation, Message } from '@/ai/chat/conversation.types';
 import { shouldCompact, MAX_HISTORY_TOKENS } from '@/ai/chat/tokenBudget';
 import { compactConversation, buildHistoryForRequest, pruneHistoryTokens } from '@/ai/chat/compaction';
-import { buildContextPack, serializeContextPack } from '@/ai/context/buildContextPack';
+import { buildContextPack, serializeContextPack, hasActiveScenario } from '@/ai/context/buildContextPack';
 import { SYSTEM_PROMPT, ACTION_CONTRACT } from '@/ai/config';
 
 import { validateAction } from '@/ai/actions/validateAction';
@@ -152,9 +152,10 @@ function getContextBlock(
   const result = simulate(config, overrides);
   // When a scenario is active, also simulate the pure base plan so the pack can carry
   // a grounded base-vs-scenario effect (scenarioEffect). simulate(baseConfig, {}) is
-  // the base with no runtime events / overrides applied.
-  const hasScenario = (overrides.runtimeEvents?.length ?? 0) > 0;
-  const baseResult = hasScenario ? simulate(baseConfig, {}) : undefined;
+  // the base with no runtime events / overrides applied. "Active" includes a what-if
+  // account or a hidden base account, not just runtime events (see P2 B-5).
+  const scenarioActive = hasActiveScenario(overrides);
+  const baseResult = scenarioActive ? simulate(baseConfig, {}) : undefined;
   const pack = buildContextPack(result, config, overrides, baselineAccountIds, undefined, baseResult);
   const block = serializeContextPack(pack);
   const epoch = crypto.randomUUID();

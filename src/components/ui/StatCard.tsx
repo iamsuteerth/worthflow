@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 interface StatCardProps {
   title: string;
   value: ReactNode;
-  sub?: string;
+  sub?: ReactNode;
   icon?: ReactNode;
   iconColor?: string;
   valueColor?: string;

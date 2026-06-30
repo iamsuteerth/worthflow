@@ -137,6 +137,7 @@ export default function ScenarioPanel() {
   const baseConfig     = usePlannerStore((s) => s.baseConfig);
   const overrides      = usePlannerStore((s) => s.overrides);
   const savedScenarios = usePlannerStore((s) => s.savedScenarios);
+  const history        = usePlannerStore((s) => s.history);
   const reset          = usePlannerStore((s) => s.resetOverrides);
   const loadPlan       = usePlannerStore((s) => s.loadPlan);
 
@@ -319,7 +320,7 @@ export default function ScenarioPanel() {
         <Button variant="default" leftSection={<IconUpload size={14} />} onClick={() => fileInputRef.current?.click()}>
           Import
         </Button>
-        <Button variant="default" leftSection={<IconDownload size={14} />} onClick={() => exportPlan({ baseConfig, overrides, savedScenarios })}>
+        <Button variant="default" leftSection={<IconDownload size={14} />} onClick={() => exportPlan({ baseConfig, overrides, savedScenarios, history })}>
           Export
         </Button>
         <Button color="red" variant="light" leftSection={<IconRefresh size={14} />} onClick={() => setResetConfirmOpen(true)}>

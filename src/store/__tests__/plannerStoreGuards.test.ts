@@ -17,6 +17,7 @@ vi.hoisted(() => {
 
 import { usePlannerStore } from '@/store/plannerStore';
 import { baseConfig, account, m } from '@/engine/__tests__/factories';
+import type { RuntimeEvent } from '@/types/runtimeEvent';
 
 function setPlan(over = {}) {
   const cfg = baseConfig({
@@ -81,5 +82,38 @@ describe('plannerStore — future-dated account opening cash guard', () => {
       defaultAnnualReturn: 10, defaultMonthlyContribution: 0,
     });
     expect(id).toBeTruthy();
+  });
+});
+
+describe('plannerStore — updateRuntimeEvent structural guard (P2 B-3)', () => {
+  it('no-ops an edit that moves an event outside the forecast window', () => {
+    usePlannerStore.getState().addTransientOneOffExpense(m('2025-03'), 1_000, 'X');
+    const id = events()[0].id;
+    usePlannerStore.getState().updateRuntimeEvent(id, { month: m('2030-01') } as Partial<RuntimeEvent>);
+    expect((events()[0] as { month: string }).month).toBe('2025-03'); // unchanged
+  });
+
+  it('no-ops a deposit edit moved before its account starts', () => {
+    setPlan({
+      investments: {
+        accounts: [account({ id: 'acc-1', name: 'Index Fund', startMonth: m('2025-06'), openingBalance: 0, defaultMonthlyContribution: 0, defaultAnnualReturn: 0 })],
+        amountOverrides: [],
+        returnOverrides: [],
+      },
+    });
+    usePlannerStore.getState().addTransientInvestmentDeposit('acc-1', m('2025-08'), 10_000);
+    const id = events()[0].id;
+    // 2025-03 is in-window but before the account's 2025-06 start → rejected.
+    usePlannerStore.getState().updateRuntimeEvent(id, { month: m('2025-03') } as Partial<RuntimeEvent>);
+    expect((events()[0] as { month: string }).month).toBe('2025-08'); // unchanged
+  });
+
+  it('applies a valid in-window edit', () => {
+    usePlannerStore.getState().addTransientOneOffExpense(m('2025-03'), 1_000, 'X');
+    const id = events()[0].id;
+    usePlannerStore.getState().updateRuntimeEvent(id, { amount: 2_000, month: m('2025-05') } as Partial<RuntimeEvent>);
+    const e = events()[0] as { amount: number; month: string };
+    expect(e.amount).toBe(2_000);
+    expect(e.month).toBe('2025-05');
   });
 });

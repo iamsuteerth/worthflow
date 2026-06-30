@@ -206,6 +206,99 @@ function appendEvent(
   return [...current, event];
 }
 
+// Structural validity of a runtime event against the live (effective) config: every
+// month it references is inside the forecast window, ranges are ordered (and ANNUAL
+// recurrences span whole years), deposits/withdrawals/account-overrides don't precede
+// their account, and range overrides don't overlap another override on the same account.
+// Cheap + deterministic — NO simulation. Used by updateRuntimeEvent as a store-level
+// backstop so an edit can't bypass the same structural invariants the addTransient*
+// guards enforce on creation. Cash / account-balance caps are deliberately NOT checked
+// here: those need a full simulation and stay with the edit form + the AI feasibility
+// check (both measure them with the event removed). See P2 B-3.
+function rangesOverlap(
+  startMonth: MonthKey,
+  endMonth: MonthKey,
+  ranges: { startMonth: MonthKey; endMonth: MonthKey }[]
+): boolean {
+  return ranges.some((r) => !(endMonth < r.startMonth || startMonth > r.endMonth));
+}
+
+function isRuntimeEventStructurallyValid(
+  event: RuntimeEvent,
+  config: PlannerConfig,
+  others: RuntimeEvent[]
+): boolean {
+  const months = generateMonths(config.forecast.startMonth, config.forecast.totalMonths);
+  const inWindow = new Set<string>(months);
+  const account = (id: string) => config.investments.accounts.find((a) => a.id === id);
+
+  switch (event.type) {
+    case "ONE_OFF_EXPENSE":
+    case "CREDIT_CARD_EXPENSE":
+    case "BONUS_INCOME":
+      return inWindow.has(event.month);
+    case "SALARY_CHANGE":
+      return inWindow.has(event.effectiveMonth);
+    case "FD":
+    case "RD":
+      return inWindow.has(event.startMonth);
+    case "OPENING_CASH_OVERRIDE":
+      return true;
+    case "RECURRING_EXPENSE":
+      if (!inWindow.has(event.startMonth) || !inWindow.has(event.endMonth) || event.startMonth > event.endMonth) {
+        return false;
+      }
+      return (
+        (event.frequency ?? "MONTHLY") !== "ANNUAL" ||
+        isValidAnnualRange(config.forecast.startMonth, config.forecast.totalMonths, event.startMonth, event.endMonth)
+      );
+    case "SPENDING_OVERRIDE": {
+      if (!inWindow.has(event.startMonth) || !inWindow.has(event.endMonth) || event.startMonth > event.endMonth) {
+        return false;
+      }
+      const existing = others.filter(
+        (e): e is RuntimeSpendingOverride => e.type === "SPENDING_OVERRIDE"
+      );
+      return !rangesOverlap(event.startMonth, event.endMonth, existing);
+    }
+    case "INVESTMENT_DEPOSIT":
+    case "INVESTMENT_WITHDRAWAL": {
+      const acct = account(event.accountId);
+      return !!acct && inWindow.has(event.month) && event.month >= acct.startMonth;
+    }
+    case "ACCOUNT_AMOUNT_OVERRIDE": {
+      const acct = account(event.accountId);
+      if (
+        !acct || !inWindow.has(event.startMonth) || !inWindow.has(event.endMonth) ||
+        event.startMonth > event.endMonth || event.startMonth < acct.startMonth
+      ) {
+        return false;
+      }
+      const existing = others.filter(
+        (e): e is RuntimeAccountAmountOverride =>
+          e.type === "ACCOUNT_AMOUNT_OVERRIDE" && e.accountId === event.accountId
+      );
+      return !rangesOverlap(event.startMonth, event.endMonth, existing);
+    }
+    case "ACCOUNT_RETURN_OVERRIDE": {
+      const acct = account(event.accountId);
+      if (
+        !acct || !inWindow.has(event.startMonth) || !inWindow.has(event.endMonth) ||
+        event.startMonth > event.endMonth || event.startMonth < acct.startMonth
+      ) {
+        return false;
+      }
+      const existing = others.filter(
+        (e): e is RuntimeAccountReturnOverride =>
+          e.type === "ACCOUNT_RETURN_OVERRIDE" && e.accountId === event.accountId
+      );
+      return !rangesOverlap(event.startMonth, event.endMonth, existing);
+    }
+    default:
+      return true;
+  }
+}
+
 export function getAvailableCash(
   config: PlannerConfig,
   overrides: PlannerOverrides,
@@ -535,9 +628,17 @@ export const usePlannerStore = create<PlannerStore>()(
 
       updateRuntimeEvent: (id, changes) =>
         set((s) => {
-          const events = (s.overrides.runtimeEvents ?? []).map((e) =>
-            e.id === id ? ({ ...e, ...changes } as RuntimeEvent) : e
-          );
+          const current = s.overrides.runtimeEvents ?? [];
+          const target = current.find((e) => e.id === id);
+          if (!target) return s;
+          const merged = { ...target, ...changes } as RuntimeEvent;
+          // Store-level backstop: reject an edit that breaks the same structural
+          // invariants creation enforces (window/range/account-start/overlap), measured
+          // against the OTHER events. The edit form and AI feasibility check still own
+          // the simulation-based cash/balance caps. A rejected edit is a no-op.
+          const others = current.filter((e) => e.id !== id);
+          if (!isRuntimeEventStructurallyValid(merged, s.config, others)) return s;
+          const events = current.map((e) => (e.id === id ? merged : e));
           return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
