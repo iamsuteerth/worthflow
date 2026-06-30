@@ -30,11 +30,13 @@ export function getCreditCardExpense(
   config: PlannerConfig,
   month: MonthKey
 ): number {
-  return (
-    config.creditCardBills.find(
-      (bill) => bill.month === month
-    )?.amount ?? 0
-  );
+  // SUM every bill in the month — multiple cards can bill the same month (e.g. an
+  // ICICI and an SBI bill in July). A previous `.find()` here returned only the first,
+  // silently dropping the rest from the cash math even though buildCashflowEvents lists
+  // them all. Mirrors getOneOffExpense / getRecurringExpense / getBonusIncome.
+  return config.creditCardBills
+    .filter((bill) => bill.month === month)
+    .reduce((sum, bill) => sum + bill.amount, 0);
 }
 
 export function getOneOffExpense(

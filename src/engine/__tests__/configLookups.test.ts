@@ -90,6 +90,16 @@ describe("getCreditCardExpense", () => {
     expect(getCreditCardExpense(config, "2025-03")).toBe(15_000);
     expect(getCreditCardExpense(config, "2025-04")).toBe(0);
   });
+
+  it("sums multiple bills in the same month (e.g. an ICICI and an SBI bill)", () => {
+    const config = baseConfig({
+      creditCardBills: [
+        { id: "1", month: "2025-03", amount: 4_707, label: "ICICI Bill" },
+        { id: "2", month: "2025-03", amount: 863, label: "SBI Bill" },
+      ],
+    });
+    expect(getCreditCardExpense(config, "2025-03")).toBe(5_570);
+  });
 });
 
 describe("getOneOffExpense", () => {

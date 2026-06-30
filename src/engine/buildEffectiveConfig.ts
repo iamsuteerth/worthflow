@@ -8,6 +8,12 @@ export function buildEffectiveConfig(
 ): PlannerConfig {
   const config = structuredClone(baseConfig);
 
+  // A baseConfig rehydrated from localStorage (persist `merge` doesn't field-backfill)
+  // can predate `recurringExpenses` (added in v2.0.0) and arrive undefined. Normalise
+  // it so the RECURRING_EXPENSE case below can `.push` safely and the returned config
+  // is always well-formed for downstream consumers.
+  config.recurringExpenses ??= [];
+
   if (overrides.incomeMonthly !== undefined) {
     config.income.monthly = overrides.incomeMonthly;
   }
