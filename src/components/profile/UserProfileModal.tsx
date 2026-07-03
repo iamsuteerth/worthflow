@@ -3,7 +3,6 @@ import {
   Button,
   Divider,
   Group,
-  Loader,
   Modal,
   Stack,
   Text,
@@ -142,9 +141,10 @@ export function UserProfileModal({ opened, onClose }: UserProfileModalProps) {
             </Group>
 
             {savesLoading && (
-              <Group justify="center" py="md">
-                <Loader size="sm" color="brand" />
-              </Group>
+              <>
+                <SaveFileCard isPlaceholder label="" networth={0} timeframeMonths={0} createdAt="" />
+                <SaveFileCard isPlaceholder label="" networth={0} timeframeMonths={0} createdAt="" />
+              </>
             )}
 
             {!savesLoading && savesError && (

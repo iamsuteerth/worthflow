@@ -1,9 +1,10 @@
 import { useEffect, useState, lazy, Suspense } from "react";
-import { Alert, Button, Center, Group, Loader, SegmentedControl, Stack } from "@mantine/core";
+import { Alert, Button, Group, SegmentedControl, Stack } from "@mantine/core";
 import { IconChartLine, IconCloudOff, IconSettings } from "@tabler/icons-react";
 
 import PlannerShell from "@/components/layout/AppShell";
 import LoginPage from "@/components/auth/LoginPage";
+import { AppLoadingSkeleton, PageContentSkeleton } from "@/components/layout/SkeletonLoaders";
 
 import { AI_ENABLED } from "@/lib/featureFlags";
 import { usePlannerStore, type AppView } from "@/store/plannerStore";
@@ -74,11 +75,7 @@ export default function App() {
   }, [authenticated, autoLoadLatest]);
 
   if (loading || (authenticated && !cloudReady)) {
-    return (
-      <Center h="100vh">
-        <Loader color="brand" />
-      </Center>
-    );
+    return <AppLoadingSkeleton />;
   }
 
   if (!authenticated) {
@@ -116,7 +113,7 @@ export default function App() {
           data={NAV_DATA}
           radius="md"
         />
-        <Suspense fallback={<Loader />}>
+        <Suspense fallback={<PageContentSkeleton />}>
           {activeView === "builder"
             ? <ConfigBuilderPage />
             : <ForecastPage />}

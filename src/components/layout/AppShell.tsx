@@ -8,7 +8,6 @@ import {
   Burger,
   Drawer,
   Group,
-  Loader,
   Stack,
   Text,
   Title,
@@ -26,6 +25,7 @@ import { getInitials } from "@/utils/display";
 
 import ThemeToggle from "@/components/layout/ThemeToggle";
 import AppFooter from "@/components/layout/AppFooter";
+import { ScenarioPanelSkeleton } from "@/components/layout/SkeletonLoaders";
 
 const AiFab = AI_ENABLED
   ? lazy(() => import("@/components/ai/AiFab"))
@@ -86,7 +86,7 @@ export default function PlannerShell({ children }: Props) {
           radius={0}
           position="left"
         >
-          <Suspense fallback={<Loader />}>
+          <Suspense fallback={<ScenarioPanelSkeleton />}>
             <ScenarioPanel />
           </Suspense>
         </Drawer>
@@ -159,7 +159,7 @@ export default function PlannerShell({ children }: Props) {
             }}
           >
             <ScenarioLabHeading />
-            <Suspense fallback={<Loader />}>
+            <Suspense fallback={<ScenarioPanelSkeleton />}>
               <ScenarioPanel />
             </Suspense>
           </AppShell.Navbar>
@@ -172,7 +172,7 @@ export default function PlannerShell({ children }: Props) {
       </AppShell>
 
       {AiFab && (
-        <Suspense fallback={<Loader />}>
+        <Suspense fallback={null}>
           <AiFab />
         </Suspense>
       )}
