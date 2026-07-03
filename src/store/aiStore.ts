@@ -2,14 +2,12 @@ import type { AiErrorKind } from '@/ai/provider/types';
 import type { KeyStatus } from '@/ai/keyVault/keyVault';
 import type { KeyBlob, EncryptedEnvelope } from '@/ai/cloud/aiCloud';
 import type { Conversation, Message } from '@/ai/chat/conversation.types';
-import type { PlannerConfig } from '@/types/config';
-import type { PlannerOverrides } from '@/types/overrides';
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import { aiProvider } from '@/ai/provider/index';
-import { AiError } from '@/ai/provider/types';
+import { AiError, isAbortError } from '@/ai/provider/types';
 
 import {
   resolveKeyStatus,
@@ -18,9 +16,8 @@ import {
   encryptNewKey,
   reEncryptKeyWithNewPassphrase,
   clearAllKekState,
-  encryptWithSessionKek,
-  decryptWithSessionKek,
   clearSessionKek,
+  getSessionKek,
   activateKek,
 } from '@/ai/keyVault/keyVault';
 
@@ -36,7 +33,14 @@ import {
 import { emptyConversation } from '@/ai/chat/conversation.types';
 import { shouldCompact, MAX_HISTORY_TOKENS } from '@/ai/chat/tokenBudget';
 import { compactConversation, buildHistoryForRequest, pruneHistoryTokens } from '@/ai/chat/compaction';
-import { buildContextPack, serializeContextPack, hasActiveScenario } from '@/ai/context/buildContextPack';
+import {
+  encryptConversation,
+  decryptConversation,
+  scheduleConversationWrite,
+  flushConversationWrite,
+  cancelConversationWrite,
+} from '@/ai/chat/conversationSync';
+import { getContextBlock, clearContextCache } from '@/ai/context/contextCache';
 import { SYSTEM_PROMPT, ACTION_CONTRACT } from '@/ai/config';
 
 import { validateAction } from '@/ai/actions/validateAction';
@@ -55,9 +59,10 @@ import {
 } from '@/ai/aiNotifications';
 
 import { usePlannerStore } from '@/store/plannerStore';
-import { simulate } from '@/engine/simulate';
 import { aesGcmEncrypt } from '@/ai/keyVault/crypto';
 import { cacheKek, clearKek } from '@/ai/keyVault/kekCache';
+
+export { mergeConversations } from '@/ai/chat/conversationSync';
 
 // ---------------------------------------------------------------------------
 // Interfaces
@@ -97,66 +102,6 @@ interface AiStore {
   dismissProposedAction(messageId: string): void;
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function isPreconditionFailed(err: unknown): boolean {
-  const e = err as { name?: string; $metadata?: { httpStatusCode?: number } };
-  return e?.name === 'PreconditionFailed' || e?.$metadata?.httpStatusCode === 412;
-}
-
-async function encryptConversation(conv: Conversation): Promise<EncryptedEnvelope> {
-  const { iv, ciphertext, epoch } = await encryptWithSessionKek(JSON.stringify(conv));
-  return { v: 1, keyEpoch: epoch, iv, ciphertext };
-}
-
-async function decryptConversation(
-  envelope: EncryptedEnvelope,
-  blobEpoch: string,
-): Promise<Conversation | 'epoch_mismatch' | 'decrypt_error'> {
-  if (envelope.keyEpoch !== blobEpoch) return 'epoch_mismatch';
-  try {
-    const plaintext = await decryptWithSessionKek(envelope.iv, envelope.ciphertext, envelope.keyEpoch);
-    return JSON.parse(plaintext) as Conversation;
-  } catch {
-    return 'decrypt_error';
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Context-pack cache
-// ---------------------------------------------------------------------------
-// Building the pack re-runs simulate() and serialises the result. plannerStore
-// replaces `config`/`overrides` with new object references on every plan change,
-// so caching by reference identity skips redundant work when the plan is
-// unchanged between turns and keeps the serialised block byte-identical across
-// those turns — which lets Gemini's implicit prefix caching discount the repeated
-// context. Accuracy is preserved: any real plan edit yields new references and a
-// fresh rebuild (with a new contextEpoch).
-let _ctxCache: { configRef: unknown; overridesRef: unknown; block: string; epoch: string } | null = null;
-
-function getContextBlock(
-  config: PlannerConfig,
-  overrides: PlannerOverrides,
-  baselineAccountIds: string[],
-  baseConfig: PlannerConfig,
-): { block: string; epoch: string } {
-  if (_ctxCache && _ctxCache.configRef === config && _ctxCache.overridesRef === overrides) {
-    return { block: _ctxCache.block, epoch: _ctxCache.epoch };
-  }
-  const result = simulate(config, overrides);
-  // When a scenario is active, simulate the pure base plan so the pack can carry
-  // a grounded base-vs-scenario effect.
-  const scenarioActive = hasActiveScenario(overrides);
-  const baseResult = scenarioActive ? simulate(baseConfig, {}) : undefined;
-  const pack = buildContextPack(result, config, overrides, baselineAccountIds, undefined, baseResult);
-  const block = serializeContextPack(pack);
-  const epoch = crypto.randomUUID();
-  _ctxCache = { configRef: config, overridesRef: overrides, block, epoch };
-  return { block, epoch };
-}
-
 let _abortController: AbortController | null = null;
 
 // ---------------------------------------------------------------------------
@@ -189,6 +134,7 @@ export const useAiStore = create<AiStore>()(
             await get().loadConversationFromCloud();
           }
         } catch {
+          notifyAiCloudSyncFailed();
         }
       },
 
@@ -196,54 +142,16 @@ export const useAiStore = create<AiStore>()(
       // Setup
       // ------------------------------------------------------------------
       setupKey: async (plaintextApiKey, passphrase) => {
-        // Validate key
         set({ keyStatus: 'validating' });
-        const valid = await aiProvider.validateKey(plaintextApiKey);
-        if (!valid) {
-          set({ keyStatus: 'absent' });
-          throw new AiError('INVALID_KEY', 'Your API key was rejected by Gemini. Check the key and try again.');
-        }
-
-        // Encrypt key + mint new epoch
-        const { blob: partial, kek } = await encryptNewKey(plaintextApiKey, passphrase);
-        const now = new Date().toISOString();
-        const blob: KeyBlob = {
-          ...partial,
-          providerId: 'gemini',
-          createdAt: now,
-          updatedAt: now,
-        };
-
-        // Upload blob
-        await putKeyBlob(blob);
-
-        // Write empty encrypted conversation
-        const emptyCov = emptyConversation();
-        const { iv, ciphertext } = await aesGcmEncrypt(kek, JSON.stringify(emptyCov));
-        const envelope: EncryptedEnvelope = { v: 1, keyEpoch: blob.keyEpoch, iv, ciphertext };
-        const initEtag = await putConversation(envelope, null);
-
-        // Cache KEK + set session
         try {
-          await cacheKek(kek, blob.keyEpoch);
-        } catch {
-          if (!get().indexedDbWarningShown) {
-            notifyIndexedDbUnavailable();
-            set({ indexedDbWarningShown: true });
-          }
+          await mintKeyAndResetChat(set, get, plaintextApiKey, passphrase);
+          notifyAiKeySetup();
+        } catch (err) {
+          set({ keyStatus: 'absent' });
+          throw err instanceof AiError
+            ? err
+            : new AiError('CLOUD_SYNC', "Couldn't save your encrypted key to the cloud. Check your connection and try again.");
         }
-
-        // Activate the KEK we already have
-        await activateKek(kek, blob.keyEpoch);
-
-        set({
-          keyBlob: blob,
-          keyStatus: 'ready',
-          conversation: emptyCov,
-          _conversationEtag: initEtag,
-        });
-
-        notifyAiKeySetup();
       },
 
       // ------------------------------------------------------------------
@@ -255,6 +163,18 @@ export const useAiStore = create<AiStore>()(
 
         await unlockWithPassphrase(keyBlob, passphrase);
         set({ keyStatus: 'ready' });
+
+        const session = getSessionKek();
+        if (session) {
+          try {
+            await cacheKek(session.kek, session.epoch);
+          } catch {
+            if (!get().indexedDbWarningShown) {
+              notifyIndexedDbUnavailable();
+              set({ indexedDbWarningShown: true });
+            }
+          }
+        }
 
         await get().loadConversationFromCloud();
       },
@@ -298,51 +218,15 @@ export const useAiStore = create<AiStore>()(
       // Forgot passphrase: destroys old chat
       // ------------------------------------------------------------------
       forgotPassphrase: async (newKey, newPassphrase) => {
-        // Validate the new key
         set({ keyStatus: 'validating' });
-        const valid = await aiProvider.validateKey(newKey);
-        if (!valid) {
-          set({ keyStatus: 'locked' });
-          throw new AiError('INVALID_KEY', 'Your API key was rejected by Gemini. Check the key and try again.');
-        }
-
-        // New epoch + encrypt
-        const { blob: partial, kek } = await encryptNewKey(newKey, newPassphrase);
-        const now = new Date().toISOString();
-        const blob: KeyBlob = {
-          ...partial,
-          providerId: 'gemini',
-          createdAt: now,
-          updatedAt: now,
-        };
-
-        // Overwrite blob
-        await putKeyBlob(blob);
-
-        // Write fresh empty chat under new epoch
-        const emptyCov = emptyConversation();
-        const { iv, ciphertext } = await aesGcmEncrypt(kek, JSON.stringify(emptyCov));
-        const envelope: EncryptedEnvelope = { v: 1, keyEpoch: blob.keyEpoch, iv, ciphertext };
-        const fpEtag = await putConversation(envelope, undefined);
-
-        // Cache new KEK
         try {
-          await cacheKek(kek, blob.keyEpoch);
-        } catch {
-          if (!get().indexedDbWarningShown) {
-            notifyIndexedDbUnavailable();
-            set({ indexedDbWarningShown: true });
-          }
+          await mintKeyAndResetChat(set, get, newKey, newPassphrase);
+        } catch (err) {
+          set({ keyStatus: 'locked' });
+          throw err instanceof AiError
+            ? err
+            : new AiError('CLOUD_SYNC', "Couldn't save your new encrypted key to the cloud. Check your connection and try again.");
         }
-
-        await activateKek(kek, blob.keyEpoch);
-
-        set({
-          keyBlob: blob,
-          keyStatus: 'ready',
-          conversation: emptyCov,
-          _conversationEtag: fpEtag,
-        });
       },
 
       // ------------------------------------------------------------------
@@ -379,7 +263,11 @@ export const useAiStore = create<AiStore>()(
             return;
           }
 
-          set({ conversation: result, _conversationEtag: etag });
+          const normalized: Conversation = {
+            ...result,
+            messages: result.messages.map((m) => (m.streaming ? { ...m, streaming: false } : m)),
+          };
+          set({ conversation: normalized, _conversationEtag: etag });
         } catch {
           // S3 load failed - non-fatal. Keep empty conversation.
           notifyAiCloudSyncFailed();
@@ -390,27 +278,10 @@ export const useAiStore = create<AiStore>()(
       // Send a message
       // ------------------------------------------------------------------
       send: async (text) => {
-        const { keyBlob, keyStatus, conversation, sending } = get();
-        if (sending) return;
-        if (keyStatus !== 'ready' || !keyBlob) return;
+        const apiKey = await claimTurnKey(set, get);
+        if (apiKey === null) return;
 
-        // Get plaintext key
-        let apiKey: string;
-        try {
-          apiKey = await revealKey(keyBlob);
-        } catch (err) {
-          const kind = err instanceof AiError ? err.kind : 'UNKNOWN';
-          const message = err instanceof AiError ? err.message : 'Could not unlock key.';
-          const errMsg: Message = {
-            id: crypto.randomUUID(),
-            role: 'assistant',
-            text: message,
-            createdAt: new Date().toISOString(),
-            error: { kind, message },
-          };
-          set({ conversation: { ...conversation, messages: [...conversation.messages, errMsg] } });
-          return;
-        }
+        const conversation = get().conversation;
 
         // Append user message
         const userMsg: Message = {
@@ -435,7 +306,7 @@ export const useAiStore = create<AiStore>()(
           messages: [...conversation.messages, userMsg, assistantPlaceholder],
           updatedAt: new Date().toISOString(),
         };
-        set({ conversation: updatedWithUser, sending: true });
+        set({ conversation: updatedWithUser });
 
         // Build the context block (cached by plan identity)
         const plannerState = usePlannerStore.getState();
@@ -508,7 +379,7 @@ export const useAiStore = create<AiStore>()(
             }));
           }
         } catch (err) {
-          if ((err as { name?: string })?.name === 'AbortError') {
+          if (isAbortError(err)) {
             aborted = true;
           } else {
             const kind = err instanceof AiError ? err.kind : 'UNKNOWN';
@@ -566,23 +437,14 @@ export const useAiStore = create<AiStore>()(
         // Debounced encrypted cloud write-back. The write re-encrypts via the
         // session KEK and never needs the plaintext key, so it isn't passed in -
         // the decrypted key isn't retained beyond this provider call.
-        scheduleWrite(get, set);
+        scheduleConversationWrite(get, set);
       },
 
       proposeAction: async (text) => {
-        const { keyBlob, keyStatus, conversation, sending } = get();
-        if (sending) return;
-        if (keyStatus !== 'ready' || !keyBlob) return;
+        const apiKey = await claimTurnKey(set, get);
+        if (apiKey === null) return;
 
-        let apiKey: string;
-        try {
-          apiKey = await revealKey(keyBlob);
-        } catch (err) {
-          const kind = err instanceof AiError ? err.kind : 'UNKNOWN';
-          const message = err instanceof AiError ? err.message : 'Could not unlock key.';
-          appendAssistant(set, get, { text: message, error: { kind, message } });
-          return;
-        }
+        const conversation = get().conversation;
 
         const userMsg: Message = {
           id: crypto.randomUUID(),
@@ -592,7 +454,6 @@ export const useAiStore = create<AiStore>()(
         };
         set({
           conversation: { ...conversation, messages: [...conversation.messages, userMsg], updatedAt: new Date().toISOString() },
-          sending: true,
         });
 
         // Build the grounded context block + the validation context (window + names).
@@ -630,7 +491,6 @@ export const useAiStore = create<AiStore>()(
               contextBlock,
               history,
               userMessage: text,
-              expectAction: true,
             },
             apiKey,
             controller.signal,
@@ -669,7 +529,7 @@ export const useAiStore = create<AiStore>()(
             }, contextEpoch);
           }
         } catch (err) {
-          if ((err as { name?: string })?.name === 'AbortError') {
+          if (isAbortError(err)) {
             // user cancelled — leave just the user turn
           } else {
             const kind = err instanceof AiError ? err.kind : 'UNKNOWN';
@@ -681,7 +541,7 @@ export const useAiStore = create<AiStore>()(
           set({ sending: false });
         }
 
-        scheduleWrite(get, set);
+        scheduleConversationWrite(get, set);
       },
 
       applyProposedAction: (messageId) => {
@@ -694,11 +554,11 @@ export const useAiStore = create<AiStore>()(
           // Clear any stale failure note; the "applied" badge itself is derived.
           if (msg.actionStatus === 'failed' || msg.actionError) {
             updateMessage(set, get, messageId, { actionStatus: undefined, actionError: undefined });
-            scheduleWrite(get, set);
+            scheduleConversationWrite(get, set);
           }
         } else {
           updateMessage(set, get, messageId, { actionStatus: 'failed', actionError: result.message });
-          scheduleWrite(get, set);
+          scheduleConversationWrite(get, set);
         }
       },
 
@@ -706,7 +566,7 @@ export const useAiStore = create<AiStore>()(
         const msg = get().conversation.messages.find((m) => m.id === messageId);
         if (!msg?.proposedAction) return;
         updateMessage(set, get, messageId, { actionStatus: 'dismissed' });
-        scheduleWrite(get, set);
+        scheduleConversationWrite(get, set);
       },
 
       // ------------------------------------------------------------------
@@ -748,11 +608,8 @@ export const useAiStore = create<AiStore>()(
       clearForSignOut: () => {
         _abortController?.abort();
         _abortController = null;
-        if (_writeDebounce) {
-          clearTimeout(_writeDebounce);
-          _writeDebounce = null;
-        }
-        _ctxCache = null;
+        cancelConversationWrite();
+        clearContextCache();
         clearSessionKek();
         clearKek().catch(() => {});
         set({
@@ -782,20 +639,76 @@ export function aiPersistPartialize(state: AiStore): {
 }
 
 // ---------------------------------------------------------------------------
-// Debounced cloud write helper (outside the store to avoid re-creating on each render)
+// Store-level helpers
 // ---------------------------------------------------------------------------
 
-// Cross-device merge: keep all remote messages, append any local messages whose ids
-// aren't already in remote (dedupe by id). Exported so the concurrency behaviour can
-// be locked by a test without driving the debounced S3 path.
-export function mergeConversations(remote: Conversation, local: Conversation): Conversation {
-  const remoteIds = new Set(remote.messages.map((m) => m.id));
-  const newLocal = local.messages.filter((m) => !remoteIds.has(m.id));
-  return {
-    ...remote,
-    messages: [...remote.messages, ...newLocal],
-    updatedAt: new Date().toISOString(),
-  };
+type SetFn = (partial: Partial<AiStore>) => void;
+type GetFn = () => AiStore;
+
+// Shared by setupKey/forgotPassphrase: validate the key, encrypt it under a fresh
+// epoch, upload blob + empty chat, cache/activate the KEK, and set the store ready.
+// Throws on any failure; callers translate that into their fallback status.
+async function mintKeyAndResetChat(
+  set: SetFn,
+  get: GetFn,
+  plaintextApiKey: string,
+  passphrase: string,
+): Promise<void> {
+  const valid = await aiProvider.validateKey(plaintextApiKey);
+  if (!valid) {
+    throw new AiError('INVALID_KEY', 'Your API key was rejected by Gemini. Check the key and try again.');
+  }
+
+  const { blob: partial, kek } = await encryptNewKey(plaintextApiKey, passphrase);
+  const now = new Date().toISOString();
+  const blob: KeyBlob = { ...partial, providerId: 'gemini', createdAt: now, updatedAt: now };
+
+  await putKeyBlob(blob);
+
+  // Unconditional write: a create-only put can 412 forever against a stale object,
+  // and the new epoch makes any old envelope unreadable anyway.
+  const emptyCov = emptyConversation();
+  const { iv, ciphertext } = await aesGcmEncrypt(kek, JSON.stringify(emptyCov));
+  const envelope: EncryptedEnvelope = { v: 1, keyEpoch: blob.keyEpoch, iv, ciphertext };
+  const etag = await putConversation(envelope, undefined);
+
+  try {
+    await cacheKek(kek, blob.keyEpoch);
+  } catch {
+    if (!get().indexedDbWarningShown) {
+      notifyIndexedDbUnavailable();
+      set({ indexedDbWarningShown: true });
+    }
+  }
+
+  await activateKek(kek, blob.keyEpoch);
+
+  set({
+    keyBlob: blob,
+    keyStatus: 'ready',
+    conversation: emptyCov,
+    _conversationEtag: etag,
+  });
+}
+
+// Shared prologue of send/proposeAction: claim the `sending` flag BEFORE the first
+// await (a later claim left a window where a second Enter passed the guard and sent
+// the same turn twice), then decrypt the API key. Returns null when the turn can't
+// start — with any error already surfaced in-chat and `sending` released.
+async function claimTurnKey(set: SetFn, get: GetFn): Promise<string | null> {
+  const { keyBlob, keyStatus, sending } = get();
+  if (sending) return null;
+  if (keyStatus !== 'ready' || !keyBlob) return null;
+  set({ sending: true });
+  try {
+    return await revealKey(keyBlob);
+  } catch (err) {
+    const kind = err instanceof AiError ? err.kind : 'UNKNOWN';
+    const message = err instanceof AiError ? err.message : 'Could not unlock key.';
+    appendAssistant(set, get, { text: message, error: { kind, message } });
+    set({ sending: false });
+    return null;
+  }
 }
 
 // Detect the model's "I can only do one change — which first?" reply. Returns the
@@ -858,42 +771,10 @@ function updateMessage(
   });
 }
 
-let _writeDebounce: ReturnType<typeof setTimeout> | null = null;
-
-function scheduleWrite(
-  get: () => AiStore,
-  set: (partial: Partial<AiStore>) => void,
-) {
-  if (_writeDebounce) clearTimeout(_writeDebounce);
-  _writeDebounce = setTimeout(async () => {
-    const { conversation, _conversationEtag, keyBlob } = get();
-    if (!keyBlob) return;
-    try {
-      const envelope = await encryptConversation(conversation);
-      // Conditional update when we have an etag; unconditional fallback when we don't
-      // (never null/create-only here — the object already exists after setup)
-      const newEtag = await putConversation(envelope, _conversationEtag ?? undefined);
-      set({ _conversationEtag: newEtag });
-    } catch (err) {
-      if (isPreconditionFailed(err)) {
-        // Genuine concurrent write from another device: re-fetch, merge, retry
-        try {
-          const { envelope: remoteEnv, etag: remoteEtag } = await getConversation();
-          if (!remoteEnv || !keyBlob) return;
-          const remote = await decryptConversation(remoteEnv, keyBlob.keyEpoch);
-          if (remote === 'epoch_mismatch' || remote === 'decrypt_error') return;
-
-          // Merge: keep remote messages, append any local messages not yet in remote
-          const merged = mergeConversations(remote, get().conversation);
-          const mergedEnvelope = await encryptConversation(merged);
-          const mergedEtag = await putConversation(mergedEnvelope, remoteEtag);
-          set({ conversation: merged, _conversationEtag: mergedEtag ?? remoteEtag });
-        } catch {
-          notifyAiCloudSyncFailed();
-        }
-      } else {
-        notifyAiCloudSyncFailed();
-      }
-    }
-  }, 1500);
+if (typeof document !== 'undefined') {
+  const flush = () => flushConversationWrite(useAiStore.getState, useAiStore.setState);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flush();
+  });
+  window.addEventListener('pagehide', flush);
 }

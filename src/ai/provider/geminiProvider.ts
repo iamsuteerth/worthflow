@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import type { Content } from '@google/genai';
 import { AI_MODEL_ID } from '@/ai/config';
-import { AiError, type AIProvider, type AiRequest, type AiResult, type AiStreamChunk } from '@/ai/provider/types';
+import { AiError, isAbortError, type AIProvider, type AiRequest, type AiResult, type AiStreamChunk } from '@/ai/provider/types';
 
 // Strip a ```json … ``` fence if the model wraps its JSON despite the
 // application/json response mode (occasionally happens).
@@ -16,7 +16,7 @@ export function translateError(err: unknown): AiError {
   const status = e?.status;
   const msg = e?.message ?? 'Unknown error';
 
-  if (e?.name === 'AbortError') throw err;
+  if (isAbortError(err)) throw err;
 
   if (status === 401 || status === 403) {
     return new AiError('INVALID_KEY', 'Your AI key was rejected. Re-enter it in AI Settings.');
@@ -98,7 +98,7 @@ const geminiProvider: AIProvider = {
         if (text) yield { textDelta: text };
       }
     } catch (err) {
-      if ((err as { name?: string })?.name === 'AbortError') throw err;
+      if (isAbortError(err)) throw err;
       throw translateError(err);
     }
   },
@@ -120,7 +120,7 @@ const geminiProvider: AIProvider = {
       });
       raw = response.text ?? '';
     } catch (err) {
-      if ((err as { name?: string })?.name === 'AbortError') throw err;
+      if (isAbortError(err)) throw err;
       throw translateError(err);
     }
 
@@ -144,7 +144,7 @@ const geminiProvider: AIProvider = {
       await ai.models.generateContent({
         model: AI_MODEL_ID,
         contents: 'ping',
-        config: { maxOutputTokens: 1 },
+        config: { maxOutputTokens: 1, abortSignal: signal },
       });
       return true;
     } catch (err) {

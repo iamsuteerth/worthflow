@@ -23,7 +23,6 @@ export async function cacheKek(kek: CryptoKey, keyEpoch: string): Promise<void> 
     const store = tx.objectStore(STORE_NAME);
     const record: KekRecord = { keyEpoch, kek };
     const req = store.put(record, RECORD_KEY);
-    req.onsuccess = () => resolve();
     req.onerror = () => reject(req.error);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
@@ -47,7 +46,6 @@ export async function clearKek(): Promise<void> {
     const tx = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
     const req = store.delete(RECORD_KEY);
-    req.onsuccess = () => resolve();
     req.onerror = () => reject(req.error);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);

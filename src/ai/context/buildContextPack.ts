@@ -1,21 +1,6 @@
 import type { SimulationResult } from '@/engine/simulate';
 import type { PlannerConfig } from '@/types/config';
 import type { PlannerOverrides } from '@/types/overrides';
-import type {
-  RuntimeOneOffExpense,
-  RuntimeCreditCardExpense,
-  RuntimeRecurringExpense,
-  RuntimeBonusIncome,
-  RuntimeSalaryChange,
-  RuntimeSpendingOverride,
-  RuntimeOpeningCashOverride,
-  RuntimeInvestmentDeposit,
-  RuntimeInvestmentWithdrawal,
-  RuntimeAccountAmountOverride,
-  RuntimeAccountReturnOverride,
-  RuntimeFixedDeposit,
-  RuntimeRecurringDeposit,
-} from '@/types/runtimeEvent';
 import { MAX_CONTEXT_PACK_BYTES } from '@/ai/config';
 import { projectInstrument } from '@/engine/instrumentProjection';
 import { addMonths } from '@/engine/dateUtils';
@@ -103,77 +88,43 @@ function buildScenarioChanges(
   config: PlannerConfig,
   overrides: PlannerOverrides,
 ): string[] {
-  const lines: string[] = [];
-  const events = overrides.runtimeEvents ?? [];
+  const accountName = (id: string): string =>
+    config.investments.accounts.find((a) => a.id === id)?.name ?? 'account';
 
-  for (const e of events) {
+  // The switch narrows RuntimeEvent by its `type` discriminant — no casts needed.
+  const lines = (overrides.runtimeEvents ?? []).map((e): string => {
     switch (e.type) {
       case 'ONE_OFF_EXPENSE':
-        lines.push(`One-off expense ${formatMoney((e as RuntimeOneOffExpense).amount)} in ${(e as RuntimeOneOffExpense).month}${(e as RuntimeOneOffExpense).label ? ` (${(e as RuntimeOneOffExpense).label})` : ''}`);
-        break;
+        return `One-off expense ${formatMoney(e.amount)} in ${e.month}${e.label ? ` (${e.label})` : ''}`;
       case 'CREDIT_CARD_EXPENSE':
-        lines.push(`Credit card expense ${formatMoney((e as RuntimeCreditCardExpense).amount)} in ${(e as RuntimeCreditCardExpense).month}`);
-        break;
-      case 'RECURRING_EXPENSE': {
-        const re = e as RuntimeRecurringExpense;
-        lines.push(`Recurring expense "${re.name}" ${formatMoney(re.amount)}/${re.frequency === 'MONTHLY' ? 'mo' : 'yr'} from ${re.startMonth} to ${re.endMonth}`);
-        break;
-      }
+        return `Credit card expense ${formatMoney(e.amount)} in ${e.month}`;
+      case 'RECURRING_EXPENSE':
+        return `Recurring expense "${e.name}" ${formatMoney(e.amount)}/${e.frequency === 'MONTHLY' ? 'mo' : 'yr'} from ${e.startMonth} to ${e.endMonth}`;
       case 'BONUS_INCOME':
-        lines.push(`Bonus income ${formatMoney((e as RuntimeBonusIncome).amount)} in ${(e as RuntimeBonusIncome).month}`);
-        break;
-      case 'SALARY_CHANGE': {
-        const sc = e as RuntimeSalaryChange;
-        lines.push(`Salary changes to ${formatMoney(sc.newMonthlyIncome)}/mo from ${sc.effectiveMonth}`);
-        break;
-      }
-      case 'SPENDING_OVERRIDE': {
-        const so = e as RuntimeSpendingOverride;
-        lines.push(`Monthly spend set to ${formatMoney(so.amount)}/mo from ${so.startMonth} to ${so.endMonth}`);
-        break;
-      }
+        return `Bonus income ${formatMoney(e.amount)} in ${e.month}`;
+      case 'SALARY_CHANGE':
+        return `Salary changes to ${formatMoney(e.newMonthlyIncome)}/mo from ${e.effectiveMonth}`;
+      case 'SPENDING_OVERRIDE':
+        return `Monthly spend set to ${formatMoney(e.amount)}/mo from ${e.startMonth} to ${e.endMonth}`;
       case 'OPENING_CASH_OVERRIDE':
         // The amount lives on the event (applied to config.cash.openingBalance by
         // buildEffectiveConfig), NOT on overrides.openingBalance — reading the latter
         // always reported ₹0 to the model.
-        lines.push(`Opening cash override: ${formatMoney((e as RuntimeOpeningCashOverride).amount)}`);
-        break;
-      case 'INVESTMENT_DEPOSIT': {
-        const dep = e as RuntimeInvestmentDeposit;
-        const acct = config.investments.accounts.find((a) => a.id === dep.accountId);
-        lines.push(`Investment deposit ${formatMoney(dep.amount)} to ${acct?.name ?? 'account'} in ${dep.month}`);
-        break;
-      }
-      case 'INVESTMENT_WITHDRAWAL': {
-        const wd = e as RuntimeInvestmentWithdrawal;
-        const acct = config.investments.accounts.find((a) => a.id === wd.accountId);
-        lines.push(`Investment withdrawal ${formatMoney(wd.amount)} from ${acct?.name ?? 'account'} in ${wd.month}`);
-        break;
-      }
-      case 'ACCOUNT_AMOUNT_OVERRIDE': {
-        const ao = e as RuntimeAccountAmountOverride;
-        const acct = config.investments.accounts.find((a) => a.id === ao.accountId);
-        lines.push(`Contribution override for ${acct?.name ?? 'account'}: ${formatMoney(ao.amount)}/mo from ${ao.startMonth} to ${ao.endMonth}`);
-        break;
-      }
-      case 'ACCOUNT_RETURN_OVERRIDE': {
-        const ro = e as RuntimeAccountReturnOverride;
-        const acct = config.investments.accounts.find((a) => a.id === ro.accountId);
-        lines.push(`Return override for ${acct?.name ?? 'account'}: ${ro.annualReturn}% p.a. from ${ro.startMonth} to ${ro.endMonth}`);
-        break;
-      }
-      case 'FD': {
-        const fd = e as RuntimeFixedDeposit;
-        lines.push(`New FD "${fd.name}": ${formatMoney(fd.principal)} at ${fd.rate}% for ${fd.durationMonths} months from ${fd.startMonth}`);
-        break;
-      }
-      case 'RD': {
-        const rd = e as RuntimeRecurringDeposit;
-        lines.push(`New RD "${rd.name}": ${formatMoney(rd.monthlyContribution)}/mo at ${rd.rate}% for ${rd.durationMonths} months from ${rd.startMonth}`);
-        break;
-      }
+        return `Opening cash override: ${formatMoney(e.amount)}`;
+      case 'INVESTMENT_DEPOSIT':
+        return `Investment deposit ${formatMoney(e.amount)} to ${accountName(e.accountId)} in ${e.month}`;
+      case 'INVESTMENT_WITHDRAWAL':
+        return `Investment withdrawal ${formatMoney(e.amount)} from ${accountName(e.accountId)} in ${e.month}`;
+      case 'ACCOUNT_AMOUNT_OVERRIDE':
+        return `Contribution override for ${accountName(e.accountId)}: ${formatMoney(e.amount)}/mo from ${e.startMonth} to ${e.endMonth}`;
+      case 'ACCOUNT_RETURN_OVERRIDE':
+        return `Return override for ${accountName(e.accountId)}: ${e.annualReturn}% p.a. from ${e.startMonth} to ${e.endMonth}`;
+      case 'FD':
+        return `New FD "${e.name}": ${formatMoney(e.principal)} at ${e.rate}% for ${e.durationMonths} months from ${e.startMonth}`;
+      case 'RD':
+        return `New RD "${e.name}": ${formatMoney(e.monthlyContribution)}/mo at ${e.rate}% for ${e.durationMonths} months from ${e.startMonth}`;
     }
-  }
+  });
 
   // Number each entry (1-based) in runtimeEvents order. The model uses this number
   // as the `ref` when editing/deleting a change, and it keeps "what's active" lists

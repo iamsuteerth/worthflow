@@ -5,12 +5,13 @@ import { IconChartLine, IconCloudOff, IconSettings } from "@tabler/icons-react";
 import PlannerShell from "@/components/layout/AppShell";
 import LoginPage from "@/components/auth/LoginPage";
 
+import { AI_ENABLED } from "@/lib/featureFlags";
 import { usePlannerStore, type AppView } from "@/store/plannerStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCloudStore } from "@/store/cloudStore";
 
 let aiStoreImport: Promise<{ useAiStore: { getState: () => { initAi: () => Promise<void> } } }> | null = null;
-if (import.meta.env.VITE_AI_ENABLED) {
+if (AI_ENABLED) {
   aiStoreImport = import("@/store/aiStore") as unknown as typeof aiStoreImport;
 }
 

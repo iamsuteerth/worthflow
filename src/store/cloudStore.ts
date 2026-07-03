@@ -193,10 +193,7 @@ export const useCloudStore = create<CloudStore>((set) => ({
       // A brand-new save object was uploaded but never referenced by a committed
       // manifest — delete it so it doesn't orphan in S3.
       if (objectUploaded && !overwriteKey) {
-        try {
-          await storageDeleteSave(key)
-        } catch {
-        }
+        await storageDeleteSave(key).catch(() => undefined) // best-effort cleanup
       }
       throw err
     }

@@ -147,7 +147,6 @@ describe('mockProvider.proposeAction (Phase 2)', () => {
         contextBlock: JSON.stringify({ meta: { startMonth: '2027-05' } }),
         history: [],
         userMessage: 'add an expense',
-        expectAction: true,
       },
       'mock-key',
     );
@@ -160,7 +159,7 @@ describe('mockProvider.proposeAction (Phase 2)', () => {
     ac.abort();
     await expect(
       mockProvider.proposeAction(
-        { systemPrompt: '', contextBlock: '', history: [], userMessage: 'x', expectAction: true },
+        { systemPrompt: '', contextBlock: '', history: [], userMessage: 'x' },
         'mock-key',
         ac.signal,
       ),

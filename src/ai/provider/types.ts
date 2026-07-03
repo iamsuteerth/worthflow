@@ -24,23 +24,21 @@ export class AiError extends Error {
   }
 }
 
+export function isAbortError(err: unknown): boolean {
+  return (err as { name?: string } | null | undefined)?.name === 'AbortError';
+}
+
 export interface AiRequest {
   systemPrompt: string;
   contextBlock: string;
   history: Array<{ role: 'user' | 'assistant'; text: string }>;
   userMessage: string;
-  // Phase 2: request a structured ProposedAction (JSON) instead of free text.
-  // Set only on the explicit "Suggest a change" path; chat keeps streaming text.
-  expectAction?: boolean;
 }
 
 export interface AiStreamChunk {
   textDelta: string;
 }
 
-// Phase 2: the structured result of a `proposeAction` call. `proposedActionJson`
-// is RAW, untrusted model output — it must pass through Zod (validateAction)
-// before anything is rendered or applied.
 export interface AiResult {
   text: string;
   proposedActionJson?: unknown;
@@ -54,7 +52,6 @@ export interface AIProvider {
     key: string,
     signal?: AbortSignal,
   ): AsyncIterable<AiStreamChunk>;
-  // Phase 2: one-shot structured request. Returns raw JSON for Zod validation.
   proposeAction(req: AiRequest, key: string, signal?: AbortSignal): Promise<AiResult>;
   validateKey(key: string, signal?: AbortSignal): Promise<boolean>;
 }

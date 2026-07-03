@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { AI_ENABLED } from '@/lib/featureFlags'
 import { authService, type AuthUser } from '@/lib/auth'
 import { usePlannerStore } from '@/store/plannerStore'
 import { useCloudStore } from '@/store/cloudStore'
@@ -48,7 +49,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({ user: null, authenticated: false })
     usePlannerStore.getState().resetForSignOut()
     useCloudStore.setState({ saves: [], savesError: null, initialLoadFailed: false })
-    if (import.meta.env.VITE_AI_ENABLED) {
+    if (AI_ENABLED) {
       const { useAiStore } = await import('@/store/aiStore')
       useAiStore.getState().clearForSignOut()
     }

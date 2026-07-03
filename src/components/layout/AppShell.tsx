@@ -16,6 +16,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
+import { AI_ENABLED } from "@/lib/featureFlags";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { usePlannerStore } from "@/store/plannerStore";
 import { useUiStore } from "@/store/uiStore";
@@ -26,7 +27,7 @@ import { getInitials } from "@/utils/display";
 import ThemeToggle from "@/components/layout/ThemeToggle";
 import AppFooter from "@/components/layout/AppFooter";
 
-const AiFab = import.meta.env.VITE_AI_ENABLED
+const AiFab = AI_ENABLED
   ? lazy(() => import("@/components/ai/AiFab"))
   : null;
 
