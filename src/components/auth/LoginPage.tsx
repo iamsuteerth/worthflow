@@ -211,7 +211,7 @@ export default function LoginPage() {
   const renderView = () => {
     if (view === "signIn") {
       return (
-        <Stack gap="lg">
+        <Stack gap="lg" component="form" onSubmit={(e) => { e.preventDefault(); handleSignIn(); }}>
           <ViewHeader icon={IconLock} title="Worth Flow" subtitle="Sign in to continue" />
           {error && <Alert color="red" radius="md">{error}</Alert>}
           <Stack gap="sm">
@@ -219,20 +219,20 @@ export default function LoginPage() {
               placeholder="Email"
               value={email}
               onChange={(e) => { setEmail(e.currentTarget.value); clearError(); }}
-              onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
               type="email"
+              autoComplete="email"
               autoFocus
             />
             <PasswordInput
               placeholder="Password"
               value={password}
               onChange={(e) => { setPassword(e.currentTarget.value); clearError(); }}
-              onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
+              autoComplete="current-password"
             />
           </Stack>
           <Button
             fullWidth
-            onClick={handleSignIn}
+            type="submit"
             loading={loading}
             disabled={!isValidEmail(email) || !password}
           >
@@ -255,7 +255,7 @@ export default function LoginPage() {
       const passwordValid = isValidPassword(signUpPassword);
       const passwordsMatch = signUpPassword === confirmPassword;
       return (
-        <Stack gap="lg">
+        <Stack gap="lg" component="form" onSubmit={(e) => { e.preventDefault(); handleSignUp(); }}>
           <ViewHeader icon={IconUserPlus} title="Create Account" />
           {error && <Alert color="red" radius="md">{error}</Alert>}
           <Stack gap="sm">
@@ -264,6 +264,7 @@ export default function LoginPage() {
               value={signUpEmail}
               onChange={(e) => { setSignUpEmail(e.currentTarget.value); clearError(); }}
               type="email"
+              autoComplete="email"
               autoFocus
             />
             <PasswordInput
@@ -271,19 +272,20 @@ export default function LoginPage() {
               value={signUpPassword}
               onChange={(e) => { setSignUpPassword(e.currentTarget.value); clearError(); }}
               description={PASSWORD_HINT}
+              autoComplete="new-password"
               error={signUpPassword && !passwordValid ? PASSWORD_HINT : undefined}
             />
             <PasswordInput
               placeholder="Confirm Password"
               value={confirmPassword}
               onChange={(e) => { setConfirmPassword(e.currentTarget.value); clearError(); }}
-              onKeyDown={(e) => e.key === "Enter" && handleSignUp()}
+              autoComplete="new-password"
               error={confirmPassword && !passwordsMatch ? "Passwords do not match." : undefined}
             />
           </Stack>
           <Button
             fullWidth
-            onClick={handleSignUp}
+            type="submit"
             loading={loading}
             disabled={!emailValid || !passwordValid || !passwordsMatch}
           >
@@ -300,7 +302,7 @@ export default function LoginPage() {
 
     if (view === "confirmSignUp") {
       return (
-        <Stack gap="lg">
+        <Stack gap="lg" component="form" onSubmit={(e) => { e.preventDefault(); handleConfirmSignUp(); }}>
           <ViewHeader
             icon={IconMailCheck}
             title="Verify your email"
@@ -311,14 +313,14 @@ export default function LoginPage() {
             placeholder="6-digit code"
             value={code}
             onChange={(e) => { setCode(e.currentTarget.value); clearError(); }}
-            onKeyDown={(e) => e.key === "Enter" && handleConfirmSignUp()}
             maxLength={6}
             inputMode="numeric"
+            autoComplete="one-time-code"
             autoFocus
           />
           <Button
             fullWidth
-            onClick={handleConfirmSignUp}
+            type="submit"
             loading={loading}
             disabled={code.length < 6}
           >
@@ -339,7 +341,7 @@ export default function LoginPage() {
     if (view === "forgotPassword") {
       const emailValid = isValidEmail(forgotEmail);
       return (
-        <Stack gap="lg">
+        <Stack gap="lg" component="form" onSubmit={(e) => { e.preventDefault(); handleForgotPassword(); }}>
           <ViewHeader
             icon={IconKey}
             title="Reset password"
@@ -350,13 +352,13 @@ export default function LoginPage() {
             placeholder="Email"
             value={forgotEmail}
             onChange={(e) => { setForgotEmail(e.currentTarget.value); clearError(); }}
-            onKeyDown={(e) => e.key === "Enter" && handleForgotPassword()}
             type="email"
+            autoComplete="email"
             autoFocus
           />
           <Button
             fullWidth
-            onClick={handleForgotPassword}
+            type="submit"
             loading={loading}
             disabled={!emailValid}
           >
@@ -375,7 +377,7 @@ export default function LoginPage() {
       const passwordValid = isValidPassword(newPassword);
       const passwordsMatch = newPassword === confirmNewPassword;
       return (
-        <Stack gap="lg">
+        <Stack gap="lg" component="form" onSubmit={(e) => { e.preventDefault(); handleResetPassword(); }}>
           <ViewHeader
             icon={IconKey}
             title="Set new password"
@@ -389,6 +391,7 @@ export default function LoginPage() {
               onChange={(e) => { setResetCode(e.currentTarget.value); clearError(); }}
               maxLength={6}
               inputMode="numeric"
+              autoComplete="one-time-code"
               autoFocus
             />
             <PasswordInput
@@ -396,19 +399,20 @@ export default function LoginPage() {
               value={newPassword}
               onChange={(e) => { setNewPassword(e.currentTarget.value); clearError(); }}
               description={PASSWORD_HINT}
+              autoComplete="new-password"
               error={newPassword && !passwordValid ? PASSWORD_HINT : undefined}
             />
             <PasswordInput
               placeholder="Confirm new password"
               value={confirmNewPassword}
               onChange={(e) => { setConfirmNewPassword(e.currentTarget.value); clearError(); }}
-              onKeyDown={(e) => e.key === "Enter" && handleResetPassword()}
+              autoComplete="new-password"
               error={confirmNewPassword && !passwordsMatch ? "Passwords do not match." : undefined}
             />
           </Stack>
           <Button
             fullWidth
-            onClick={handleResetPassword}
+            type="submit"
             loading={loading}
             disabled={resetCode.length < 6 || !passwordValid || !passwordsMatch}
           >

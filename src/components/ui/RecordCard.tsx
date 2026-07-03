@@ -29,7 +29,7 @@ export function RecordCard({
       p="md"
       style={
         highlighted
-          ? { borderColor: "var(--mantine-color-brand-4)" }
+          ? { borderColor: "var(--mantine-primary-color-filled)" }
           : undefined
       }
     >

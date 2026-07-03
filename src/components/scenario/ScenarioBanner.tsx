@@ -49,7 +49,7 @@ export default function ScenarioBanner() {
       <Group justify="space-between" wrap="nowrap" mb={hasChanges ? "xs" : 0}>
         <UnstyledButton onClick={() => navigateToEvents()}>
           <Group gap="xs" wrap="nowrap">
-            <IconAdjustments size={16} color="var(--mantine-color-brand-6)" />
+            <IconAdjustments size={16} color="var(--mantine-primary-color-light-color)" />
             <Text fw={700} size="sm">Scenario Active</Text>
             {events.length > 0 && (
               <Text size="xs" c="dimmed" style={{ textDecoration: "underline" }}>

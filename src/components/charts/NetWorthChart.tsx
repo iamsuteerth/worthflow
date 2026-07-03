@@ -1,6 +1,7 @@
 import type { FinancialEvent } from "@/types/events";
 
 import { Card, Stack, Text, Group, Divider, Box } from "@mantine/core";
+import { IconChartAreaLine } from "@tabler/icons-react";
 import { useElementSize } from "@mantine/hooks";
 import MonthRangeFilter from "@/components/common/MonthRangeFilter";
 import { AreaChart } from "@mantine/charts";
@@ -8,12 +9,7 @@ import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { formatMonth } from "@/engine/monthFormatting";
 import { moneyCompact, moneySigned } from "@/format/money";
 import { EmptyState } from "@/components/ui";
-
-function deltaColor(value: number): string {
-  if (value > 0) return "teal";
-  if (value < 0) return "red";
-  return "gray";
-}
+import { SEMANTIC, deltaColor } from "@/theme/semantic";
 
 type EventSummary = {
   label: string;
@@ -156,18 +152,16 @@ function ChartTooltip({
 }
 
 const SERIES = [
-  { name: "cash",             label: "Cash",        color: "brand.6"  },
-  { name: "investmentCorpus", label: "Investments", color: "violet.6" },
-  { name: "netWorth",         label: "Net Worth",   color: "teal.6"   },
+  // brand.5 stays legible on both light and dark chart backgrounds (brand.6 is
+  // too dark against the near-black dark surface).
+  { name: "cash",             label: "Cash",        color: "brand.5"                 },
+  { name: "investmentCorpus", label: "Investments", color: `${SEMANTIC.investment}.6` },
+  { name: "netWorth",         label: "Net Worth",   color: `${SEMANTIC.positive}.6`   },
 ];
 
 export default function NetWorthChart() {
   const result = useFilteredSimulation();
 
-  // Only mount the chart once its container has a real measured width. recharts'
-  // ResponsiveContainer logs a "width(-1)/height(-1)" warning if it renders into an
-  // unsized container (which happens under StrictMode's throwaway mount / first paint);
-  // gating on a measured width avoids that entirely.
   const { ref: chartRef, width: chartWidth } = useElementSize();
 
   const data: DataPoint[] = result.rows.map((row, index) => {
@@ -203,6 +197,7 @@ export default function NetWorthChart() {
 
         {data.length === 0 ? (
           <EmptyState
+            icon={<IconChartAreaLine size={24} />}
             title="No Data In Range"
             description="Adjust the month range filter to see the wealth projection."
           />

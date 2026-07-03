@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Card, Tabs } from "@mantine/core";
 
 import ForecastTable from "@/components/tables/ForecastTable";
@@ -38,6 +39,28 @@ export default function DashboardTabs() {
   const dashboardTab = useUiStore((s) => s.dashboardTab);
   const setDashboardTab = useUiStore((s) => s.setDashboardTab);
 
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [overflow, setOverflow] = useState({ left: false, right: false });
+
+  const syncOverflow = useCallback(() => {
+    const el = stripRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setOverflow({
+      left: el.scrollLeft > 1,
+      right: el.scrollLeft < maxScroll - 1,
+    });
+  }, []);
+
+  useEffect(() => {
+    syncOverflow();
+    const el = stripRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(syncOverflow);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [syncOverflow]);
+
   return (
     <Card mt="lg" radius="lg" withBorder p={0} style={{ overflow: "hidden" }}>
       <Tabs
@@ -47,12 +70,18 @@ export default function DashboardTabs() {
         }
         variant="none"
       >
-        <div className={classes.strip}>
-          {TABS.map(({ value, label }) => (
-            <Tabs.Tab key={value} value={value} className={classes.tab}>
-              {label}
-            </Tabs.Tab>
-          ))}
+        <div
+          className={classes.stripWrap}
+          data-can-left={overflow.left || undefined}
+          data-can-right={overflow.right || undefined}
+        >
+          <div ref={stripRef} className={classes.strip} onScroll={syncOverflow}>
+            {TABS.map(({ value, label }) => (
+              <Tabs.Tab key={value} value={value} className={classes.tab}>
+                {label}
+              </Tabs.Tab>
+            ))}
+          </div>
         </div>
 
         {(

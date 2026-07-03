@@ -29,7 +29,7 @@ function MessageBubble({ message }: { message: Message }) {
           padding: '8px 12px',
           borderRadius: isUser ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
           background: isUser
-            ? 'var(--mantine-color-brand-6)'
+            ? 'var(--mantine-primary-color-filled)'
             : 'var(--mantine-color-default-hover)',
           color: isUser ? 'white' : 'inherit',
         }}

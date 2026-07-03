@@ -26,7 +26,7 @@ export default function SummaryCards() {
       <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
         <StatCard
           title="Net Worth"
-          value={<AdaptiveMoney value={finalRow.assets.netWorth} />}
+          value={<AdaptiveMoney value={finalRow.assets.netWorth} accounting />}
           sub="End of forecast"
           negative={finalRow.assets.netWorth < 0}
           icon={<IconChartLine size={18} />}
@@ -37,7 +37,7 @@ export default function SummaryCards() {
       <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
         <StatCard
           title="Cash"
-          value={<AdaptiveMoney value={finalRow.assets.cash} />}
+          value={<AdaptiveMoney value={finalRow.assets.cash} accounting />}
           sub={
             <Tooltip
               multiline
@@ -61,7 +61,7 @@ export default function SummaryCards() {
       <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
         <StatCard
           title="Investments"
-          value={<AdaptiveMoney value={finalRow.assets.investmentCorpus} />}
+          value={<AdaptiveMoney value={finalRow.assets.investmentCorpus} accounting />}
           sub="End of forecast"
           negative={finalRow.assets.investmentCorpus < 0}
           icon={<IconCoins size={18} />}

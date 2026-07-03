@@ -74,7 +74,7 @@ function Chip({ label, active, onClick }: {
           ? "1px solid var(--mantine-color-brand-5)"
           : "1px solid var(--mantine-color-default-border)",
         background: active ? "var(--mantine-color-brand-light)" : "transparent",
-        color: active ? "var(--mantine-color-brand-6)" : "var(--mantine-color-dimmed)",
+        color: active ? "var(--mantine-primary-color-light-color)" : "var(--mantine-color-dimmed)",
         fontWeight: active ? 500 : 400,
         transition: "all 120ms ease",
         whiteSpace: "nowrap",
@@ -108,7 +108,7 @@ function SectionButton({ icon: Icon, label, active, onClick }: {
     >
       <Icon
         size={16}
-        style={{ color: active ? "var(--mantine-color-brand-6)" : "inherit" }}
+        style={{ color: active ? "var(--mantine-primary-color-light-color)" : "inherit" }}
         stroke={1.8}
       />
       <Text size="xs" fw={active ? 500 : 400} style={{ color: "inherit", lineHeight: 1.2 }}>

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"; 
+import type { ReactNode } from "react";
 
 import { lazy, Suspense } from "react";
 
@@ -34,6 +34,10 @@ const AiFab = AI_ENABLED
 const ScenarioPanel = lazy(
   () => import("@/components/scenario/ScenarioPanel")
 );
+
+// Shared by the content column and the footer's inner content so footer items
+// line up with the columns above; the footer border still spans full width.
+const CONTENT_MAX_WIDTH = 1920;
 
 interface Props {
   children: ReactNode;
@@ -102,13 +106,13 @@ export default function PlannerShell({ children }: Props) {
         navbar={
           activeView === "forecast"
             ? {
-                width: { sm: 400, lg: 440 },
-                breakpoint: "sm",
-                collapsed: {
-                  mobile: true,
-                  desktop: !opened,
-                },
-              }
+              width: { sm: 400, lg: 440 },
+              breakpoint: "sm",
+              collapsed: {
+                mobile: true,
+                desktop: !opened,
+              },
+            }
             : undefined
         }
         padding="lg"
@@ -165,9 +169,14 @@ export default function PlannerShell({ children }: Props) {
           </AppShell.Navbar>
         )}
 
-        <AppShell.Main>
-          {children}
-          <AppFooter />
+        {/* Main fills the grid's 1fr row (viewport height). Making it a flex
+            column and letting the content grow pushes the footer to the bottom
+            when content is short, while keeping it inset under the navbar. */}
+        <AppShell.Main style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ flex: 1, width: "100%", maxWidth: CONTENT_MAX_WIDTH, marginInline: "auto" }}>
+            {children}
+          </div>
+          <AppFooter maxWidth={CONTENT_MAX_WIDTH} />
         </AppShell.Main>
       </AppShell>
 

@@ -1,10 +1,12 @@
 import { Badge, Group, ScrollArea, Stack, Table, Text } from "@mantine/core";
+import { IconTableOff } from "@tabler/icons-react";
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { formatMonth } from "@/engine/monthFormatting";
 import { EmptyState, RecordCard } from "@/components/ui";
 import { Money } from "@/components/ui";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { moneyParens } from "@/format/money";
+import { SEMANTIC } from "@/theme/semantic";
 
 export default function ForecastTable() {
   const result = useFilteredSimulation();
@@ -13,6 +15,7 @@ export default function ForecastTable() {
   if (result.rows.length === 0) {
     return (
       <EmptyState
+        icon={<IconTableOff size={24} />}
         title="No Forecast Data"
         description="Forecast projections will appear here."
       />
@@ -33,16 +36,16 @@ export default function ForecastTable() {
               {
                 label: "Cash",
                 value: <Money value={row.assets.cash} compact accounting />,
-                valueColor: row.assets.cash < 0 ? "red" : undefined,
+                valueColor: row.assets.cash < 0 ? SEMANTIC.negative : undefined,
               },
               {
                 label: "Net Worth",
                 value: <Money value={row.assets.netWorth} compact accounting />,
-                valueColor: row.assets.netWorth < 0 ? "red" : undefined,
+                valueColor: row.assets.netWorth < 0 ? SEMANTIC.negative : undefined,
                 emphasis: true,
               },
-              { label: "FD",     value: <Money value={row.assets.fdValue} compact accounting />,  valueColor: row.assets.fdValue > 0 ? "cyan" : undefined },
-              { label: "RD",     value: <Money value={row.assets.rdValue} compact accounting />,  valueColor: row.assets.rdValue > 0 ? "grape" : undefined },
+              { label: "FD",     value: <Money value={row.assets.fdValue} compact accounting />,  valueColor: row.assets.fdValue > 0 ? SEMANTIC.instrumentFd : undefined },
+              { label: "RD",     value: <Money value={row.assets.rdValue} compact accounting />,  valueColor: row.assets.rdValue > 0 ? SEMANTIC.instrumentRd : undefined },
               { label: "Events", value: String(row.events.length) },
             ]}
           />
@@ -76,25 +79,25 @@ export default function ForecastTable() {
                 <Table.Td>{formatMonth(row.month)}</Table.Td>
 
                 <Table.Td>
-                  <Text fw={500} c={row.assets.cash < 0 ? "red" : undefined}>
+                  <Text fw={500} c={row.assets.cash < 0 ? SEMANTIC.negative : undefined}>
                     {moneyParens(row.assets.cash)}
                   </Text>
                 </Table.Td>
 
                 <Table.Td>
-                  <Text fw={700} c={row.assets.netWorth < 0 ? "red" : undefined}>
+                  <Text fw={700} c={row.assets.netWorth < 0 ? SEMANTIC.negative : undefined}>
                     {moneyParens(row.assets.netWorth)}
                   </Text>
                 </Table.Td>
 
                 <Table.Td>
-                  <Text c={row.assets.fdValue > 0 ? "cyan" : undefined}>
+                  <Text c={row.assets.fdValue > 0 ? SEMANTIC.instrumentFd : undefined}>
                     {moneyParens(row.assets.fdValue)}
                   </Text>
                 </Table.Td>
 
                 <Table.Td>
-                  <Text c={row.assets.rdValue > 0 ? "grape" : undefined}>
+                  <Text c={row.assets.rdValue > 0 ? SEMANTIC.instrumentRd : undefined}>
                     {moneyParens(row.assets.rdValue)}
                   </Text>
                 </Table.Td>

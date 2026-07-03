@@ -1,3 +1,9 @@
+/* Load Plus Jakarta Sans so these static pages match the app's typeface. The
+   React app self-hosts it via @fontsource; these standalone pages aren't part of
+   the bundle, so they pull the same family from Google Fonts. Weights mirror the
+   app (400/500/600/700/800). */
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
 :root {
   --bg: #ffffff;
   --surface: #ffffff;

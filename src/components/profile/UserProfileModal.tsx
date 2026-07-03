@@ -9,7 +9,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconCloudUpload, IconLogout } from "@tabler/icons-react";
+import { IconCloudOff, IconCloudUpload, IconLogout } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useCloudStore, SAVE_LIMIT } from "@/store/cloudStore";
@@ -153,6 +153,7 @@ export function UserProfileModal({ opened, onClose }: UserProfileModalProps) {
 
             {!savesLoading && !savesError && saves.length === 0 && (
               <EmptyState
+                icon={<IconCloudOff size={24} />}
                 title="No cloud saves yet"
                 description="Save your current plan to access it from anywhere."
               />

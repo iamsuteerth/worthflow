@@ -1,9 +1,45 @@
+.stripWrap {
+  position: relative;
+}
+
+.stripWrap::before,
+.stripWrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 1px;
+  width: 36px;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.stripWrap::before {
+  left: 0;
+  background: linear-gradient(to right, var(--mantine-color-body), transparent);
+}
+
+.stripWrap::after {
+  right: 0;
+  background: linear-gradient(to left, var(--mantine-color-body), transparent);
+}
+
+.stripWrap[data-can-left]::before {
+  opacity: 1;
+}
+
+.stripWrap[data-can-right]::after {
+  opacity: 1;
+}
+
 .strip {
   display: flex;
   align-items: stretch;
   border-bottom: 1px solid var(--mantine-color-default-border);
   overflow-x: auto;
   scrollbar-width: none;
+  scroll-behavior: smooth;
 }
 
 .strip::-webkit-scrollbar {
@@ -28,8 +64,10 @@
   background: transparent;
 }
 
+/* Primary-filled adapts per colour scheme (brand-6 light / brand-3 dark),
+   keeping the active tab legible in both. */
 .tab[data-active] {
-  color: var(--mantine-color-brand-6);
-  border-bottom-color: var(--mantine-color-brand-6);
+  color: var(--mantine-primary-color-filled);
+  border-bottom-color: var(--mantine-primary-color-filled);
   font-weight: 600;
 }
