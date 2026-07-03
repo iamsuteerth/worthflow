@@ -1,14 +1,12 @@
+import type { PlannerOverrides } from "@/types/overrides";
+
 import { describe, it, expect } from "vitest";
 import { simulate } from "@/engine/simulate";
-import type { PlannerOverrides } from "@/types/overrides";
-import { baseConfig, account, m, rdBankMaturity } from "./factories";
+import { baseConfig, account, m, rdBankMaturity } from "@/engine/__tests__/factories";
 
-// Quarterly-compounded installment accrual (see rdMath): an installment aged
-// `age` months contributes c·(1 + rate/400)^(age/3).
 const rdAges = (c: number, rate: number, ages: number[]) =>
   ages.reduce((sum, age) => sum + c * Math.pow(1 + rate / 400, age / 3), 0);
 
-// FD quarterly-compounded value after `months`: principal × (1 + rate/400)^(months/3).
 const fdValue = (principal: number, rate: number, months: number) =>
   principal * Math.pow(1 + rate / 400, months / 3);
 
@@ -25,12 +23,10 @@ describe("simulate — fixed deposits (end to end)", () => {
     });
     const { rows, summary } = simulate(config);
 
-    // An FD is net-worth-neutral on creation: cash −100k, fdValue +100k.
     expect(rows[0].assets.cash).toBe(400_000);
     expect(rows[0].assets.fdValue).toBeCloseTo(100_000, 4);
     expect(rows[0].assets.netWorth).toBeCloseTo(500_000, 4);
 
-    // Matures at 2026-01 (index 12) → 100k × 1.03^4 ≈ 112,551 back into cash.
     const maturityRow = rows[12];
     const maturity = fdValue(100_000, 12, 12);
     expect(maturityRow.events.some((e) => e.type === "FD_MATURED")).toBe(true);
@@ -39,10 +35,6 @@ describe("simulate — fixed deposits (end to end)", () => {
     expect(summary.xirr).toBeNull();
   });
 
-  // A historic FD (started before the forecast) is seeded with its accrued value —
-  // its principal already left cash in the past, so it is NOT re-debited — and it
-  // must still credit its matured value and emit FD_MATURED when it matures inside
-  // the window.
   it("matures a historic FD inside the window without re-debiting principal", () => {
     const config = baseConfig({
       forecast: { startMonth: m("2025-01"), totalMonths: 12 },
@@ -50,17 +42,14 @@ describe("simulate — fixed deposits (end to end)", () => {
       income: { monthly: 0 },
       expenses: { defaultMonthly: 0, overrides: {} },
       instruments: [
-        // Started 2024-07, 12-month term → matures 2025-07 (row index 6).
         { id: "fd1", type: "FD", name: "Old FD", principal: 100_000, rate: 12, startMonth: m("2024-07"), durationMonths: 12 },
       ],
     });
     const { rows, summary } = simulate(config);
 
-    // Seeded at 6 months of growth, with no cash debit (principal paid pre-forecast).
     expect(rows[0].assets.cash).toBe(0);
     expect(rows[0].assets.fdValue).toBeCloseTo(fdValue(100_000, 12, 6), 2);
 
-    // 2025-07: 100k × 1.03^4 ≈ 112,551 credited to cash; FD removed afterwards.
     const maturity = fdValue(100_000, 12, 12);
     const maturityRow = rows[6];
     expect(maturityRow.month).toBe("2025-07");
@@ -84,15 +73,10 @@ describe("simulate — recurring deposits (end to end)", () => {
     });
     const { rows, summary } = simulate(config);
 
-    // Final cash = 100k − 3×10k contributions + bank maturity payout.
     expect(summary.finalNetWorth).toBeCloseTo(70_000 + rdBankMaturity(10_000, 6, 3), 2);
     expect(rows[3].events.some((e) => e.type === "RD_MATURED")).toBe(true);
   });
 
-  // An RD reflects each contribution the same month the cash leaves — net worth
-  // does not dip by one installment during accumulation (it stays whole). FDs
-  // already behave this way; this keeps RDs consistent. Cash balances are
-  // unaffected (the debit is the fixed monthly contribution, not the RD value).
   it("reflects each RD contribution immediately, keeping net worth whole", () => {
     const config = baseConfig({
       forecast: { startMonth: m("2025-01"), totalMonths: 4 },
@@ -105,19 +89,14 @@ describe("simulate — recurring deposits (end to end)", () => {
     });
     const { rows } = simulate(config);
 
-    // Month 1: 10k left cash AND is reflected in the RD → net worth stays at 100k.
     expect(rows[0].assets.cash).toBe(90_000);
     expect(rows[0].assets.rdValue).toBeCloseTo(10_000, 6);
     expect(rows[0].assets.netWorth).toBeCloseTo(100_000, 6);
 
-    // Month 2: two installments visible, aged [1, 0] months.
     expect(rows[1].assets.rdValue).toBeCloseTo(rdAges(10_000, 6, [1, 0]), 4);
-    // Month 3: three installments, aged [2, 1, 0] months.
     expect(rows[2].assets.rdValue).toBeCloseTo(rdAges(10_000, 6, [2, 1, 0]), 4);
   });
 
-  // Staggered RDs stack in the monthly instrument cashflow, and the maturity
-  // payout shows up as a positive flow in the maturity month.
   it("reflects stacked RD contributions and maturity in instrument cashflow", () => {
     const config = baseConfig({
       forecast: { startMonth: m("2025-01"), totalMonths: 24 },
@@ -133,13 +112,12 @@ describe("simulate — recurring deposits (end to end)", () => {
     const flowAt = (month: string) =>
       rows.find((r) => r.month === month)!.cashflow.instrumentFlow;
 
-    expect(flowAt("2025-03")).toBe(0);        // before any RD starts
-    expect(flowAt("2025-06")).toBe(-5_000);   // RD June only
+    expect(flowAt("2025-03")).toBe(0);
+    expect(flowAt("2025-06")).toBe(-5_000);
     expect(flowAt("2025-08")).toBe(-5_000);
-    expect(flowAt("2025-09")).toBe(-10_000);  // both contributing
-    expect(flowAt("2026-05")).toBe(-10_000);  // RD June's last installment + RD Sept
+    expect(flowAt("2025-09")).toBe(-10_000);
+    expect(flowAt("2026-05")).toBe(-10_000);
 
-    // 2026-06: RD June matures (full payout) while RD Sept still contributes −5k.
     const maturityRow = rows.find((r) => r.month === "2026-06")!;
     expect(maturityRow.events.some((e) => e.type === "RD_MATURED")).toBe(true);
     expect(maturityRow.cashflow.instrumentFlow).toBeCloseTo(
@@ -167,7 +145,6 @@ describe("simulate — investment accounts (end to end)", () => {
     expect(summary.accountContributions["acc-1"]).toBe(120_000);
     expect(summary.totalInvestments).toBe(120_000);
     expect(summary.accountXirr["acc-1"]).not.toBeNull();
-    // 12% annual return, contributed monthly → XIRR near 12%.
     expect(summary.accountXirr["acc-1"]!).toBeGreaterThan(11);
     expect(summary.accountXirr["acc-1"]!).toBeLessThan(13);
     expect(summary.xirr!).toBeGreaterThan(11);
@@ -192,10 +169,8 @@ describe("simulate — investment accounts (end to end)", () => {
     };
     const { rows, summary } = simulate(config, overrides);
 
-    // Only 5k of the requested 10k could be deposited; cash floors at 0.
     expect(rows[0].assets.investmentCorpus).toBe(5_000);
     expect(rows[0].closingBalance).toBe(0);
-    // The summary still records the requested deposit total.
     expect(summary.investmentDepositsTotal).toBe(10_000);
   });
 });

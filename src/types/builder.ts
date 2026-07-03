@@ -34,23 +34,14 @@ export interface BuilderBonusIncome {
 export interface BuilderState {
   startMonth: MonthKey;
   totalMonths: number;
-
   monthlyIncome: number;
-
   openingCash: number;
   defaultMonthlyExpense: number;
-
   investmentAccounts: InvestmentAccount[];
-
   creditCardBills: BuilderCreditCardBill[];
-
   oneOffExpenses: BuilderOneOffExpense[];
-
   salaryChanges: BuilderSalaryChange[];
-
   bonusIncome: BuilderBonusIncome[];
-
   recurringExpenses: RecurringExpense[];
-
   instruments: (FixedDeposit | RecurringDeposit)[];
 }

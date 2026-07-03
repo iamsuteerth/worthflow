@@ -1,9 +1,6 @@
 import type { MonthKey } from "@/types/simulation";
 
-export function generateMonths(
-  startMonth: MonthKey,
-  totalMonths: number
-): MonthKey[] {
+export function generateMonths(startMonth: MonthKey, totalMonths: number): MonthKey[] {
   const [yearStr, monthStr] = startMonth.split("-");
 
   let year = Number(yearStr);
@@ -12,33 +9,22 @@ export function generateMonths(
   const months: MonthKey[] = [];
 
   for (let i = 0; i < totalMonths; i++) {
-    const monthKey =
-      `${year}-${String(month).padStart(2, "0")}` as MonthKey;
-
+    const monthKey = `${year}-${String(month).padStart(2, "0")}` as MonthKey;
     months.push(monthKey);
-
     month++;
-
     if (month > 12) {
       month = 1;
       year++;
     }
   }
-
   return months;
 }
 
-export function getMonthIndex(
-  month: MonthKey,
-  months: MonthKey[]
-): number {
+export function getMonthIndex(month: MonthKey, months: MonthKey[]): number {
   return months.indexOf(month);
 }
 
-export function addMonths(
-  monthKey: MonthKey,
-  offset: number
-): MonthKey {
+export function addMonths(monthKey: MonthKey, offset: number): MonthKey {
   const [yearStr, monthStr] = monthKey.split("-");
 
   let year = Number(yearStr);
@@ -56,17 +42,9 @@ export function addMonths(
     year--;
   }
 
-  return `${year}-${String(month).padStart(
-    2,
-    "0"
-  )}` as MonthKey;
+  return `${year}-${String(month).padStart(2,"0")}` as MonthKey;
 }
 
-// Last month included in a forecast that begins at `startMonth` and spans `totalMonths`.
-export function forecastEndMonth(
-  startMonth: MonthKey,
-  totalMonths: number
-): MonthKey {
+export function forecastEndMonth(startMonth: MonthKey, totalMonths: number): MonthKey {
   return addMonths(startMonth, totalMonths - 1);
 }
-

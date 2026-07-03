@@ -1,16 +1,15 @@
+import type { PlannerConfig } from "@/types/config";
+import type { PlannerOverrides } from "@/types/overrides";
+
 import { describe, it, expect } from "vitest";
 import { simulate } from "@/engine/simulate";
 import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 import { baseConfig, account, m } from "./factories";
-import type { PlannerConfig } from "@/types/config";
-import type { PlannerOverrides } from "@/types/overrides";
 
-// Mirrors the live call path: the store hands simulate the EFFECTIVE config + overrides.
 function run(config: PlannerConfig, overrides: PlannerOverrides = {}) {
   return simulate(buildEffectiveConfig(config, overrides), overrides);
 }
 
-// A representative, "rich" plan touching every value path.
 function richPlan(): PlannerConfig {
   return baseConfig({
     forecast: { startMonth: m("2025-01"), totalMonths: 36 },

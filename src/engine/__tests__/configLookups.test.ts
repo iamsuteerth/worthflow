@@ -1,4 +1,8 @@
+import type { PlannerConfig } from "@/types/config";
+import type { MonthKey } from "@/types/simulation";
+
 import { describe, it, expect } from "vitest";
+
 import {
   getMonthlyExpense,
   getMonthlyIncome,
@@ -8,8 +12,6 @@ import {
   getBonusIncome,
   isRecurringExpenseActive,
 } from "@/engine/configLookups";
-import type { PlannerConfig } from "@/types/config";
-import type { MonthKey } from "@/types/simulation";
 
 const m = (s: string) => s as MonthKey;
 
@@ -134,7 +136,6 @@ describe("isRecurringExpenseActive", () => {
   });
 
   it("is active for an ANNUAL expense only in the same calendar month as its start", () => {
-    // startMonth "2025-03" → fires every March
     const re = { id: "1", name: "Insurance", amount: 20_000, startMonth: m("2025-03"), endMonth: m("2027-03"), frequency: "ANNUAL" as const };
     expect(isRecurringExpenseActive(re, m("2025-03"))).toBe(true);
     expect(isRecurringExpenseActive(re, m("2026-03"))).toBe(true);

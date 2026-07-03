@@ -16,8 +16,6 @@ export default function MessageComposer({ onSend, onPropose, onStop, sending }: 
   function handleSend() {
     const trimmed = text.trim();
     if (!trimmed || sending) return;
-    // A clear "create / add / delete …" imperative routes straight to the action flow,
-    // like the wand; everything else is normal chat. The wand stays explicit.
     if (looksLikeActionRequest(trimmed)) {
       onPropose(trimmed);
     } else {

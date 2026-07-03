@@ -1,9 +1,10 @@
+import type { RuntimeEvent } from "@/types/runtimeEvent";
+import type { MonthKey } from "@/types/simulation";
+
 import { Group, Stack, Text } from "@mantine/core";
 import { useState } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
 import RuntimeEventList from "@/components/scenario/RuntimeEventList";
-import type { RuntimeEvent } from "@/types/runtimeEvent";
-import type { MonthKey } from "@/types/simulation";
 
 type InvestmentEventType = Extract<
   RuntimeEvent["type"],

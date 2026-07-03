@@ -1,8 +1,9 @@
 import type { PlannerConfig } from "@/types/config";
 import type { PlannerOverrides } from "@/types/overrides";
-import { z } from "zod";
 import type { SavedScenario } from "@/types/scenario";
 import type { MonthKey } from "@/types/simulation";
+
+import { z } from "zod";
 import { calculateChecksum } from "@/engine/checksum";
 import { decodeBase64 } from "@/engine/base64";
 
@@ -189,19 +190,9 @@ const RuntimeSpendingOverrideSchema = z
 const RuntimeOpeningCashOverrideSchema = z.object({
   id: z.string(),
   type: z.literal("OPENING_CASH_OVERRIDE"),
-  // Negative is intentional — models starting a scenario in overdraft.
   amount: z.number().finite(),
 });
 
-// MUST list every RuntimeEvent["type"] in @/types/runtimeEvent. A missing member
-// here silently rejects any saved/exported plan that uses it (the whole import
-// throws "Invalid Plan File"), so an exhaustiveness test locks this union — see
-// importPlan.test.ts "covers every runtime-event type".
-// AI-applied changes carry a `sourceProposalId` (the proposing message's id) so the
-// proposal card can derive its applied state from the plan. It must survive a
-// save/load round trip, so the import schema preserves it for every event type — an
-// intersection keeps the discriminated union (which rejects unknown `type`s) intact
-// while accepting the optional provenance tag on top.
 const RuntimeEventSchema = z.intersection(
   z.discriminatedUnion("type", [
     RuntimeOneOffExpenseSchema,
@@ -221,7 +212,7 @@ const RuntimeEventSchema = z.intersection(
   z.object({ sourceProposalId: z.string().optional() }),
 );
 
-// A scenario-created ("what-if") investment account — same shape as a base account.
+// A scenario-created investment account same shape as a base account.
 const ScenarioAccountSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -229,7 +220,7 @@ const ScenarioAccountSchema = z.object({
   openingBalance: z.number().nonnegative(),
   defaultAnnualReturn: z.number().min(-99.99).max(1000),
   defaultMonthlyContribution: z.number().nonnegative(),
-  // Provenance for an AI-created what-if account (see RuntimeEventSchema).
+  // Provenance for an AI-created what-if account
   sourceProposalId: z.string().optional(),
 });
 
@@ -267,20 +258,16 @@ const ImportedPlanSchema = z.object({
       startMonth: MonthKeySchema,
       totalMonths: z.number().int().min(1).max(120),
     }),
-
     income: z.object({
       monthly: z.number().nonnegative(),
     }),
-
     cash: z.object({
       openingBalance: z.number().nonnegative(),
     }),
-
     expenses: z.object({
       defaultMonthly: z.number().nonnegative(),
       overrides: z.record(MonthKeySchema, z.number()),
     }),
-
     investments: z.object({
       accounts: z.array(
         z.object({
@@ -311,26 +298,17 @@ const ImportedPlanSchema = z.object({
         })
       ),
     }),
-
     creditCardBills: z.array(CreditCardBillSchema),
-
     oneOffExpenses: z.array(OneOffExpenseSchema),
-
     recurringExpenses: z.array(RecurringExpenseSchema).optional(),
-
     instruments: z.array(
       z.discriminatedUnion("type", [FixedDepositSchema, RecurringDepositSchema])
     ),
-
     salaryChanges: z.array(SalaryChangeSchema),
-
     bonusIncome: z.array(BonusIncomeSchema),
   }),
-
   savedScenarios: z.array(SavedScenarioSchema).optional(),
-
   overrides: PlannerOverridesSchema,
-
   history: PlannerHistorySchema.optional(),
 });
 

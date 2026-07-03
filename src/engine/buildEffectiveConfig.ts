@@ -1,17 +1,11 @@
 import type { PlannerConfig } from "@/types/config";
 import type { PlannerOverrides } from "@/types/overrides";
+
 import { generateMonths } from "@/engine/dateUtils";
 
-export function buildEffectiveConfig(
-  baseConfig: PlannerConfig,
-  overrides: PlannerOverrides
-): PlannerConfig {
+export function buildEffectiveConfig(baseConfig: PlannerConfig,overrides: PlannerOverrides): PlannerConfig {
   const config = structuredClone(baseConfig);
 
-  // A baseConfig rehydrated from localStorage (persist `merge` doesn't field-backfill)
-  // can predate `recurringExpenses` (added in v2.0.0) and arrive undefined. Normalise
-  // it so the RECURRING_EXPENSE case below can `.push` safely and the returned config
-  // is always well-formed for downstream consumers.
   config.recurringExpenses ??= [];
 
   if (overrides.incomeMonthly !== undefined) {
@@ -24,18 +18,14 @@ export function buildEffectiveConfig(
     config.forecast.totalMonths = overrides.forecastMonths;
   }
 
-  // Scenario-created accounts ("what-if" accounts) are materialised into the account
-  // list BEFORE runtime events, so an ACCOUNT_AMOUNT/RETURN_OVERRIDE or deposit that
-  // targets one resolves correctly. They behave identically to a base account from here.
+  // Scenario-created accounts materialised into the account list BEFORE runtime events
+  // They behave identically to a base account from here.
   if (overrides.scenarioAccounts?.length) {
     for (const acct of overrides.scenarioAccounts) {
       config.investments.accounts.push({ ...acct });
     }
   }
 
-  // Base accounts hidden by a scenario: drop them and their base contribution/return
-  // overrides from the effective config. A reversible what-if — baseConfig is untouched,
-  // so Reset (which clears overrides) brings the account back.
   if (overrides.deletedAccountIds?.length) {
     const deleted = new Set(overrides.deletedAccountIds);
     config.investments.accounts = config.investments.accounts.filter((a) => !deleted.has(a.id));

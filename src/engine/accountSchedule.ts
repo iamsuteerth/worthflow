@@ -1,7 +1,8 @@
-import { generateMonths } from "@/engine/dateUtils";
-import { getAccountContribution, getAccountReturn } from "@/engine/accountSimulation";
 import type { PlannerConfig } from "@/types/config";
 import type { MonthKey } from "@/types/simulation";
+
+import { generateMonths } from "@/engine/dateUtils";
+import { getAccountContribution, getAccountReturn } from "@/engine/accountSimulation";
 
 export type RangeSource = "DEFAULT" | "OVERRIDE";
 
@@ -16,15 +17,10 @@ export interface ScheduleRange {
 export interface AccountSchedule {
   contributionRanges: ScheduleRange[];
   returnRanges: ScheduleRange[];
-  /** True if the account's startMonth is at/after the forecast horizon. */
   beyondForecast: boolean;
 }
 
-function collapse(
-  months: MonthKey[],
-  valueOf: (month: MonthKey) => number,
-  sourceOf: (month: MonthKey) => { source: RangeSource; overrideId?: string }
-): ScheduleRange[] {
+function collapse(months: MonthKey[], valueOf: (month: MonthKey) => number, sourceOf: (month: MonthKey) => { source: RangeSource; overrideId?: string }): ScheduleRange[] {
   const ranges: ScheduleRange[] = [];
 
   for (const month of months) {
@@ -47,10 +43,7 @@ function collapse(
   return ranges;
 }
 
-export function buildAccountSchedule(
-  config: PlannerConfig,
-  accountId: string
-): AccountSchedule {
+export function buildAccountSchedule(config: PlannerConfig, accountId: string): AccountSchedule {
   const account = config.investments.accounts.find((a) => a.id === accountId);
   if (!account) {
     return { contributionRanges: [], returnRanges: [], beyondForecast: false };

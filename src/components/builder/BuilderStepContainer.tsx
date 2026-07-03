@@ -1,5 +1,6 @@
-import { Center, Stack } from "@mantine/core";
 import type { ReactNode } from "react";
+
+import { Center, Stack } from "@mantine/core";
 
 interface Props {
   children: ReactNode;

@@ -1,13 +1,9 @@
+import type { SimulationResult } from "@/engine/simulate";
+
 import { useMemo } from "react";
 import { useSimulation } from "@/hooks/useSimulation";
 import { useFilterStore } from "@/store/filterStore";
-import type { SimulationResult } from "@/engine/simulate";
 
-/**
- * Returns the simulation result with rows filtered to the active month range.
- * Summary cards, XIRR, net worth, and lowest-cash always use the FULL result
- * (per spec — only the table/timeline views respect the filter).
- */
 export function useFilteredSimulation(): SimulationResult {
   const full = useSimulation();
   const { startMonth, endMonth } = useFilterStore();
@@ -23,7 +19,6 @@ export function useFilteredSimulation(): SimulationResult {
 
     return {
       rows: filtered,
-      // Summary uses the full result — only table/timeline views respect the filter.
       summary: full.summary,
     };
   }, [full, startMonth, endMonth]);

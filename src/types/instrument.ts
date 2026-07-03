@@ -5,33 +5,21 @@ export type Instrument =
   | RecurringDeposit;
 
 export interface FixedDeposit {
-  id: string;
-
   type: "FD";
-
+  id: string;
   name: string;
-
   principal: number;
-
   rate: number;
-
   startMonth: MonthKey;
-
   durationMonths: number;
 }
 
 export interface RecurringDeposit {
-  id: string;
-
   type: "RD";
-
+  id: string;
   name: string;
-
   monthlyContribution: number;
-
   rate: number;
-
   startMonth: MonthKey;
-
   durationMonths: number;
 }

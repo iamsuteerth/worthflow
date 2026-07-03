@@ -1,6 +1,7 @@
-import { create } from "zustand";
 import type { MonthKey } from "@/types/simulation";
 import type { EventCategory } from "@/engine/eventCategories";
+
+import { create } from "zustand";
 
 interface FilterStore {
   startMonth: MonthKey | null;

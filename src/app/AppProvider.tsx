@@ -1,9 +1,11 @@
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
+import type { ColorScheme } from "@/app/theme-context";
+
 import { MantineProvider } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { Notifications } from "@mantine/notifications";
 
-import { ThemeContext, type ColorScheme } from "@/app/theme-context";
+import { ThemeContext } from "@/app/theme-context";
 import { theme } from "@/theme/theme";
 
 export function AppProvider({ children }: { children: ReactNode }) {

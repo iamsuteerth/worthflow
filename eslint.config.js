@@ -1,9 +1,16 @@
-import js from '@eslint/js'
+// eslint.config.js
 import globals from 'globals'
+
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
+
 import tseslint from 'typescript-eslint'
-import { defineConfig, globalIgnores } from 'eslint/config'
+
+import js from '@eslint/js'
+import {
+  defineConfig, 
+  globalIgnores 
+} from 'eslint/config'
 
 export default defineConfig([
   globalIgnores(['dist']),
@@ -32,8 +39,6 @@ export default defineConfig([
       ],
     },
   },
-  // AI isolation: the simulation core must never import from @/ai/*.
-  // Deleting src/ai/ must leave the planner fully functional.
   {
     files: [
       'src/engine/**/*.{ts,tsx}',

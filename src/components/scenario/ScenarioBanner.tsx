@@ -1,3 +1,5 @@
+import type { RuntimeEvent } from "@/types/runtimeEvent";
+
 import {
   ActionIcon,
   Badge,
@@ -16,15 +18,13 @@ import {
 import { usePlannerStore } from "@/store/plannerStore";
 import { useUiStore } from "@/store/uiStore";
 import { getEventVisual } from "@/theme/eventVisuals";
-import type { RuntimeEvent } from "@/types/runtimeEvent";
 
 export default function ScenarioBanner() {
   const events = usePlannerStore((s) => s.overrides.runtimeEvents) ?? [];
   const accounts = usePlannerStore((s) => s.config.investments.accounts);
   const baselineAccountIds = usePlannerStore((s) => s.baselineAccountIds);
   const deletedAccountIds = usePlannerStore((s) => s.overrides.deletedAccountIds) ?? [];
-  // Subscribe to history (not the canUndo/canRedo getters) so the buttons re-render
-  // as the stacks change.
+
   const history = usePlannerStore((s) => s.history);
   const undo = usePlannerStore((s) => s.undo);
   const redo = usePlannerStore((s) => s.redo);
@@ -37,8 +37,6 @@ export default function ScenarioBanner() {
   const canUndo = history.past.length > 0;
   const canRedo = history.future.length > 0;
 
-  // Keep the banner up whenever there's something to show OR a redo to offer — undoing
-  // every change to an empty plan must not strand the redo control.
   if (!hasChanges && !canUndo && !canRedo) return null;
 
   const counts: Record<string, number> = {};

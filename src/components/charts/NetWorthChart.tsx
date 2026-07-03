@@ -1,3 +1,5 @@
+import type { FinancialEvent } from "@/types/events";
+
 import { Card, Stack, Text, Group, Divider, Box } from "@mantine/core";
 import { useElementSize } from "@mantine/hooks";
 import MonthRangeFilter from "@/components/common/MonthRangeFilter";
@@ -6,7 +8,6 @@ import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { formatMonth } from "@/engine/monthFormatting";
 import { moneyCompact, moneySigned } from "@/format/money";
 import { EmptyState } from "@/components/ui";
-import type { FinancialEvent } from "@/types/events";
 
 function deltaColor(value: number): string {
   if (value > 0) return "teal";

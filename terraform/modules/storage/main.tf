@@ -30,7 +30,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "saves" {
 
   # AI objects (keyblob + encrypted chat) are tagged ObjectType=ai on write.
   # After forgotPassphrase or removeKey, old versions become noncurrent;
-  # 30 days is enough — they're zero-knowledge ciphertext but shouldn't linger.
   rule {
     id     = "expire-noncurrent-ai"
     status = "Enabled"
@@ -58,8 +57,7 @@ resource "aws_s3_bucket_cors_configuration" "saves" {
     allowed_headers = ["*"]
     allowed_methods = ["GET", "PUT", "DELETE"]
     allowed_origins = var.allowed_origins
-    # ETag must be exposed so the browser SDK can read it from GetObject responses;
-    # the manifest's optimistic-concurrency writes (If-Match / If-None-Match) depend on it.
+    # ETag must be exposed so the browser SDK can read it from GetObject response
     expose_headers  = ["ETag"]
   }
 }

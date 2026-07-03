@@ -1,10 +1,11 @@
+import type { MonthKey } from "@/types/simulation";
+
 import { Button, NumberInput, Select, Stack, Text } from "@mantine/core";
 import { IconArrowUp } from "@tabler/icons-react";
 import { money } from "@/format/money";
 import { useState } from "react";
 import { useSimulation } from "@/hooks/useSimulation";
 import { usePlannerStore } from "@/store/plannerStore";
-import type { MonthKey } from "@/types/simulation";
 import MonthSelect from "@/components/common/MonthSelect";
 import { forecastEndMonth } from "@/engine/dateUtils";
 

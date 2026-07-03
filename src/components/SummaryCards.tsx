@@ -1,4 +1,5 @@
 import { Grid, Text, Tooltip } from "@mantine/core";
+
 import {
   IconChartLine,
   IconCoins,
@@ -6,6 +7,7 @@ import {
   IconTrendingUp,
   IconWallet,
 } from "@tabler/icons-react";
+
 import { useSimulation } from "@/hooks/useSimulation";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";

@@ -2,16 +2,8 @@ import type { RdPosition } from "@/engine/rd";
 import type { MonthKey } from "@/types/simulation";
 
 /**
- * Value of a Recurring Deposit as of `month`, using the standard Indian-bank
- * convention: each installment earns quarterly-compounded interest (rate / 400
- * per quarter) from its deposit until valuation — matching how banks such as
- * HDFC quote RD maturity values.
- *
- * Accrual is elapsed-based: a just-deposited installment counts immediately but
- * has accrued 0 months (so net worth never dips); by maturity — one month after
- * the final installment — every installment has aged a further month. The age is
- * capped at the duration, so valuing the RD past maturity returns the frozen
- * maturity value.
+ * Returns the value of an RD at `month`, using standard Indian-bank quarterly
+ * compounding. The value is frozen at maturity.
  */
 export function calculateRdValue(position: RdPosition, month: MonthKey): number {
   const start = new Date(`${position.startMonth}-01`);
@@ -29,7 +21,6 @@ export function calculateRdValue(position: RdPosition, month: MonthKey): number 
 
   let value = 0;
   for (let i = 0; i < contributionCount; i++) {
-    // installment i (0 = oldest) has accrued this many months
     const accruedMonths = ageCapMonths - i;
     value += position.monthlyContribution * Math.pow(1 + quarterlyRate, accruedMonths / 3);
   }

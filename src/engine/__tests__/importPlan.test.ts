@@ -1,9 +1,10 @@
+import type { RuntimeEvent } from "@/types/runtimeEvent";
+
 import { describe, it, expect } from "vitest";
 import { importPlan } from "@/engine/importPlan";
 import { calculateChecksum } from "@/engine/checksum";
 import { encodeBase64 } from "@/engine/base64";
 import { m } from "@/engine/__tests__/factories";
-import type { RuntimeEvent } from "@/types/runtimeEvent";
 
 const validPlan = {
   baseConfig: {
@@ -38,7 +39,6 @@ const validPlan = {
   savedScenarios: [],
 };
 
-/** Reproduces exportPlan's wrapper format so we can round-trip through importPlan. */
 async function makeWfPlanFile(
   data: unknown,
   { name = "plan.wfplan", corruptChecksum = false, payload }: { name?: string; corruptChecksum?: boolean; payload?: string } = {}
@@ -128,10 +128,6 @@ describe("importPlan — rejections", () => {
 });
 
 describe("importPlan — runtime-event round trip (regression: the import union must not drift)", () => {
-  // One representative of EVERY RuntimeEvent type. Typing this as a full Record
-  // makes it a COMPILE-TIME exhaustiveness guard: add a new RuntimeEvent kind and
-  // this object stops type-checking until it's added here (and, by extension, until
-  // the import schema in importPlan.ts is updated to accept it).
   const oneOfEach: Record<RuntimeEvent["type"], RuntimeEvent> = {
     ONE_OFF_EXPENSE: { id: "e1", type: "ONE_OFF_EXPENSE", month: m("2025-02"), amount: 1_000, label: "x" },
     CREDIT_CARD_EXPENSE: { id: "e2", type: "CREDIT_CARD_EXPENSE", month: m("2025-02"), amount: 1_000, label: "x" },
@@ -198,7 +194,6 @@ describe("importPlan — runtime-event round trip (regression: the import union 
     });
     const result = await importPlan(file);
     expect(result.overrides.scenarioAccounts).toEqual([scenarioAccount]);
-    // It must NOT have been folded into the base plan on load.
     expect(result.baseConfig.investments.accounts.map((a) => a.id)).not.toContain("scn-1");
   });
 
@@ -209,7 +204,6 @@ describe("importPlan — runtime-event round trip (regression: the import union 
     });
     const result = await importPlan(file);
     expect(result.overrides.deletedAccountIds).toEqual(["acc-1"]);
-    // The base account itself is still present in baseConfig (just hidden by the override).
     expect(result.baseConfig.investments.accounts.map((a) => a.id)).toContain("acc-1");
   });
 

@@ -1,7 +1,8 @@
+import type { MonthKey } from "@/types/simulation";
+
 import { Select } from "@mantine/core";
 import { useMemo } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
-import type { MonthKey } from "@/types/simulation";
 
 interface Props {
   value: MonthKey | null;
@@ -15,7 +16,6 @@ interface Props {
   disabled?: boolean;
 }
 
-// Generates MonthKey options between a start year-month and an end year-month.
 function generateOptions(
   minMonth?: string | null,
   maxMonth?: string | null

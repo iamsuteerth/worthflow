@@ -1,10 +1,3 @@
-// UTF-8-safe base64. `btoa`/`atob` only handle Latin1 and throw on any code
-// point above U+00FF (e.g. the ₹ sign, emoji, accented or regional-script text),
-// which would otherwise crash plan export and cloud save. Encoding via TextEncoder
-// keeps the output byte-identical to plain `btoa` for ASCII payloads, so plans
-// saved before this change (which were necessarily ASCII — non-ASCII used to throw)
-// still decode and still match their stored checksum.
-
 export function encodeBase64(input: string): string {
   const bytes = new TextEncoder().encode(input);
   let binary = "";

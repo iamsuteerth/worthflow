@@ -1,3 +1,7 @@
+import type { RuntimeEvent } from "@/types/runtimeEvent";
+import type { MonthKey } from "@/types/simulation";
+import type { InvestmentAccount } from "@/types/investmentAccount";
+
 import {
   ActionIcon,
   Button,
@@ -18,9 +22,6 @@ import { simulate } from "@/engine/simulate";
 import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 import { forecastEndMonth } from "@/engine/dateUtils";
 import { getEventVisual } from "@/theme/eventVisuals";
-import type { RuntimeEvent } from "@/types/runtimeEvent";
-import type { MonthKey } from "@/types/simulation";
-import type { InvestmentAccount } from "@/types/investmentAccount";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
 import MonthSelect from "@/components/common/MonthSelect";
@@ -181,21 +182,11 @@ export function EditEventModal({
   const overrides = usePlannerStore((s) => s.overrides);
   const config = usePlannerStore((s) => s.config);
 
-  // Resolve against the EFFECTIVE config so deposits/withdrawals into a scenario-created
-  // account (which lives in overrides, not baseConfig) still find their account.
   const eventAccount =
     "accountId" in event
       ? config.investments.accounts.find((a) => a.id === event.accountId)
       : undefined;
 
-  // Cap edited amounts exactly as the creation forms do: FD principal / RD
-  // contribution / deposit can't exceed the cash available that month, and a
-  // withdrawal can't exceed the account balance — both measured with THIS event
-  // removed, so editing reflects the same headroom creation enforced (previously an
-  // edit could raise the amount past what creation ever allowed). We rebuild the
-  // effective config without the event rather than just dropping it from the runtime
-  // overrides, because FDs/RDs are baked into the config layer — filtering the
-  // override list alone would leave the edited deposit's own outflow in the budget.
   const cap = useMemo(() => {
     if (!localMonth) return null;
     const others = (overrides.runtimeEvents ?? []).filter((e) => e.id !== event.id);
@@ -215,8 +206,6 @@ export function EditEventModal({
   const exceedsCap = cap !== null && localAmount > cap;
   const capLabel = event.type === "INVESTMENT_WITHDRAWAL" ? "Account balance" : "Available cash";
 
-  // Every scenario event must stay inside the forecast window (mirrors creation);
-  // deposits/withdrawals additionally can't precede their account's start month.
   const forecastStart = baseConfig.forecast.startMonth;
   const forecastEnd = forecastEndMonth(baseConfig.forecast.startMonth, baseConfig.forecast.totalMonths);
   const monthMin =

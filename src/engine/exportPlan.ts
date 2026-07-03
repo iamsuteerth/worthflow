@@ -1,22 +1,9 @@
-import type {
-  PlannerConfig,
-} from "@/types/config";
+import type { PlannerConfig } from "@/types/config";
+import type { PlannerOverrides } from "@/types/overrides";
+import type { SavedScenario } from "@/types/scenario";
 
-import type {
-  PlannerOverrides,
-} from "@/types/overrides";
-
-import type {
-  SavedScenario,
-} from "@/types/scenario";
-
-import {
-  calculateChecksum,
-} from "@/engine/checksum";
-
-import {
-  encodeBase64,
-} from "@/engine/base64";
+import { encodeBase64 } from "@/engine/base64";
+import { calculateChecksum } from "@/engine/checksum";
 
 export interface ExportedPlan {
   baseConfig: PlannerConfig;
@@ -24,13 +11,10 @@ export interface ExportedPlan {
   savedScenarios?: SavedScenario[];
   // Undo/redo stacks travel with the file so the scenario timeline is identical after
   // a manual export → import, matching the cloud save path (cloudStore.serializePlan).
-  // importPlan validates this as optional; a freshly generated plan omits it.
   history?: { past: PlannerOverrides[]; future: PlannerOverrides[] };
 }
 
-export async function exportPlan(
-  data: ExportedPlan
-) {
+export async function exportPlan(data: ExportedPlan) {
   const payload =
     encodeBase64(
       JSON.stringify(data)

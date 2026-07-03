@@ -1,9 +1,6 @@
 import type { EventType } from "@/types/events";
 
-// Shared by EventTimeline / InvestmentTimeline filter chips (#2) and any other
-// FinancialEvent-type grouping. Distinct from ScenarioPanel.EVENT_CATEGORIES,
-// which maps RuntimeEvent types (a different union, e.g. "FD"/"RD" creation
-// events vs. simulation-emitted "FD_CREATED"/"FD_MATURED").
+// Shared by EventTimeline / InvestmentTimeline
 export type EventCategory = "Income" | "Expenses" | "Investments" | "FD" | "RD";
 
 export const EVENT_CATEGORY_LIST: EventCategory[] = [

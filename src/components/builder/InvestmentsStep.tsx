@@ -1,3 +1,5 @@
+import type { MonthKey } from "@/types/simulation";
+
 import {
   Badge,
   Button,
@@ -11,13 +13,13 @@ import {
   TextInput,
   ThemeIcon,
 } from "@mantine/core";
+
 import { IconChartLine, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
 import { useBuilderStore } from "@/store/builderStore";
 import { forecastEndMonth } from "@/engine/dateUtils";
-import type { MonthKey } from "@/types/simulation";
 import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
 import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
 

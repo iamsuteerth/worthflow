@@ -1,32 +1,38 @@
+import type { ReactNode } from "react"; 
+
+import { lazy, Suspense } from "react";
+
 import {
   AppShell,
   Avatar,
   Burger,
   Drawer,
   Group,
+  Loader,
   Stack,
   Text,
   Title,
   UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { lazy, Suspense, type ReactNode } from "react";
 
-import ThemeToggle from "@/components/layout/ThemeToggle";
-import AppFooter from "@/components/layout/AppFooter";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import ScenarioPanel from "@/components/scenario/ScenarioPanel";
 import { usePlannerStore } from "@/store/plannerStore";
 import { useUiStore } from "@/store/uiStore";
 import { useAuthStore } from "@/store/authStore";
 import { UserProfileModal } from "@/components/profile/UserProfileModal";
 import { getInitials } from "@/utils/display";
 
-// Lazy-loaded AI components: only bundled & reachable when VITE_AI_ENABLED is true.
+import ThemeToggle from "@/components/layout/ThemeToggle";
+import AppFooter from "@/components/layout/AppFooter";
+
 const AiFab = import.meta.env.VITE_AI_ENABLED
   ? lazy(() => import("@/components/ai/AiFab"))
   : null;
 
+const ScenarioPanel = lazy(
+  () => import("@/components/scenario/ScenarioPanel")
+);
 
 interface Props {
   children: ReactNode;
@@ -61,7 +67,6 @@ export default function PlannerShell({ children }: Props) {
 
   return (
     <>
-      {/* Mobile drawer only */}
       {activeView === "forecast" && isMobile && (
         <Drawer
           opened={opened}
@@ -80,7 +85,9 @@ export default function PlannerShell({ children }: Props) {
           radius={0}
           position="left"
         >
-          <ScenarioPanel />
+          <Suspense fallback={<Loader />}>
+            <ScenarioPanel />
+          </Suspense>
         </Drawer>
       )}
 
@@ -142,7 +149,6 @@ export default function PlannerShell({ children }: Props) {
           </Group>
         </AppShell.Header>
 
-        {/* Desktop sidebar only */}
         {activeView === "forecast" && !isMobile && (
           <AppShell.Navbar
             p="md"
@@ -152,7 +158,9 @@ export default function PlannerShell({ children }: Props) {
             }}
           >
             <ScenarioLabHeading />
-            <ScenarioPanel />
+            <Suspense fallback={<Loader />}>
+              <ScenarioPanel />
+            </Suspense>
           </AppShell.Navbar>
         )}
 
@@ -162,9 +170,8 @@ export default function PlannerShell({ children }: Props) {
         </AppShell.Main>
       </AppShell>
 
-      {/* Floating AI assistant — rendered outside AppShell so position:fixed is unaffected */}
       {AiFab && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<Loader />}>
           <AiFab />
         </Suspense>
       )}

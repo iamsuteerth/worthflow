@@ -1,11 +1,6 @@
 import { describe, it, expect } from "vitest";
-import {
-  getMaxAnnualYears,
-  deriveAnnualEndMonth,
-  isValidAnnualYears,
-  isValidAnnualRange,
-} from "@/engine/annualExpense";
-import { m } from "./factories";
+import { getMaxAnnualYears, deriveAnnualEndMonth, isValidAnnualYears, isValidAnnualRange } from "@/engine/annualExpense";
+import { m } from "@/engine/__tests__/factories";
 
 describe("getMaxAnnualYears", () => {
   it("counts whole years available from the start month to the horizon", () => {
@@ -13,12 +8,10 @@ describe("getMaxAnnualYears", () => {
   });
 
   it("accounts for a later start month", () => {
-    // Start at index 12, 24 months remain → 2 whole years.
     expect(getMaxAnnualYears(m("2025-01"), 36, m("2026-01"))).toBe(2);
   });
 
   it("floors partial years", () => {
-    // 30 months total, start at index 0 → floor(30/12) = 2.
     expect(getMaxAnnualYears(m("2025-01"), 30, m("2025-01"))).toBe(2);
   });
 

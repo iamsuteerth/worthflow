@@ -1,6 +1,4 @@
-export async function calculateChecksum(
-  payload: string
-): Promise<string> {
+export async function calculateChecksum(payload: string): Promise<string> {
   const data =
     new TextEncoder().encode(
       payload

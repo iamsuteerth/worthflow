@@ -1,7 +1,8 @@
+import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
+
 import { describe, it, expect } from "vitest";
 import { createInitialState } from "@/engine/stateFactory";
-import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
-import { baseConfig, account, m } from "./factories";
+import { baseConfig, account, m } from "@/engine/__tests__/factories";
 
 describe("createInitialState", () => {
   it("seeds cash from the opening balance and zeroes account balances", () => {
@@ -26,7 +27,6 @@ describe("createInitialState", () => {
     const config = baseConfig({ forecast: { startMonth: m("2025-01"), totalMonths: 12 }, instruments: [histFd] });
     const state = createInitialState(config);
     expect(state.fds).toHaveLength(1);
-    // 12 months elapsed at 10%, quarterly compounded → 100k × 1.025^4 ≈ 110,381.
     expect(state.fds[0].currentValue).toBeCloseTo(100_000 * Math.pow(1 + 10 / 400, 12 / 3), 4);
   });
 
@@ -61,11 +61,7 @@ describe("createInitialState", () => {
     const config = baseConfig({ forecast: { startMonth: m("2025-01"), totalMonths: 12 }, instruments: [histRd] });
     const state = createInitialState(config);
     expect(state.rds).toHaveLength(1);
-    // 6 months of contributions made before the forecast.
     expect(state.rds[0].totalContributed).toBe(30_000);
-    // Value as of the month before forecast start: 6 installments aged
-    // [5,4,3,2,1,0] months, quarterly-compounded (rate/400). All installments
-    // are reflected (no lag), so the seeded value exceeds bare contributions.
     const expected = 5_000 * [5, 4, 3, 2, 1, 0].reduce((s, k) => s + Math.pow(1 + 6 / 400, k / 3), 0);
     expect(state.rds[0].currentValue).toBeCloseTo(expected, 4);
     expect(state.rds[0].currentValue).toBeGreaterThan(30_000);

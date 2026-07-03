@@ -2,13 +2,8 @@ import type { PlannerConfig } from "@/types/config";
 import type { InvestmentAccount } from "@/types/investmentAccount";
 import type { MonthKey } from "@/types/simulation";
 
-/**
- * Cast a plain string to a MonthKey. MonthKey is a template-literal type
- * (`${number}-${string}`) so literals need an explicit cast in tests.
- */
 export const m = (s: string) => s as MonthKey;
 
-/** A complete, zeroed PlannerConfig. Override only what a test cares about. */
 export function baseConfig(overrides: Partial<PlannerConfig> = {}): PlannerConfig {
   return {
     forecast: { startMonth: m("2025-01"), totalMonths: 3 },
@@ -26,13 +21,6 @@ export function baseConfig(overrides: Partial<PlannerConfig> = {}): PlannerConfi
   };
 }
 
-/**
- * Textbook Indian-bank RD maturity value (quarterly compounding), derived
- * algebraically from the geometric series — an independent reference for
- * assertions, not a copy of the engine's loop.
- *
- *   M = c · [ (1+i)^(n/3) − 1 ] / [ 1 − (1+i)^(−1/3) ],   i = rate/400, n = months
- */
 export function rdBankMaturity(monthlyContribution: number, rate: number, durationMonths: number): number {
   const i = rate / 400;
   return (
@@ -41,7 +29,6 @@ export function rdBankMaturity(monthlyContribution: number, rate: number, durati
   );
 }
 
-/** An investment account with sensible defaults. */
 export function account(overrides: Partial<InvestmentAccount> = {}): InvestmentAccount {
   return {
     id: "acc-1",

@@ -1,10 +1,11 @@
+import type { BuilderState } from "@/types/builder";
+import type { PlannerOverrides } from "@/types/overrides";
+
 import { describe, it, expect } from "vitest";
 import { builderToConfig } from "@/engine/builderToConfig";
 import { configToBuilder } from "@/engine/configToBuilder";
 import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
-import type { BuilderState } from "@/types/builder";
-import type { PlannerOverrides } from "@/types/overrides";
-import { baseConfig, account, m } from "./factories";
+import { baseConfig, account, m } from "@/engine/__tests__/factories";
 
 const baseState: BuilderState = {
   startMonth: m("2025-01"),
@@ -39,7 +40,6 @@ describe('configToBuilder — "Keep my edits" promotion (effective config → bu
       runtimeEvents: [
         { id: "fd", type: "FD", name: "Scenario FD", principal: 50_000, rate: 7, startMonth: m("2025-03"), durationMonths: 12 },
         { id: "oe", type: "ONE_OFF_EXPENSE", month: m("2025-04"), amount: 10_000, label: "Trip" },
-        // Override-layer + flows — NOT representable in the baseline-only builder.
         { id: "ao", type: "ACCOUNT_AMOUNT_OVERRIDE", accountId: "base-acc", startMonth: m("2025-02"), endMonth: m("2025-05"), amount: 9_000 },
         { id: "dep", type: "INVESTMENT_DEPOSIT", accountId: "base-acc", month: m("2025-03"), amount: 1_000 },
       ],
@@ -47,12 +47,10 @@ describe('configToBuilder — "Keep my edits" promotion (effective config → bu
 
     const draft = configToBuilder(buildEffectiveConfig(cfg, overrides));
 
-    // Carried: the scenario account, the scenario FD, and the one-off expense.
     expect(draft.investmentAccounts.map((a) => a.id).sort()).toEqual(["base-acc", "scn"]);
     expect(draft.instruments.map((i) => i.name)).toContain("Scenario FD");
     expect(draft.oneOffExpenses.map((e) => e.label)).toContain("Trip");
 
-    // Dropped (builder edits the baseline only): amount overrides and deposits.
     const generated = builderToConfig(draft);
     expect(generated.investments.amountOverrides).toHaveLength(0);
   });
@@ -102,11 +100,9 @@ describe("configToBuilder", () => {
 
   it("drops override-layer fields — expenses.overrides, investments.*Overrides come back empty", () => {
     const config = builderToConfig(baseState);
-    // builderToConfig always produces empty override collections
     expect(config.expenses.overrides).toEqual({});
     expect(config.investments.amountOverrides).toEqual([]);
     expect(config.investments.returnOverrides).toEqual([]);
-    // configToBuilder never reads those fields, so they're absent from BuilderState
     const result = configToBuilder(config);
     expect(result).not.toHaveProperty("expenses");
     expect(result).not.toHaveProperty("overrides");

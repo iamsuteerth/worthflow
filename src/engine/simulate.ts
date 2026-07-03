@@ -1,8 +1,15 @@
-import { generateMonths } from "@/engine/dateUtils";
 
 import type { AssetSnapshot } from "@/types/assets";
 import type { MonthlyCashflow, SimulationRow, SimulationSummary, MonthKey } from "@/types/simulation";
 import type { PlannerConfig } from "@/types/config";
+import type { PlannerOverrides } from "@/types/overrides";
+import type {
+  RuntimeInvestmentDeposit,
+  RuntimeInvestmentWithdrawal,
+  RuntimeAccountAmountOverride,
+  RuntimeAccountReturnOverride,
+  RuntimeSpendingOverride,
+} from "@/types/runtimeEvent";
 
 import {
   getMonthlyExpense,
@@ -18,26 +25,15 @@ import { processInstrumentLifecycle } from "@/engine/instrumentLifecycle";
 import { buildCashflowEvents } from "@/engine/buildCashflowEvents";
 import { getAccountContribution, processAccountMonth } from "@/engine/accountSimulation";
 
-import type { PlannerOverrides } from "@/types/overrides";
-import type {
-  RuntimeInvestmentDeposit,
-  RuntimeInvestmentWithdrawal,
-  RuntimeAccountAmountOverride,
-  RuntimeAccountReturnOverride,
-  RuntimeSpendingOverride,
-} from "@/types/runtimeEvent";
-
 import { calculateXirr } from "@/engine/calculateXirr";
+import { generateMonths } from "@/engine/dateUtils";
 
 export interface SimulationResult {
   rows: SimulationRow[];
   summary: SimulationSummary;
 }
 
-export function simulate(
-  config: PlannerConfig,
-  overrides?: PlannerOverrides
-): SimulationResult {
+export function simulate(config: PlannerConfig,overrides?: PlannerOverrides): SimulationResult {
   const months = generateMonths(
     config.forecast.startMonth,
     config.forecast.totalMonths
@@ -56,16 +52,14 @@ export function simulate(
   }
 
   // The opening balance actually funded for each future-dated account (clamped to the
-  // cash available at its start month). Surfaced so the UI reports what was invested,
-  // not the configured figure, when the two differ.
+  // cash available at its start month)
   const accountFundedOpening: Record<string, number> = {};
 
   let lowestCash = state.cash;
   let lowestCashMonth = months[0];
 
-  // A deposit/withdrawal only counts when its account exists and has started — matching
-  // the per-month live-account filter below, so an orphaned reference (deleted account,
-  // stale import) never inflates these totals either.
+  // A deposit/withdrawal only counts when its account exists and has started
+  // An orphaned reference never inflates these totals either.
   const refersToLiveAccount = (accountId: string, month: MonthKey): boolean =>
     accounts.some((a) => a.id === accountId && month >= a.startMonth);
 
@@ -100,11 +94,6 @@ export function simulate(
     state.cash -= flatExpense + creditCardExpense + oneOffExpense + recurringExpense;
     cashFloor = Math.min(cashFloor, state.cash);
 
-    // Only act on a deposit/withdrawal whose account actually exists and has started.
-    // Otherwise a deposit's cash would be deducted below without ever being credited
-    // (processAccountMonth skips it), destroying cash. Using the same refersToLiveAccount
-    // check keeps the cash effect and the account effect in lockstep, so an orphaned
-    // reference (a stale imported event, or one pointing at a deleted account) is a no-op.
     const monthDeposits =
       overrides?.runtimeEvents?.filter(
         (e): e is RuntimeInvestmentDeposit =>
@@ -126,13 +115,6 @@ export function simulate(
 
     const cashAfterContrib = state.cash - contributionPreview;
 
-    // Future-dated accounts (those starting after the forecast begins) fund their
-    // opening balance from cash at the start month — a one-time outflow, like an FD
-    // principal, CLAMPED to the cash available so it can never conjure wealth or push
-    // cash negative. Accounts that start at the forecast start represent wealth
-    // already held and are seeded with no cash outflow (the existing behaviour).
-    // (Ongoing monthly contributions, like an RD's, are not clamped and may go
-    // negative — that path is unchanged.)
     let remainingCash = Math.max(0, cashAfterContrib);
     let fundedOpeningTotal = 0;
     const seededOpenings: Record<string, number> = {};
@@ -303,10 +285,6 @@ export function simulate(
           rangeEnd: e.endMonth,
         })) ?? [];
 
-    // An account "opens" in its start month — surfaced as an event so the Investment
-    // Timeline reflects when each account (base or scenario-created) came into the plan.
-    // The amount is what was actually seeded: the funded opening for a future-dated
-    // account (clamped to cash), or the configured opening for one held from the start.
     const accountCreatedEvents = accounts
       .filter((account) => account.startMonth === month)
       .map((account) => ({

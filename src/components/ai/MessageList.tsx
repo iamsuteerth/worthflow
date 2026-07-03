@@ -44,7 +44,6 @@ function MessageBubble({ message }: { message: Message }) {
         {message.streaming && !message.text ? (
           <Loader size="xs" color={isUser ? 'white' : 'brand'} type="dots" />
         ) : isUser ? (
-          // User text is literal — render plain so stray Markdown chars aren't eaten.
           <Text size="sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.5 }}>
             {message.text}
           </Text>
@@ -76,8 +75,6 @@ function MessageBubble({ message }: { message: Message }) {
 export default function MessageList({ messages, summary, sending }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  // Follow the latest message only while the user is already at the bottom, so a
-  // streaming reply doesn't repeatedly yank them down if they've scrolled up to read.
   const pinnedRef = useRef(true);
 
   const handleScroll = () => {

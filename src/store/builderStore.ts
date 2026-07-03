@@ -1,3 +1,8 @@
+import type { MonthKey } from "@/types/simulation";
+import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
+import type { RecurringExpense } from "@/types/recurringExpense";
+import type { InvestmentAccount } from "@/types/investmentAccount";
+
 import { create } from "zustand";
 
 import type {
@@ -8,12 +13,8 @@ import type {
   BuilderCreditCardBill,
 } from "@/types/builder";
 
-import type { MonthKey } from "@/types/simulation";
-import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
-import type { RecurringExpense } from "@/types/recurringExpense";
-import type { InvestmentAccount } from "@/types/investmentAccount";
-import { uniquifyAccountName } from "@/utils/uniquifyAccountName";
 import { isValidAnnualRange } from "@/engine/annualExpense";
+import { uniquifyAccountName } from "@/utils/uniquifyAccountName";
 
 const initialState: BuilderState = {
   startMonth: new Date().toISOString().slice(0, 7) as MonthKey,
@@ -33,9 +34,6 @@ const initialState: BuilderState = {
 interface BuilderStore {
   state: BuilderState;
 
-  // How the draft was seeded when entering the builder: "base" (from baseConfig, the
-  // default) or "effective" (base + active scenario changes folded in — "Keep my edits").
-  // ReviewStep reads this to describe exactly what a regenerate would drop.
   seedSource: "base" | "effective";
   setSeedSource: (source: "base" | "effective") => void;
 

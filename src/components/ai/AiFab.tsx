@@ -20,7 +20,6 @@ const panelTransition = {
 };
 
 export default function AiFab() {
-  // ── All hooks unconditionally first ──────────────────────────────────────
   const ctx = useContext(ThemeContext);
   const isDark = ctx?.colorScheme === 'dark';
 
@@ -34,8 +33,6 @@ export default function AiFab() {
 
   const isMobile = useIsMobile();
   const [liftPx, setLiftPx] = useState(0);
-  // Track viewport so panel geometry (right inset, max height) recomputes on resize
-  // / rotation — not just on scroll.
   const [viewport, setViewport] = useState({ w: window.innerWidth, h: window.innerHeight });
 
   useEffect(() => {
@@ -44,7 +41,6 @@ export default function AiFab() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // Footer intersection observer — lifts FAB when footer scrolls into view
   useEffect(() => {
     const footer = document.getElementById('app-footer');
     if (!footer) return;
@@ -62,23 +58,18 @@ export default function AiFab() {
     return () => observer.disconnect();
   }, []);
 
-  // Close AI panel when the mobile scenario drawer opens — they can't coexist
   useEffect(() => {
     if (isMobile && scenarioDrawerOpened && aiPanelOpened) {
       closeAiPanel();
     }
   }, [isMobile, scenarioDrawerOpened, aiPanelOpened, closeAiPanel]);
 
-  // ── Conditional render gates (after all hooks) ────────────────────────────
   if (!authenticated || activeView !== 'forecast') return null;
   if (isMobile && scenarioDrawerOpened) return null;
 
   const isOpen = aiPanelOpened;
   const hasKey = keyStatus !== 'absent';
 
-  // Panel dimensions — larger on desktop, near-fullscreen on mobile. The desired
-  // height is capped by panelMaxHeight so the panel can never overflow the top of
-  // the viewport as the FAB lifts near the footer (see aiFabGeometry).
   const panelHeight = isMobile
     ? 'calc(100dvh - 104px)'
     : 'min(720px, calc(100vh - 140px))';
@@ -99,7 +90,6 @@ export default function AiFab() {
 
   return (
     <>
-      {/* Floating chat panel */}
       <Transition
         mounted={isOpen}
         transition={panelTransition}
@@ -110,7 +100,6 @@ export default function AiFab() {
           <Paper
             shadow="xl"
             radius="lg"
-            // Border only on desktop — avoids "border soup" stacking on mobile
             withBorder={!isMobile}
             style={{
               ...styles,
@@ -133,7 +122,6 @@ export default function AiFab() {
         )}
       </Transition>
 
-      {/* FAB */}
       <button
         onClick={() => { if (isOpen) { closeAiPanel(); } else { openAiPanel(); } }}
         aria-label={isOpen ? 'Close AI assistant' : hasKey ? 'Open AI assistant' : 'Set up AI assistant'}

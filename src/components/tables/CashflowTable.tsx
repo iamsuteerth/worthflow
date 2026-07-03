@@ -6,9 +6,6 @@ import { moneyParens } from "@/format/money";
 import { EmptyState, RecordCard, Money } from "@/components/ui";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
-// Derives the per-row cashflow columns with accounting signs: outflows negative,
-// inflows positive. Colors: red/orange for "hurting" spend, green for cash in,
-// neutral for money moved into investments/instruments (deposits, contributions).
 function cashflowColumns(row: ReturnType<typeof useFilteredSimulation>["rows"][number]) {
   const c = row.cashflow;
   const bonus = sumEvents(row.events, "BONUS_INCOME");

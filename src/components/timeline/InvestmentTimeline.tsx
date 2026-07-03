@@ -5,6 +5,7 @@ import {
   ThemeIcon,
   Timeline,
 } from "@mantine/core";
+
 import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { formatMonthGrouped } from "@/engine/monthFormatting";
 import { getEventVisual } from "@/theme/eventVisuals";

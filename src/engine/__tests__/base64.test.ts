@@ -8,7 +8,6 @@ describe("base64 (UTF-8 safe)", () => {
   });
 
   it("round-trips non-Latin1 text that plain btoa cannot encode", () => {
-    // Sanity: the old approach throws on these inputs.
     expect(() => btoa("₹")).toThrow();
     expect(() => btoa("Café 🎉")).toThrow();
 

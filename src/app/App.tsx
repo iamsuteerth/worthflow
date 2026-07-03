@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { Alert, Button, Center, Group, Loader, SegmentedControl, Stack } from "@mantine/core";
 import { IconChartLine, IconCloudOff, IconSettings } from "@tabler/icons-react";
 
 import PlannerShell from "@/components/layout/AppShell";
 import LoginPage from "@/components/auth/LoginPage";
-import ForecastPage from "@/pages/ForecastPage";
-import ConfigBuilderPage from "@/pages/ConfigBuilderPage";
 
 import { usePlannerStore, type AppView } from "@/store/plannerStore";
 import { useAuthStore } from "@/store/authStore";
@@ -15,6 +13,9 @@ let aiStoreImport: Promise<{ useAiStore: { getState: () => { initAi: () => Promi
 if (import.meta.env.VITE_AI_ENABLED) {
   aiStoreImport = import("@/store/aiStore") as unknown as typeof aiStoreImport;
 }
+
+const ForecastPage = lazy(() => import("@/pages/ForecastPage"));
+const ConfigBuilderPage = lazy(() => import("@/pages/ConfigBuilderPage"));
 
 const NAV_DATA = [
   {
@@ -55,15 +56,12 @@ export default function App() {
   useEffect(() => {
     if (!authenticated) return;
     let cancelled = false;
-    // setState lives in the async callback (allowed) and the cleanup (runs on
-    // sign-out / before re-run), never synchronously in the effect body.
     autoLoadLatest().finally(async () => {
       if (!cancelled) {
         setCloudReady(true);
-        // Kick off AI init non-blockingly after the plan loads
         if (aiStoreImport) {
           aiStoreImport.then(({ useAiStore }) => {
-            useAiStore.getState().initAi().catch(() => {});
+            useAiStore.getState().initAi().catch(() => { });
           });
         }
       }
@@ -72,7 +70,7 @@ export default function App() {
       cancelled = true;
       setCloudReady(false);
     };
-  }, [authenticated, autoLoadLatest]); // autoLoadLatest is a stable Zustand action
+  }, [authenticated, autoLoadLatest]);
 
   if (loading || (authenticated && !cloudReady)) {
     return (
@@ -117,7 +115,11 @@ export default function App() {
           data={NAV_DATA}
           radius="md"
         />
-        {activeView === "builder" ? <ConfigBuilderPage /> : <ForecastPage />}
+        <Suspense fallback={<Loader />}>
+          {activeView === "builder"
+            ? <ConfigBuilderPage />
+            : <ForecastPage />}
+        </Suspense>
       </Stack>
     </PlannerShell>
   );

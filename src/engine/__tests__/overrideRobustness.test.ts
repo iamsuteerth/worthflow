@@ -1,9 +1,10 @@
+import type { PlannerConfig } from "@/types/config";
+import type { PlannerOverrides } from "@/types/overrides";
+
 import { describe, it, expect } from "vitest";
 import { simulate } from "@/engine/simulate";
 import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 import { baseConfig, account, m } from "./factories";
-import type { PlannerConfig } from "@/types/config";
-import type { PlannerOverrides } from "@/types/overrides";
 
 const run = (cfg: PlannerConfig, ov: PlannerOverrides = {}) =>
   simulate(buildEffectiveConfig(cfg, ov), ov);
@@ -40,7 +41,6 @@ describe("override robustness — orphaned references are ignored, never crash o
 
     expect(dirty.summary.finalNetWorth).toBe(clean.summary.finalNetWorth);
     expect(dirty.rows.map((r) => r.assets.netWorth)).toEqual(clean.rows.map((r) => r.assets.netWorth));
-    // …and the summary totals aren't inflated by the orphaned events either.
     expect(dirty.summary.investmentDepositsTotal).toBe(0);
     expect(dirty.summary.investmentWithdrawalsTotal).toBe(0);
     invariantHolds(dirty);
@@ -56,14 +56,13 @@ describe("override robustness — orphaned references are ignored, never crash o
         returnOverrides: [],
       },
     });
-    // Account A deleted, yet a stale deposit still references it → must be skipped.
     const ov: PlannerOverrides = {
       deletedAccountIds: ["a"],
       runtimeEvents: [{ id: "dep", type: "INVESTMENT_DEPOSIT", accountId: "a", month: m("2025-03"), amount: 20_000 }],
     };
     const res = run(cfg, ov);
-    expect(res.rows[res.rows.length - 1].assets.accountSnapshots).toHaveLength(0); // A is gone
-    expect(res.summary.finalInvestmentCorpus).toBe(0); // deposit ignored, no corpus
+    expect(res.rows[res.rows.length - 1].assets.accountSnapshots).toHaveLength(0);
+    expect(res.summary.finalInvestmentCorpus).toBe(0);
     invariantHolds(res);
   });
 });
@@ -84,7 +83,6 @@ describe("override robustness — a scenario salary change flows through to mont
     };
     const res = run(cfg, ov);
     const incomeByMonth = Object.fromEntries(res.rows.map((r) => [r.month, r.cashflow.income]));
-    // Base income before the change, new income at and after the effective month.
     expect(incomeByMonth["2025-03"]).toBe(100_000);
     expect(incomeByMonth["2025-04"]).toBe(200_000);
     expect(incomeByMonth["2025-06"]).toBe(200_000);
@@ -115,7 +113,6 @@ describe("override robustness — the full override stack simulates cleanly toge
     };
     const res = run(cfg, ov);
 
-    // Effective accounts = the scenario account only (base is hidden).
     expect(res.rows[res.rows.length - 1].assets.accountSnapshots.map((s) => s.accountId)).toEqual(["scn"]);
     invariantHolds(res);
   });

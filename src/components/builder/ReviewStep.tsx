@@ -1,3 +1,5 @@
+import type { RuntimeEvent } from "@/types/runtimeEvent";
+
 import {
   Alert,
   Button,
@@ -11,7 +13,7 @@ import {
   Text,
   ThemeIcon,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+
 import {
   IconBolt,
   IconBuildingBank,
@@ -24,6 +26,7 @@ import {
   IconPlayerPlay,
   IconWallet,
 } from "@tabler/icons-react";
+
 import { useMemo } from "react";
 import { builderToConfig } from "@/engine/builderToConfig";
 import { AdaptiveMoney } from "@/components/ui";
@@ -32,16 +35,13 @@ import { formatMonth } from "@/engine/monthFormatting";
 import { useBuilderStore } from "@/store/builderStore";
 import { usePlannerStore } from "@/store/plannerStore";
 import { useCloudStore, defaultPlanLabel } from "@/store/cloudStore";
+import { useDisclosure } from "@mantine/hooks";
 import {
   notifyCloudSaved,
   notifyCloudAutoSaveFailed,
   notifyGeneratedNudge,
 } from "@/lib/cloudNotifications";
-import type { RuntimeEvent } from "@/types/runtimeEvent";
 
-// Generating a plan resets the override layer (loadGeneratedPlan clears overrides and
-// saved scenarios). The builder carries the baseline forward, so this lists only what
-// is actually discarded: Scenario Lab what-if events and saved scenarios.
 function summarizeDroppedScenarioData(
   events: RuntimeEvent[],
   savedScenarioCount: number
@@ -70,7 +70,6 @@ function summarizeDroppedScenarioData(
   return items;
 }
 
-// Uniform summary card: icon + label on the top row, value below. Nothing else.
 function MetricCard({
   label,
   value,
@@ -112,10 +111,6 @@ export default function ReviewStep() {
 
   const [confirmOpened, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
 
-  // What regeneration would actually drop. When the draft was seeded from the baseline
-  // (default), every override is discarded. When it was seeded from the effective plan
-  // ("Keep my edits"), the builder already carries baseline-representable items, so only
-  // the override-layer events it can't represent are truly lost.
   const droppedItems = useMemo(() => {
     const all = overrides.runtimeEvents ?? [];
     const NON_CARRYING: RuntimeEvent["type"][] = [
@@ -132,7 +127,6 @@ export default function ReviewStep() {
 
   const config = useMemo(() => builderToConfig(state), [state]);
 
-  // Every category addable in the Events step counts as an event.
   const totalEvents =
     state.oneOffExpenses.length +
     state.creditCardBills.length +

@@ -21,5 +21,5 @@ export const handler = async (event) => {
       console.error('Failed to set member_since (non-fatal):', err)
     }
   }
-  return event // never throw — confirmation must always succeed
+  return event
 }

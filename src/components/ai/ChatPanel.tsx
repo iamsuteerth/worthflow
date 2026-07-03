@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+
 import {
   ActionIcon,
   Alert,
@@ -11,7 +12,9 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
+
 import { useDisclosure } from '@mantine/hooks';
+
 import {
   IconDotsVertical,
   IconRefresh,
@@ -21,6 +24,7 @@ import {
   IconTrash,
   IconX,
 } from '@tabler/icons-react';
+
 import { useAiStore } from '@/store/aiStore';
 import { useUiStore } from '@/store/uiStore';
 import MessageList from '@/components/ai/MessageList';
@@ -42,7 +46,6 @@ export default function ChatPanel() {
 
   const closeAiPanel = useUiStore((s) => s.closeAiPanel);
 
-  // Closing the panel (this component unmounts) cancels any in-flight stream.
   useEffect(() => () => useAiStore.getState().stopStreaming(), []);
 
   const [settingsOpened, { open: openSettings, close: closeSettings }] = useDisclosure(false);
@@ -66,7 +69,6 @@ export default function ChatPanel() {
 
   return (
     <Box style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      {/* Header */}
       <Group
         justify="space-between"
         p="sm"
@@ -136,7 +138,6 @@ export default function ChatPanel() {
         </Group>
       </Group>
 
-      {/* Body */}
       {isAbsent && (
         <Box style={{ flex: 1, overflowY: 'auto' }}>
           <Stack p="md" gap="md">
@@ -191,7 +192,6 @@ export default function ChatPanel() {
         </Box>
       )}
 
-      {/* Settings modal */}
       <Modal
         opened={settingsOpened}
         onClose={() => { closeSettings(); setForgotMode(false); }}
@@ -204,7 +204,6 @@ export default function ChatPanel() {
         />
       </Modal>
 
-      {/* Clear confirm modal */}
       <Modal
         opened={clearConfirm}
         onClose={() => setClearConfirm(false)}

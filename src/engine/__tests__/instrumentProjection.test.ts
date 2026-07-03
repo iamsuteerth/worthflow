@@ -1,8 +1,9 @@
+import type { FinancialEvent } from "@/types/events";
+
 import { describe, it, expect } from "vitest";
 import { fdMaturityValue, rdMaturityValue, projectInstrument } from "@/engine/instrumentProjection";
 import { simulate } from "@/engine/simulate";
-import type { FinancialEvent } from "@/types/events";
-import { baseConfig, m, rdBankMaturity } from "./factories";
+import { baseConfig, m, rdBankMaturity } from "@/engine/__tests__/factories";
 
 function eventAmount(rows: { events: FinancialEvent[] }[], type: string): number {
   for (const row of rows) {
@@ -12,15 +13,12 @@ function eventAmount(rows: { events: FinancialEvent[] }[], type: string): number
   throw new Error(`No ${type} event found`);
 }
 
-// FD quarterly-compounded maturity: principal × (1 + rate/400)^(months/3).
 const fdValue = (principal: number, rate: number, months: number) =>
   principal * Math.pow(1 + rate / 400, months / 3);
 
 describe("fdMaturityValue", () => {
   it("matches the quarterly-compounded bank maturity formula", () => {
-    // 100k @ 12% / 12mo → 100k × 1.03^4 ≈ 112,551
     expect(fdMaturityValue(100_000, 12, 12)).toBeCloseTo(fdValue(100_000, 12, 12), 4);
-    // 50k @ 10% / 24mo → 50k × 1.025^8 ≈ 60,920
     expect(fdMaturityValue(50_000, 10, 24)).toBeCloseTo(fdValue(50_000, 10, 24), 4);
   });
 });
@@ -31,8 +29,6 @@ describe("rdMaturityValue", () => {
   });
 
   it("matches bank quoting for a 2-year RD (HDFC reference)", () => {
-    // ₹10,000/month for 24 months @ 6.45% p.a. — HDFC quotes ≈ ₹2,56,726;
-    // the standard quarterly-compounding formula yields ≈ ₹2,56,710.
     const value = rdMaturityValue(10_000, 6.45, 24);
     expect(value).toBeCloseTo(rdBankMaturity(10_000, 6.45, 24), 2);
     expect(value).toBeGreaterThan(256_000);
@@ -54,14 +50,12 @@ describe("projectInstrument", () => {
     const p = projectInstrument({
       id: "rd1", type: "RD", name: "RD", monthlyContribution: 10_000, rate: 6, startMonth: m("2025-01"), durationMonths: 3,
     });
-    expect(p.principal).toBe(30_000); // total contributed
+    expect(p.principal).toBe(30_000);
     expect(p.maturityValue).toBeCloseTo(rdMaturityValue(10_000, 6, 3), 6);
     expect(p.interest).toBeCloseTo(p.maturityValue - 30_000, 6);
   });
 });
 
-// The invariant that prevents the three RD/FD formulas from ever drifting again:
-// the projection a user sees == the amount the simulation actually credits to cash.
 describe("projection matches the simulated maturity payout", () => {
   it("RD: rdMaturityValue equals the RD_MATURED payout", () => {
     const config = baseConfig({

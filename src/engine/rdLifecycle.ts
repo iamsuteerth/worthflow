@@ -1,46 +1,22 @@
-import type {
-  PlannerConfig,
-} from "@/types/config";
+import type { PlannerConfig } from "@/types/config";
+import type { LifecycleResult } from "@/types/lifecycle";
+import type { MonthKey } from "@/types/simulation";
+import type { SimulationState } from "@/types/simulationState";
 
-import type {
-  LifecycleResult,
-} from "@/types/lifecycle";
+import { createRdPosition } from "@/engine/rd";
+import { calculateRdValue } from "@/engine/rdMath";
 
-import type {
-  SimulationState,
-} from "@/types/simulationState";
-
-import type {
-  MonthKey,
-} from "@/types/simulation";
-
-import {
-  createRdPosition,
-} from "@/engine/rd";
-
-import {
-  calculateRdValue,
-} from "@/engine/rdMath";
-
-export function processRdLifecycle(
-  state: SimulationState,
-  config: PlannerConfig,
-  month: MonthKey
-): LifecycleResult {
+export function processRdLifecycle(state: SimulationState, config: PlannerConfig, month: MonthKey): LifecycleResult {
   const result: LifecycleResult = {
     state: {
       ...state,
-
       rds: [...state.rds],
     },
-
     events: [],
-
     minCash: state.cash,
   };
 
-  const nextState =
-    result.state;
+  const nextState = result.state;
 
   config.instruments.forEach(
     (instrument) => {
@@ -66,19 +42,11 @@ export function processRdLifecycle(
         );
 
         result.events.push({
-          id:
-            `${instrument.id}-created`,
-
+          id: `${instrument.id}-created`,
           month,
-
-          type:
-            "RD_CREATED",
-
-          amount:
-            instrument.monthlyContribution,
-
-          description:
-            instrument.name,
+          type: "RD_CREATED",
+          amount: instrument.monthlyContribution,
+          description: instrument.name,
         });
       }
     }
@@ -90,21 +58,15 @@ export function processRdLifecycle(
         ...rd,
       };
 
-      if (
-        month >= rd.startMonth &&
-        month <
-        rd.maturityMonth
-      ) {
-        nextState.cash -=
-          rd.monthlyContribution;
+      if (month >= rd.startMonth && month < rd.maturityMonth) {
+        nextState.cash -= rd.monthlyContribution;
 
         result.minCash = Math.min(
           result.minCash,
           nextState.cash
         );
 
-        updated.totalContributed +=
-          rd.monthlyContribution;
+        updated.totalContributed += rd.monthlyContribution;
       }
 
       updated.currentValue =
@@ -124,9 +86,7 @@ export function processRdLifecycle(
     );
 
   maturedRds.forEach((rd) => {
-
-    nextState.cash +=
-      rd.currentValue;
+    nextState.cash += rd.currentValue;
 
     result.minCash = Math.min(
       result.minCash,
@@ -134,21 +94,14 @@ export function processRdLifecycle(
     );
 
     result.events.push({
-      id:
-        `${rd.id}-matured`,
-
+      id:  `${rd.id}-matured`,
       month,
-
-      type:
-        "RD_MATURED",
-
+      type: "RD_MATURED",
       amount:
         Math.round(
           rd.currentValue
         ),
-
-      description:
-        rd.name,
+      description: rd.name,
     });
   });
 

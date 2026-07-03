@@ -1,5 +1,6 @@
-import { Card, Group, Stack, Text, ThemeIcon } from "@mantine/core";
 import type { ReactNode } from "react";
+
+import { Card, Group, Stack, Text, ThemeIcon } from "@mantine/core";
 
 interface StatCardProps {
   title: string;

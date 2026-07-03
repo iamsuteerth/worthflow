@@ -1,12 +1,10 @@
 import type { PlannerConfig } from "@/types/config";
 import type { FinancialEvent } from "@/types/events";
 import type { MonthKey } from "@/types/simulation";
+
 import { isRecurringExpenseActive } from "@/engine/configLookups";
 
-export function buildCashflowEvents(
-  config: PlannerConfig,
-  month: MonthKey
-): FinancialEvent[] {
+export function buildCashflowEvents(config: PlannerConfig, month: MonthKey): FinancialEvent[] {
   const events: FinancialEvent[] = [];
 
   config.oneOffExpenses

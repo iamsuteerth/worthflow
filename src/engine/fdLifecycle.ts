@@ -1,43 +1,21 @@
-import type {
-  PlannerConfig,
-} from "@/types/config";
+import type { PlannerConfig } from "@/types/config";
+import type { LifecycleResult } from "@/types/lifecycle";
+import type { MonthKey } from "@/types/simulation";
+import type { SimulationState } from "@/types/simulationState";
 
-import type {
-  LifecycleResult,
-} from "@/types/lifecycle";
+import { createFdPosition, updateFdPosition } from "@/engine/fd";
 
-import type {
-  SimulationState,
-} from "@/types/simulationState";
-
-import type {
-  MonthKey,
-} from "@/types/simulation";
-
-import {
-  createFdPosition,
-  updateFdPosition,
-} from "@/engine/fd";
-
-export function processFdLifecycle(
-  state: SimulationState,
-  config: PlannerConfig,
-  month: MonthKey
-): LifecycleResult {
+export function processFdLifecycle(state: SimulationState, config: PlannerConfig, month: MonthKey): LifecycleResult {
   const result: LifecycleResult = {
     state: {
       ...state,
-
       fds: [...state.fds],
     },
-
     events: [],
-
     minCash: state.cash,
   };
 
-  const nextState =
-    result.state;
+  const nextState = result.state;
 
   config.instruments.forEach(
     (instrument) => {
@@ -47,17 +25,8 @@ export function processFdLifecycle(
         return;
       }
 
-      if (
-        instrument.startMonth ===
-        month &&
-        !nextState.fds.some(
-          (fd) =>
-            fd.id ===
-            instrument.id
-        )
-      ) {
-        nextState.cash -=
-          instrument.principal;
+      if (instrument.startMonth === month && !nextState.fds.some((fd) => fd.id === instrument.id)) {
+        nextState.cash -= instrument.principal;
 
         result.minCash = Math.min(
           result.minCash,
@@ -71,19 +40,11 @@ export function processFdLifecycle(
         );
 
         result.events.push({
-          id:
-            `${instrument.id}-created`,
-
+          id: `${instrument.id}-created`,
           month,
-
-          type:
-            "FD_CREATED",
-
-          amount:
-            instrument.principal,
-
-          description:
-            instrument.name,
+          type:  "FD_CREATED",
+          amount: instrument.principal,
+          description: instrument.name,
         });
       }
     }
@@ -105,8 +66,7 @@ export function processFdLifecycle(
     );
 
   maturedFds.forEach((fd) => {
-    nextState.cash +=
-      fd.currentValue;
+    nextState.cash += fd.currentValue;
 
     result.minCash = Math.min(
       result.minCash,
@@ -114,21 +74,14 @@ export function processFdLifecycle(
     );
 
     result.events.push({
-      id:
-        `${fd.id}-matured`,
-
+      id: `${fd.id}-matured`,
       month,
-
-      type:
-        "FD_MATURED",
-
+      type: "FD_MATURED",
       amount:
         Math.round(
           fd.currentValue
         ),
-
-      description:
-        fd.name,
+      description: fd.name,
     });
   });
 

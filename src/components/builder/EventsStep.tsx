@@ -1,3 +1,5 @@
+import type { MonthKey } from "@/types/simulation";
+
 import {
   Alert,
   Badge,
@@ -14,6 +16,7 @@ import {
   TextInput,
   ThemeIcon,
 } from "@mantine/core";
+
 import {
   IconAlertCircle,
   IconBolt,
@@ -24,13 +27,13 @@ import {
   IconTrash,
   IconTrendingUp,
 } from "@tabler/icons-react";
+
 import { useMemo, useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
 import { getMaxAnnualYears, deriveAnnualEndMonth } from "@/engine/annualExpense";
 import { forecastEndMonth } from "@/engine/dateUtils";
 import { useBuilderStore } from "@/store/builderStore";
-import type { MonthKey } from "@/types/simulation";
 import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
 import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
 

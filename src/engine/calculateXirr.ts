@@ -47,8 +47,8 @@ export function calculateXirr(
   const NPV_TOL = 1e-10;
   const MAX_ITER = 300;
 
-  // --- Pass 1: Newton-Raphson with backtracking ---
-  // Fast convergence when well-behaved; we try several starting guesses.
+  // Pass 1: Newton-Raphson with backtracking
+  // Fast convergence when well-behaved
   const newtonGuesses = [0.1, 0.0, 0.5, -0.1, -0.3, 1.0, 2.0, -0.5];
 
   for (const initial of newtonGuesses) {
@@ -89,7 +89,7 @@ export function calculateXirr(
     }
   }
 
-  // --- Pass 2: Brent's method (guaranteed convergence given a bracket) ---
+  // Pass 2: Brent's method (guaranteed convergence given a bracket)
   // Scan for a sign change across a wide range of rates.
   function findBracket(): [number, number] | null {
     // Sweep candidate rates from -99% to very high returns

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildAccountSchedule } from "@/engine/accountSchedule";
-import { baseConfig, account, m } from "./factories";
+import { baseConfig, account, m } from "@/engine/__tests__/factories";
 
 describe("buildAccountSchedule", () => {
   it("returns empty ranges for an unknown account", () => {

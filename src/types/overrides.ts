@@ -4,22 +4,16 @@ import type { InvestmentAccount } from "@/types/investmentAccount";
 
 export interface PlannerOverrides {
   incomeMonthly?: number;
-
   openingBalance?: number;
-
   forecastMonths?: number;
 
-  // Investment accounts created inside a scenario (a "what-if"). They live here,
-  // NOT in baseConfig, so they never leak into the Plan Builder, are cleared by
-  // Reset, and travel with the plan on save/export. buildEffectiveConfig materialises
-  // them into config.investments.accounts so the engine, deposits and overrides see
-  // them exactly like a base account. To make an account permanent, add it in the Builder.
+  // Scenario-only investment accounts. Excluded from baseConfig, reset with the scenario,
+  // materialised at runtime, and only permanent if added in the Builder.
   scenarioAccounts?: InvestmentAccount[];
 
-  // Base ("original") accounts hidden by a scenario, by id. A reversible what-if:
-  // baseConfig keeps the account, buildEffectiveConfig filters it (and its base
-  // overrides) out of the effective config, and Reset clears this list to bring it
-  // back. Symmetric with scenarioAccounts; surfaced as "Removed base acc ×N".
+  // Base accounts hidden by a scenario, by id. buildEffectiveConfig filters it (and its base overrides)
+  // out of the effective config, and Reset clears this list to bring it back.
+  // Symmetric with scenarioAccounts; surfaced as "Removed base acc ×N".
   deletedAccountIds?: string[];
 
   monthlyExpenses?: Record<

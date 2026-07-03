@@ -1,9 +1,10 @@
 import type { PlannerConfig } from "@/types/config";
 import type { SimulationState } from "@/types/simulationState";
+import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
+
 import { addMonths } from "@/engine/dateUtils";
 import { createHistoricalFdPosition } from "@/engine/fd";
 import { createHistoricalRdPosition } from "@/engine/rd";
-import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
 
 export function createInitialState(config: PlannerConfig): SimulationState {
   const forecastStart = config.forecast.startMonth;

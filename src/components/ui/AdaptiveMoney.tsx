@@ -9,12 +9,6 @@ interface AdaptiveMoneyProps {
   accounting?: boolean;
 }
 
-// Shows the full rupee figure, but the moment it would overflow its container it
-// swaps to the compact form (₹58.40L / ₹5.20Cr) with a tooltip carrying the exact
-// amount. Overflow is measured against an always-present hidden full-width node, so
-// the decision is stable (switching the visible text to compact can't flip it back
-// and forth). It inherits font/size/colour from its parent, so drop it inside a
-// styled <Text>. With no layout (SSR / jsdom) it renders the full figure verbatim.
 export function AdaptiveMoney({ value, signed = false, accounting = false }: AdaptiveMoneyProps) {
   const abs = Math.abs(value);
   const sign = signed ? (value >= 0 ? "+" : "−") : "";
@@ -40,7 +34,6 @@ export function AdaptiveMoney({ value, signed = false, accounting = false }: Ada
     if (!wrap || !measure || typeof ResizeObserver === "undefined") return;
 
     const evaluate = () => {
-      // Full text's natural width vs the available width (+1px tolerance for rounding).
       setCompact(measure.scrollWidth > wrap.clientWidth + 1);
     };
     evaluate();
@@ -66,7 +59,6 @@ export function AdaptiveMoney({ value, signed = false, accounting = false }: Ada
 
   return (
     <span ref={wrapRef} style={{ display: "block", position: "relative", overflow: "hidden", maxWidth: "100%" }}>
-      {/* Always-present, out-of-flow full-text node used only for measurement. */}
       <span
         ref={measureRef}
         aria-hidden

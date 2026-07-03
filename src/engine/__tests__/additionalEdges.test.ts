@@ -1,12 +1,11 @@
+import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
+
 import { describe, it, expect } from "vitest";
 import { addMonths, getMonthIndex, generateMonths } from "@/engine/dateUtils";
 import { calculateXirr } from "@/engine/calculateXirr";
 import { isFdActive, createHistoricalFdPosition, getElapsedMonths } from "@/engine/fd";
 import { createHistoricalRdPosition } from "@/engine/rd";
-import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
-import { m } from "./factories";
-
-// ─── dateUtils edges ─────────────────────────────────────────────────────────
+import { m } from "@/engine/__tests__/factories";
 
 describe("addMonths — boundary behaviour", () => {
   it("returns the same month for an offset of 0", () => {
@@ -42,11 +41,8 @@ describe("getMonthIndex", () => {
   });
 });
 
-// ─── XIRR edges ──────────────────────────────────────────────────────────────
-
 describe("calculateXirr — sign and degenerate cases", () => {
   it("returns a negative rate for a loss-making investment", () => {
-    // Invest 100k, receive 80k one year later → −20%.
     const xirr = calculateXirr([
       { amount: -100_000, date: new Date("2025-01-01") },
       { amount: 80_000, date: new Date("2026-01-01") },
@@ -72,7 +68,6 @@ describe("calculateXirr — sign and degenerate cases", () => {
   });
 });
 
-// ─── FD helpers ──────────────────────────────────────────────────────────────
 
 const baseFd: FixedDeposit = {
   id: "fd1", type: "FD", name: "FD", principal: 100_000, rate: 10, startMonth: m("2025-01"), durationMonths: 12,
@@ -83,7 +78,7 @@ describe("isFdActive", () => {
     expect(isFdActive(baseFd, m("2024-12"))).toBe(false);
     expect(isFdActive(baseFd, m("2025-01"))).toBe(true);
     expect(isFdActive(baseFd, m("2025-12"))).toBe(true);
-    expect(isFdActive(baseFd, m("2026-01"))).toBe(false); // maturity month
+    expect(isFdActive(baseFd, m("2026-01"))).toBe(false);
   });
 });
 
@@ -101,7 +96,6 @@ describe("createHistoricalFdPosition", () => {
       { ...baseFd, startMonth: m("2024-01"), durationMonths: 24 },
       m("2025-01")
     );
-    // 12 months @ 10%, quarterly compounded → 100k × 1.025^4 ≈ 110,381.
     expect(pos.currentValue).toBeCloseTo(100_000 * Math.pow(1 + 10 / 400, 12 / 3), 4);
     expect(pos.maturityMonth).toBe("2026-01");
     expect(pos.active).toBe(true);
@@ -114,7 +108,7 @@ describe("createHistoricalRdPosition", () => {
       id: "rd1", type: "RD", name: "RD", monthlyContribution: 5_000, rate: 6, startMonth: m("2024-07"), durationMonths: 12,
     };
     const pos = createHistoricalRdPosition(rd, m("2025-01"));
-    expect(pos.totalContributed).toBe(30_000); // 6 months elapsed × 5k
+    expect(pos.totalContributed).toBe(30_000);
     expect(pos.maturityMonth).toBe("2025-07");
     expect(pos.currentValue).toBeGreaterThan(0);
   });

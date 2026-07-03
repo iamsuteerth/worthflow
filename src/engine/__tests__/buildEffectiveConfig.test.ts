@@ -1,7 +1,8 @@
+import type { PlannerOverrides } from "@/types/overrides";
+
 import { describe, it, expect } from "vitest";
 import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
-import type { PlannerOverrides } from "@/types/overrides";
-import { baseConfig, account, m } from "./factories";
+import { baseConfig, account, m } from "@/engine/__tests__/factories";
 
 describe("buildEffectiveConfig — scalar overrides", () => {
   it("returns an unchanged clone when overrides are empty", () => {
@@ -43,7 +44,6 @@ describe("buildEffectiveConfig — scenario accounts (what-if)", () => {
     };
     const result = buildEffectiveConfig(config, overrides);
     expect(result.investments.accounts.map((a) => a.id)).toEqual(["base-1", "scn-1"]);
-    // The base config is never mutated — the account leaks nowhere near the Builder.
     expect(config.investments.accounts).toHaveLength(1);
   });
 
@@ -59,8 +59,7 @@ describe("buildEffectiveConfig — scenario accounts (what-if)", () => {
     });
     const result = buildEffectiveConfig(config, { deletedAccountIds: ["drop"] });
     expect(result.investments.accounts.map((a) => a.id)).toEqual(["keep"]);
-    expect(result.investments.amountOverrides).toHaveLength(0); // its base override goes too
-    // baseConfig is never mutated.
+    expect(result.investments.amountOverrides).toHaveLength(0);
     expect(config.investments.accounts).toHaveLength(2);
   });
 
@@ -183,7 +182,6 @@ describe("buildEffectiveConfig — runtime events", () => {
         { id: "sp1", type: "SPENDING_OVERRIDE", startMonth: m("2025-02"), endMonth: m("2025-12"), amount: 30_000 },
       ],
     });
-    // Forecast only covers 2025-01..2025-03.
     expect(Object.keys(result.expenses.overrides)).toEqual(["2025-02", "2025-03"]);
   });
 

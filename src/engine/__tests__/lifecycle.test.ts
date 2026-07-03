@@ -1,10 +1,11 @@
+import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
+
 import { describe, it, expect } from "vitest";
 import { createInitialState } from "@/engine/stateFactory";
 import { processFdLifecycle } from "@/engine/fdLifecycle";
 import { processRdLifecycle } from "@/engine/rdLifecycle";
 import { processInstrumentLifecycle } from "@/engine/instrumentLifecycle";
-import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
-import { baseConfig, m, rdBankMaturity } from "./factories";
+import { baseConfig, m, rdBankMaturity } from "@/engine/__tests__/factories";
 
 const fd = (over: Partial<FixedDeposit> = {}): FixedDeposit => ({
   id: "fd1", type: "FD", name: "FD A", principal: 100_000, rate: 12, startMonth: m("2025-01"), durationMonths: 12, ...over,
@@ -33,18 +34,15 @@ describe("processFdLifecycle", () => {
     let state = createInitialState(config);
     state = processFdLifecycle(state, config, m("2025-01")).state;
     const cashAfterCreate = state.cash;
-    // Re-running the same month must not debit the principal again.
     const again = processFdLifecycle(state, config, m("2025-01"));
     expect(again.state.cash).toBe(cashAfterCreate);
     expect(again.events).toHaveLength(0);
   });
 
   it("matures an FD on its maturity month, crediting the compounded value to cash", () => {
-    // 1-month FD at 12% → matures the next month at principal × (1 + 12/400)^(1/3)
-    // (quarterly compounding, one month = a third of a quarter elapsed).
     const config = baseConfig({ cash: { openingBalance: 500_000 }, instruments: [fd({ durationMonths: 1 })] });
     let state = createInitialState(config);
-    state = processFdLifecycle(state, config, m("2025-01")).state; // created, cash 400k
+    state = processFdLifecycle(state, config, m("2025-01")).state;
     const matured = processFdLifecycle(state, config, m("2025-02"));
 
     const expectedValue = 100_000 * Math.pow(1 + 12 / 400, 1 / 3);
@@ -73,14 +71,10 @@ describe("processRdLifecycle", () => {
       instruments: [rd()],
     });
     let state = createInitialState(config);
-    // Walk the RD through its contribution months and maturity.
     for (const month of ["2025-01", "2025-02", "2025-03", "2025-04"] as const) {
       state = processRdLifecycle(state, config, m(month)).state;
     }
-    // 3 contributions of 10k at 6%, paid out at the quarterly-compounded bank
-    // maturity value.
     expect(state.rds).toHaveLength(0);
-    // Cash = 100k − 3×10k contributions + bank maturity payout.
     expect(state.cash).toBeCloseTo(70_000 + rdBankMaturity(10_000, 6, 3), 2);
   });
 });
@@ -91,7 +85,6 @@ describe("processInstrumentLifecycle", () => {
     const state = createInitialState(config);
     const result = processInstrumentLifecycle(state, config, m("2025-01"));
 
-    // FD principal (100k) + RD contribution (10k) leave cash at 390k.
     expect(result.state.cash).toBe(390_000);
     expect(result.events.map((e) => e.type).sort()).toEqual(["FD_CREATED", "RD_CREATED"]);
   });

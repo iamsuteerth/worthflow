@@ -1,7 +1,8 @@
-import { simulate } from "@/engine/simulate";
-import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 import type { PlannerConfig } from "@/types/config";
 import type { PlannerOverrides } from "@/types/overrides";
+
+import { simulate } from "@/engine/simulate";
+import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 
 export interface ScenarioDelta {
   netWorth: number;
@@ -9,10 +10,7 @@ export interface ScenarioDelta {
   lowestCash: number;
 }
 
-export function compareScenario(
-  baseConfig: PlannerConfig,
-  overrides: PlannerOverrides
-): ScenarioDelta {
+export function compareScenario(baseConfig: PlannerConfig, overrides: PlannerOverrides): ScenarioDelta {
   const base = simulate(baseConfig);
   const scenario = simulate(buildEffectiveConfig(baseConfig, overrides));
 

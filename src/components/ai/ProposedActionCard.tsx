@@ -1,3 +1,5 @@
+import type { Message } from '@/ai/chat/conversation.types';
+
 import { useMemo } from 'react';
 import { Alert, Badge, Button, Group, Paper, Stack, Text } from '@mantine/core';
 import {
@@ -14,7 +16,6 @@ import { checkFeasibility } from '@/ai/actions/checkFeasibility';
 import { describeAction } from '@/ai/actions/describeAction';
 import { isProposalApplied } from '@/ai/actions/proposalState';
 import { Money } from '@/components/ui';
-import type { Message } from '@/ai/chat/conversation.types';
 
 interface Props {
   message: Message;
@@ -22,8 +23,6 @@ interface Props {
 
 function DeltaRow({ label, before, after }: { label: string; before: number; after: number }) {
   const changed = before !== after;
-  // The chat panel is narrow, so use the compact form (with a tooltip carrying the
-  // exact figure) — big rupee values would otherwise overflow the row.
   return (
     <Group justify="space-between" gap={6} wrap="nowrap">
       <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>{label}</Text>
@@ -68,12 +67,10 @@ export default function ProposedActionCard({ message }: Props) {
 
   const feasibility = useMemo(
     () => (action && actionable ? checkFeasibility(action) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [action, actionable, config, overrides],
   );
   const delta = useMemo(
     () => (action && actionable && feasibility?.feasible ? dryRun(action) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [action, actionable, feasibility, config, overrides],
   );
 
@@ -100,7 +97,6 @@ export default function ProposedActionCard({ message }: Props) {
         </Stack>
       )}
 
-      {/* Pre-flag impossibility before the user even tries to Apply. */}
       {actionable && infeasibleReason && (
         <Alert color="orange" variant="light" icon={<IconAlertTriangle size={12} />} p={6} mb={8} radius="sm">
           <Text size="xs">{infeasibleReason}</Text>

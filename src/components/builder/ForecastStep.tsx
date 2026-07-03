@@ -1,9 +1,10 @@
+import type { MonthKey } from "@/types/simulation";
+
 import { Card, Grid, NumberInput, Stack, Text, ThemeIcon } from "@mantine/core";
 import { IconCalendarMonth, IconChartLine } from "@tabler/icons-react";
 import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
 import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
 import { useBuilderStore } from "@/store/builderStore";
-import type { MonthKey } from "@/types/simulation";
 
 export default function ForecastStep() {
   const state = useBuilderStore((store) => store.state);

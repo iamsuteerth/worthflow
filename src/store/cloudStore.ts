@@ -1,3 +1,5 @@
+import type { SaveFileMeta } from '@/lib/storage'
+
 import { create } from 'zustand'
 import { simulate } from '@/engine/simulate'
 import { calculateChecksum } from '@/engine/checksum'
@@ -11,8 +13,7 @@ import {
   uploadSave,
   downloadSave,
   deleteSave as storageDeleteSave,
-  generateSaveKey,
-  type SaveFileMeta,
+  generateSaveKey
 } from '@/lib/storage'
 
 export type { SaveFileMeta }
@@ -20,7 +21,6 @@ export type { SaveFileMeta }
 export const SAVE_LIMIT = 5
 export const SAVE_LIMIT_ERROR = 'SAVE_LIMIT_REACHED'
 
-// Default label for the first plan's automatic save, e.g. "My Plan · Jun 2026".
 export function defaultPlanLabel(date = new Date()): string {
   const stamp = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
   return `My Plan · ${stamp}`
@@ -31,8 +31,6 @@ function isPreconditionFailed(err: unknown): boolean {
   return e?.name === 'PreconditionFailed' || e?.$metadata?.httpStatusCode === 412
 }
 
-// Reads the manifest fresh, applies `mutate`, and commits with a conditional write.
-// On a concurrent change (412) it re-reads and retries. Returns the committed list.
 async function commitManifest(
   mutate: (entries: SaveFileMeta[]) => SaveFileMeta[]
 ): Promise<SaveFileMeta[]> {
@@ -165,7 +163,6 @@ export const useCloudStore = create<CloudStore>((set) => ({
       for (let attempt = 0; attempt < 3; attempt++) {
         const { entries, etag } = await loadManifestWithETag()
 
-        // Authoritative cap check against the fresh manifest (the in-memory count may be stale).
         if (!overwriteKey && entries.length >= SAVE_LIMIT) {
           throw new Error(SAVE_LIMIT_ERROR)
         }
@@ -194,13 +191,11 @@ export const useCloudStore = create<CloudStore>((set) => ({
       throw new Error('Could not update saves. Please try again.')
     } catch (err) {
       // A brand-new save object was uploaded but never referenced by a committed
-      // manifest — delete it so it doesn't orphan in S3. (Never for an overwrite: that
-      // key is an existing save we must not remove.)
+      // manifest — delete it so it doesn't orphan in S3.
       if (objectUploaded && !overwriteKey) {
         try {
           await storageDeleteSave(key)
         } catch {
-          // Best-effort cleanup; surface the original failure regardless.
         }
       }
       throw err

@@ -1,5 +1,4 @@
-import type { PlannerOverrides }
-  from "@/types/overrides";
+import type { PlannerOverrides } from "@/types/overrides";
 
 export interface SavedScenario {
   id: string;

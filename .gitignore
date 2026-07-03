@@ -24,7 +24,6 @@ dist-ssr
 *.sw?
 .env
 .env.production
-*.dev*
 .claude
 
 # Personal financial data
@@ -39,3 +38,6 @@ terraform/.terraform.lock.hcl
 
 # Terraform-generated Lambda build artifact
 terraform/modules/post_confirmation/lambda/*.zip
+
+# Files only for developer environment
+*.dev*

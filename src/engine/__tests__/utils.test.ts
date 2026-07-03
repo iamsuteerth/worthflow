@@ -1,10 +1,11 @@
+import type { EventType } from "@/types/events";
+import type { BuilderState } from "@/types/builder";
+
 import { describe, it, expect } from "vitest";
 import { formatMonth } from "@/engine/monthFormatting";
 import { getEventCategory, EVENT_CATEGORY_LIST, FINANCIAL_EVENT_CATEGORY } from "@/engine/eventCategories";
 import { builderToConfig } from "@/engine/builderToConfig";
-import type { EventType } from "@/types/events";
-import type { BuilderState } from "@/types/builder";
-import { m } from "./factories";
+import { m } from "@/engine/__tests__/factories";
 
 describe("formatMonth", () => {
   it("formats a month key as a long month and year", () => {

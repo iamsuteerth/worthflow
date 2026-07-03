@@ -1,4 +1,6 @@
-import { Text, Tooltip, type TextProps } from "@mantine/core";
+import type { TextProps } from "@mantine/core";
+
+import { Text, Tooltip } from "@mantine/core";
 import { money, moneyCompact, moneyParens, moneyCompactParens } from "@/format/money";
 
 interface MoneyProps extends Omit<TextProps, "children"> {

@@ -1,14 +1,8 @@
+import type { RuntimeInvestmentDeposit, RuntimeInvestmentWithdrawal } from "@/types/runtimeEvent";
+
 import { describe, it, expect } from "vitest";
-import {
-  getAccountReturn,
-  getAccountContribution,
-  processAccountMonth,
-} from "@/engine/accountSimulation";
-import type {
-  RuntimeInvestmentDeposit,
-  RuntimeInvestmentWithdrawal,
-} from "@/types/runtimeEvent";
-import { baseConfig, account, m } from "./factories";
+import { getAccountReturn, getAccountContribution, processAccountMonth } from "@/engine/accountSimulation";
+import { baseConfig, account, m } from  "@/engine/__tests__/factories";
 
 const MONTHLY_FACTOR = (annual: number) => Math.pow(1 + annual / 100, 1 / 12);
 
@@ -91,7 +85,6 @@ describe("processAccountMonth", () => {
       },
     });
     const result = processAccountMonth(config, { "acc-1": 0 }, m("2025-01"), [], []);
-    // Opening balance is seeded, then one month of growth is applied.
     expect(result.accountBalances["acc-1"]).toBeCloseTo(100_000 * MONTHLY_FACTOR(12), 4);
     expect(result.xirrEntries).toEqual([
       { amount: -100_000, date: new Date("2025-01-01"), accountId: "acc-1" },
@@ -99,9 +92,6 @@ describe("processAccountMonth", () => {
   });
 
   it("pins the begin-of-month convention: opening grows in its start month, contribution does not", () => {
-    // Documents the intentional difference from an FD (whose fresh principal accrues
-    // only from elapsed months): an account's opening models money already invested,
-    // so it earns its start month; the same month's contribution is added AFTER growth.
     const config = baseConfig({
       investments: {
         accounts: [account({ startMonth: m("2025-01"), openingBalance: 100_000, defaultAnnualReturn: 12, defaultMonthlyContribution: 9_000 })],
@@ -110,7 +100,6 @@ describe("processAccountMonth", () => {
       },
     });
     const result = processAccountMonth(config, { "acc-1": 0 }, m("2025-01"), [], []);
-    // opening * one-month factor, THEN + contribution (which earns nothing this month).
     expect(result.accountBalances["acc-1"]).toBeCloseTo(100_000 * MONTHLY_FACTOR(12) + 9_000, 4);
   });
 
@@ -134,7 +123,6 @@ describe("processAccountMonth", () => {
         returnOverrides: [],
       },
     });
-    // 0% return → no growth; balance moves purely by the contribution.
     const result = processAccountMonth(config, { "acc-1": 20_000 }, m("2025-02"), [], []);
     expect(result.accountBalances["acc-1"]).toBe(28_000);
     expect(result.totalContribution).toBe(8_000);

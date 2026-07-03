@@ -42,7 +42,7 @@ export async function loadManifest(): Promise<SaveFileMeta[]> {
 }
 
 // Returns the manifest plus its S3 ETag, so a subsequent write can be made
-// conditional (optimistic concurrency). ETag is null when the manifest doesn't exist yet.
+// conditional. ETag is null when the manifest doesn't exist yet.
 export async function loadManifestWithETag(): Promise<{
   entries: SaveFileMeta[]
   etag: string | null

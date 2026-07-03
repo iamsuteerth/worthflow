@@ -1,9 +1,10 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
 import type { Plugin } from "vite";
 
-// Replicates Vercel's clean-URL behaviour in the dev server.
-// /about → /about.html, /privacy → /privacy.html, etc.
+import { defineConfig } from "vite";
+
+import react from "@vitejs/plugin-react";
+
+// Replicate Vercel's clean-URL behaviour in the dev server.
 const staticHtmlPlugin: Plugin = {
   name: "static-html-clean-urls",
   configureServer(server) {
@@ -30,17 +31,19 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (id.includes("react")) { 
+            return "react";
+          }
           if (id.includes("aws-amplify") || id.includes("@aws-sdk")) {
             return "aws-vendor";
           }
           if (id.includes("recharts")) {
             return "recharts";
           }
-          if (id.includes("@google/genai") || id.includes("google/genai")) {
+          if (id.includes("@google/genai")) {
             return "ai-vendor";
           }
-          // Markdown rendering is only used by the (lazy) AI chat. Keep its
-          // sizeable dependency tree out of the main bundle.
+
           if (
             id.includes("react-markdown") ||
             id.includes("remark-") ||

@@ -8,4 +8,3 @@ export interface RecurringExpense {
   endMonth: MonthKey;
   frequency: "MONTHLY" | "ANNUAL";
 }
- 

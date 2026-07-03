@@ -1,10 +1,12 @@
 import type { Instrument } from "@/types/instrument";
 import type { MonthKey } from "@/types/simulation";
+import type { RecurringExpense } from "@/types/recurringExpense";
+
 import type {
   SalaryChange,
   BonusIncome,
 } from "@/types/incomeEvents";
-import type { RecurringExpense } from "@/types/recurringExpense";
+
 import type {
   InvestmentAccount,
   AccountAmountOverride,
@@ -51,24 +53,14 @@ export interface CreditCardBill {
 
 export interface PlannerConfig {
   forecast: ForecastConfig;
-
   income: IncomeConfig;
-
   cash: CashConfig;
-
   expenses: ExpenseConfig;
-
   investments: InvestmentConfig;
-
   oneOffExpenses: OneOffExpense[];
-
   creditCardBills: CreditCardBill[];
-
   recurringExpenses: RecurringExpense[];
-
   instruments: Instrument[];
-
   salaryChanges: SalaryChange[];
-
   bonusIncome: BonusIncome[];
 }

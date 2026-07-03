@@ -1,5 +1,6 @@
-import { Card, type CardProps } from "@mantine/core";
 import type { ReactNode } from "react";
+
+import { Card, type CardProps } from "@mantine/core";
 
 interface SurfaceCardProps extends Omit<CardProps, "radius" | "shadow" | "withBorder"> {
   children: ReactNode;

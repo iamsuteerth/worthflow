@@ -1,32 +1,12 @@
-import type {
-  PlannerConfig,
-} from "@/types/config";
+import type { PlannerConfig } from "@/types/config";
+import type { LifecycleResult } from "@/types/lifecycle";
+import type { MonthKey } from "@/types/simulation";
+import type { SimulationState } from "@/types/simulationState";
 
-import type {
-  MonthKey,
-} from "@/types/simulation";
+import { processFdLifecycle } from "@/engine/fdLifecycle";
+import { processRdLifecycle } from "@/engine/rdLifecycle";
 
-import type {
-  LifecycleResult,
-} from "@/types/lifecycle";
-
-import type {
-  SimulationState,
-} from "@/types/simulationState";
-
-import {
-  processFdLifecycle,
-} from "@/engine/fdLifecycle";
-
-import {
-  processRdLifecycle,
-} from "@/engine/rdLifecycle";
-
-export function processInstrumentLifecycle(
-  state: SimulationState,
-  config: PlannerConfig,
-  month: MonthKey
-): LifecycleResult {
+export function processInstrumentLifecycle(state: SimulationState,  config: PlannerConfig, month: MonthKey): LifecycleResult {
   const fdResult =
     processFdLifecycle(
       state,
@@ -42,15 +22,11 @@ export function processInstrumentLifecycle(
     );
 
   return {
-    state:
-      rdResult.state,
-
+    state: rdResult.state,
     events: [
       ...fdResult.events,
-
       ...rdResult.events,
     ],
-
     minCash: Math.min(
       fdResult.minCash,
       rdResult.minCash

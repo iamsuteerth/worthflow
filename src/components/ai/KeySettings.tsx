@@ -90,10 +90,8 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
   const [loading, setLoading] = useState(false);
   const [removeConfirm, setRemoveConfirm] = useState(false);
 
-  // For forgot mode: confirm dialog shown
   const [forgotConfirmed, setForgotConfirmed] = useState(false);
 
-  // Change passphrase mode (when key is ready)
   const [changeMode, setChangeMode] = useState(false);
 
   function validatePassphrase(): string | null {
@@ -157,7 +155,6 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
     }
   }
 
-  // Forgot passphrase flow: show confirm dialog first
   if (forgotMode && !forgotConfirmed) {
     return (
       <Stack gap="md" p="md">
@@ -180,7 +177,6 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
     );
   }
 
-  // Change passphrase mode
   if (changeMode) {
     return (
       <Stack gap="md" p="md">
@@ -218,7 +214,6 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
     );
   }
 
-  // Remove key confirm
   if (removeConfirm) {
     return (
       <Stack gap="md" p="md">
@@ -238,7 +233,6 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
     );
   }
 
-  // Main setup / manage view
   return (
     <Stack gap="md" p="md">
       <Group gap="xs">

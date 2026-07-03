@@ -1,3 +1,5 @@
+import type { MonthKey } from "@/types/simulation";
+
 import { Fragment, useEffect, useState } from "react";
 import {
   ActionIcon,
@@ -19,7 +21,6 @@ import { useUiStore } from "@/store/uiStore";
 import { formatMonth } from "@/engine/monthFormatting";
 import { generateMonths, getMonthIndex } from "@/engine/dateUtils";
 import { buildAccountSchedule, type ScheduleRange } from "@/engine/accountSchedule";
-import type { MonthKey } from "@/types/simulation";
 import { money } from "@/components/tables/tableUtils";
 import { EmptyState } from "@/components/ui";
 import { EditEventModal } from "@/components/scenario/RuntimeEventList";

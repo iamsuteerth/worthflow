@@ -1,11 +1,8 @@
-import { addMonths, generateMonths, getMonthIndex } from "@/engine/dateUtils";
 import type { MonthKey } from "@/types/simulation";
 
-export function getMaxAnnualYears(
-  forecastStartMonth: MonthKey,
-  totalMonths: number,
-  startMonth: MonthKey
-): number {
+import { addMonths, generateMonths, getMonthIndex } from "@/engine/dateUtils";
+
+export function getMaxAnnualYears(forecastStartMonth: MonthKey, totalMonths: number, startMonth: MonthKey): number {
   const months = generateMonths(forecastStartMonth, totalMonths);
   const startIndex = getMonthIndex(startMonth, months);
   if (startIndex < 0) return 0;
@@ -16,22 +13,12 @@ export function deriveAnnualEndMonth(startMonth: MonthKey, years: number): Month
   return addMonths(startMonth, years * 12 - 1);
 }
 
-export function isValidAnnualYears(
-  forecastStartMonth: MonthKey,
-  totalMonths: number,
-  startMonth: MonthKey,
-  years: number
-): boolean {
+export function isValidAnnualYears(forecastStartMonth: MonthKey, totalMonths: number, startMonth: MonthKey, years: number): boolean {
   if (years < 1) return false;
   return years <= getMaxAnnualYears(forecastStartMonth, totalMonths, startMonth);
 }
 
-export function isValidAnnualRange(
-  forecastStartMonth: MonthKey,
-  totalMonths: number,
-  startMonth: MonthKey,
-  endMonth: MonthKey
-): boolean {
+export function isValidAnnualRange(forecastStartMonth: MonthKey, totalMonths: number, startMonth: MonthKey, endMonth: MonthKey): boolean {
   const months = generateMonths(forecastStartMonth, totalMonths);
   const startIndex = getMonthIndex(startMonth, months);
   const endIndex = getMonthIndex(endMonth, months);

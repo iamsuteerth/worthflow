@@ -1,3 +1,5 @@
+import type { TablerIcon } from "@tabler/icons-react";
+
 import {
   Alert,
   Anchor,
@@ -13,9 +15,9 @@ import {
   ThemeIcon,
   Title,
 } from "@mantine/core";
+
 import { notifications } from "@mantine/notifications";
 import { IconKey, IconLock, IconMailCheck, IconUserPlus } from "@tabler/icons-react";
-import type { TablerIcon } from "@tabler/icons-react";
 import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { authService } from "@/lib/auth";

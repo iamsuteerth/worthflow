@@ -1,5 +1,6 @@
-import { Card, Group, Stack, Text } from "@mantine/core";
 import type { ReactNode } from "react";
+
+import { Card, Group, Stack, Text } from "@mantine/core";
 
 export interface RecordField {
   label: string;

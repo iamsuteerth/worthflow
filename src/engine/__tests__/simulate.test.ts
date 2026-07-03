@@ -1,8 +1,9 @@
+import type { PlannerConfig } from "@/types/config";
+import type { PlannerOverrides } from "@/types/overrides";
+
 import { describe, it, expect } from "vitest";
 import { simulate } from "@/engine/simulate";
 import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
-import type { PlannerConfig } from "@/types/config";
-import type { PlannerOverrides } from "@/types/overrides";
 
 function makeConfig(overrides: Partial<PlannerConfig> = {}): PlannerConfig {
   return {
@@ -20,8 +21,6 @@ function makeConfig(overrides: Partial<PlannerConfig> = {}): PlannerConfig {
     ...overrides,
   };
 }
-
-// ─── Account-created events ──────────────────────────────────────────────────
 
 describe("simulate — ACCOUNT_CREATED events", () => {
   it("emits an ACCOUNT_CREATED event in an account's start month with its opening", () => {
@@ -49,7 +48,6 @@ describe("simulate — ACCOUNT_CREATED events", () => {
       expenses: { defaultMonthly: 0, overrides: {} },
       investments: {
         accounts: [
-          // Opening 100k but only 30k cash is available at the start month → funded clamps to 30k.
           { id: "a1", name: "Future", startMonth: "2025-03", openingBalance: 100_000, defaultAnnualReturn: 0, defaultMonthlyContribution: 0 },
         ],
         amountOverrides: [],
@@ -67,15 +65,11 @@ describe("simulate — ACCOUNT_CREATED events", () => {
         { id: "scn-1", name: "What-If SIP", startMonth: "2025-02", openingBalance: 0, defaultAnnualReturn: 10, defaultMonthlyContribution: 5_000 },
       ],
     };
-    // Mirror the real call path: the store passes the EFFECTIVE config (base + scenario
-    // accounts materialised by buildEffectiveConfig) into simulate.
     const effective = buildEffectiveConfig(cfg, overrides);
     const created = simulate(effective, overrides).rows.flatMap((r) => r.events).find((e) => e.type === "ACCOUNT_CREATED");
     expect(created).toMatchObject({ month: "2025-02", accountId: "scn-1", description: "What-If SIP", amount: 0 });
   });
 });
-
-// ─── Row count & month labels ────────────────────────────────────────────────
 
 describe("simulate — structure", () => {
   it("produces one row per forecast month", () => {
@@ -97,13 +91,8 @@ describe("simulate — structure", () => {
   });
 });
 
-// ─── Cash arithmetic ─────────────────────────────────────────────────────────
-
 describe("simulate — cash arithmetic", () => {
   it("accumulates cash correctly over 3 months (income 100k, expense 50k)", () => {
-    // Month 1: 0 + 100k − 50k = 50k
-    // Month 2: 50k + 100k − 50k = 100k
-    // Month 3: 100k + 100k − 50k = 150k
     const { rows } = simulate(makeConfig());
     expect(rows[0].closingBalance).toBe(50_000);
     expect(rows[1].closingBalance).toBe(100_000);
@@ -137,13 +126,8 @@ describe("simulate — cash arithmetic", () => {
   });
 });
 
-// ─── Salary changes ──────────────────────────────────────────────────────────
-
 describe("simulate — salary changes", () => {
   it("applies a salary change starting from the effective month", () => {
-    // Base 100k → 150k from 2025-02
-    // Month 1 (Jan): income = 100k, closing = 50k
-    // Month 2 (Feb): income = 150k, closing = 50k + 150k − 50k = 150k
     const config = makeConfig({
       salaryChanges: [
         { id: "s1", effectiveMonth: "2025-02", newMonthlyIncome: 150_000, description: "Raise" },
@@ -157,13 +141,8 @@ describe("simulate — salary changes", () => {
   });
 });
 
-// ─── One-off expenses ────────────────────────────────────────────────────────
-
 describe("simulate — one-off expenses", () => {
   it("deducts a one-off expense only in its target month", () => {
-    // Month 1: 0 + 100k − 50k = 50k
-    // Month 2: 50k + 100k − 50k − 20k = 80k   (one-off in Feb)
-    // Month 3: 80k + 100k − 50k = 130k
     const config = makeConfig({
       oneOffExpenses: [{ id: "o1", month: "2025-02", amount: 20_000, label: "Laptop" }],
     });
@@ -184,21 +163,16 @@ describe("simulate — one-off expenses", () => {
   });
 });
 
-// ─── Credit card bills ───────────────────────────────────────────────────────
-
 describe("simulate — credit card bills", () => {
   it("deducts a credit card bill in its target month", () => {
     const config = makeConfig({
       creditCardBills: [{ id: "c1", month: "2025-01", amount: 10_000, label: "HDFC" }],
     });
     const { rows } = simulate(config);
-    // Month 1: 0 + 100k − 50k − 10k = 40k
     expect(rows[0].closingBalance).toBe(40_000);
     expect(rows[0].cashflow.creditCardExpense).toBe(10_000);
   });
 });
-
-// ─── Bonus income ────────────────────────────────────────────────────────────
 
 describe("simulate — bonus income", () => {
   it("adds bonus income on top of salary in its target month", () => {
@@ -206,13 +180,10 @@ describe("simulate — bonus income", () => {
       bonusIncome: [{ id: "b1", month: "2025-02", amount: 50_000, description: "Annual bonus" }],
     });
     const { rows } = simulate(config);
-    // Month 2: income = 100k salary + 50k bonus = 150k
     expect(rows[1].cashflow.income).toBe(150_000);
-    expect(rows[1].closingBalance).toBe(50_000 + 150_000 - 50_000); // 150k
+    expect(rows[1].closingBalance).toBe(50_000 + 150_000 - 50_000);
   });
 });
-
-// ─── Expense overrides ───────────────────────────────────────────────────────
 
 describe("simulate — expense overrides", () => {
   it("uses the override expense instead of defaultMonthly for that month", () => {
@@ -226,8 +197,6 @@ describe("simulate — expense overrides", () => {
   });
 });
 
-// ─── Summary ─────────────────────────────────────────────────────────────────
-
 describe("simulate — summary", () => {
   it("reports correct finalNetWorth", () => {
     const { summary, rows } = simulate(makeConfig());
@@ -236,7 +205,6 @@ describe("simulate — summary", () => {
 
   it("reports total income as sum of all monthly incomes", () => {
     const { summary } = simulate(makeConfig());
-    // 3 months × 100k = 300k
     expect(summary.totalIncome).toBe(300_000);
   });
 
@@ -246,14 +214,12 @@ describe("simulate — summary", () => {
   });
 
   it("tracks the lowest balance across the simulation", () => {
-    // Opening = 0; first cashflow always raises balance → lowestBalance = opening (0)
     const { summary } = simulate(makeConfig());
     expect(summary.lowestBalance).toBe(0);
     expect(summary.lowestBalanceMonth).toBe("2025-01");
   });
 
   it("reports a negative lowestBalance when cash goes below zero", () => {
-    // Income 30k, expense 50k, opening 0 → Month 1 closing = -20k
     const config = makeConfig({ income: { monthly: 30_000 }, expenses: { defaultMonthly: 50_000, overrides: {} } });
     const { summary } = simulate(config);
     expect(summary.lowestBalance).toBeLessThan(0);
@@ -325,10 +291,8 @@ describe("simulate — cashflow reconciliation", () => {
     };
     const { rows } = simulate(config, overrides);
 
-    // Month 1: 10k contribution (investmentAmount), 20k deposit out → proceeds −20k.
     expect(rows[0].cashflow.investmentAmount).toBe(10_000);
     expect(rows[0].cashflow.proceeds).toBe(-20_000);
-    // Month 2: 10k contribution, 5k withdrawal in → proceeds +5k.
     expect(rows[1].cashflow.investmentAmount).toBe(10_000);
     expect(rows[1].cashflow.proceeds).toBe(5_000);
   });

@@ -1,22 +1,20 @@
+import type { PlannerConfig } from "@/types/config";
+import type { SavedScenario } from "@/types/scenario";
+import type { InvestmentAccount } from "@/types/investmentAccount";
+import type { PlannerOverrides } from "@/types/overrides";
+import type { RuntimeEvent } from "@/types/runtimeEvent";
+import type { RuntimeAccountAmountOverride, RuntimeAccountReturnOverride, RuntimeSpendingOverride } from "@/types/runtimeEvent";
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import type { PlannerConfig } from "@/types/config";
-type MonthKey = PlannerConfig['forecast']['startMonth']
-import type { PlannerOverrides } from "@/types/overrides";
-import type { RuntimeEvent } from "@/types/runtimeEvent";
-import type {
-  RuntimeAccountAmountOverride,
-  RuntimeAccountReturnOverride,
-  RuntimeSpendingOverride,
-} from "@/types/runtimeEvent";
 import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 import { simulate } from "@/engine/simulate";
 import { isValidAnnualRange } from "@/engine/annualExpense";
 import { generateMonths } from "@/engine/dateUtils";
-import type { SavedScenario } from "@/types/scenario";
-import type { InvestmentAccount } from "@/types/investmentAccount";
 import { uniquifyAccountName } from "@/utils/uniquifyAccountName";
+
+type MonthKey = PlannerConfig['forecast']['startMonth']
 
 export type AppView = "builder" | "forecast";
 
@@ -39,17 +37,9 @@ interface PlannerStore {
   activeView: AppView;
   baselineAccountIds: string[];
   pristineSnapshot: string;
-  // The base config as of the last load/save — the true baseline a scenario sits
-  // on. Unlike overrides, creating/deleting an investment account mutates baseConfig,
-  // so resetOverrides needs this snapshot to fully restore the baseline (remove
-  // accounts added in the scenario, bring back ones deleted). Kept in lockstep with
-  // pristineSnapshot (set at every load/save).
   baselineConfig: PlannerConfig;
-
-  // Undo/redo for scenario changes. `past`/`future` are snapshots of `overrides`; every
-  // scenario mutation pushes the prior overrides onto `past` and clears `future` (a new
-  // action can't fork the timeline). Persisted with the plan so it travels across devices.
   history: PlannerHistory;
+
   undo: () => void;
   redo: () => void;
   canUndo: () => boolean;
@@ -117,8 +107,6 @@ interface PlannerStore {
   updateRuntimeEvent: (id: string, changes: Partial<RuntimeEvent>) => void;
   deleteRuntimeEvent: (id: string) => void;
 
-  // Stamp a just-created scenario change (runtime event or scenario account) with the
-  // id of the AI proposal that created it. Provenance only — see tagAppliedChange impl.
   tagAppliedChange: (changeId: string, proposalId: string) => void;
 
   setOverrides: (overrides: Partial<PlannerOverrides>) => void;
@@ -162,8 +150,6 @@ function captureBaselineAccountIds(config: PlannerConfig): string[] {
   return config.investments.accounts.map((a) => a.id);
 }
 
-// Serializes exactly what a saved .wfplan captures (see cloudStore.serializePlan),
-// so the pristine snapshot can be compared 1:1 against the live plan to detect edits.
 function serializePristine(
   baseConfig: PlannerConfig,
   overrides: PlannerOverrides,
@@ -174,12 +160,6 @@ function serializePristine(
 
 const initialPristine = serializePristine(initialConfig, {}, []);
 
-// Apply a scenario mutation AND record it on the undo stack. Snapshots the PRIOR
-// overrides onto `past`, clears `future` (a new action can't fork the redo timeline),
-// and caps the stack. Every user-facing scenario change funnels through this; a no-op
-// mutation (one that early-returns `s` after a failed guard) never reaches it, so the
-// history only ever records real changes. baseConfig is constant across scenario
-// mutations, so snapshotting `overrides` alone fully captures an undoable step.
 function commit(
   s: { baseConfig: PlannerConfig; overrides: PlannerOverrides; history: PlannerHistory },
   baseConfig: PlannerConfig,
@@ -206,15 +186,6 @@ function appendEvent(
   return [...current, event];
 }
 
-// Structural validity of a runtime event against the live (effective) config: every
-// month it references is inside the forecast window, ranges are ordered (and ANNUAL
-// recurrences span whole years), deposits/withdrawals/account-overrides don't precede
-// their account, and range overrides don't overlap another override on the same account.
-// Cheap + deterministic — NO simulation. Used by updateRuntimeEvent as a store-level
-// backstop so an edit can't bypass the same structural invariants the addTransient*
-// guards enforce on creation. Cash / account-balance caps are deliberately NOT checked
-// here: those need a full simulation and stay with the edit form + the AI feasibility
-// check (both measure them with the event removed). See P2 B-3.
 function rangesOverlap(
   startMonth: MonthKey,
   endMonth: MonthKey,
@@ -309,9 +280,6 @@ export function getAvailableCash(
   return Math.floor(Math.max(0, row?.closingBalance ?? 0));
 }
 
-// The simulated value of a single investment account at `month` — the cap a
-// withdrawal can't exceed (mirrors AddInvestmentWithdrawalForm). Exported so the
-// store guard and the AI feasibility check share one source of truth.
 export function getAccountValueAtMonth(
   config: PlannerConfig,
   overrides: PlannerOverrides,
@@ -339,9 +307,6 @@ export const usePlannerStore = create<PlannerStore>()(
 
       setActiveView: (activeView) => set({ activeView }),
 
-      // Undo: restore the previous overrides snapshot, pushing the current one onto
-      // `future` so it can be redone. baseConfig (and thus baselineAccountIds) is
-      // constant across scenario mutations, so only `overrides` needs restoring.
       undo: () =>
         set((s) => {
           if (s.history.past.length === 0) return s;
@@ -356,8 +321,6 @@ export const usePlannerStore = create<PlannerStore>()(
           };
         }),
 
-      // Redo: reapply the next overrides snapshot off `future`, pushing the current one
-      // back onto `past`. Mirror image of undo.
       redo: () =>
         set((s) => {
           if (s.history.future.length === 0) return s;
@@ -487,9 +450,6 @@ export const usePlannerStore = create<PlannerStore>()(
         set((s) => {
           if (account.openingBalance < 0 || account.defaultMonthlyContribution < 0) return s;
           if (account.openingBalance === 0 && account.defaultMonthlyContribution === 0) return s;
-          // A future-dated account funds its opening balance from cash at its start
-          // month, so (like deposits/FDs) it can't exceed the cash available then.
-          // An account starting at the forecast start is wealth already held — no cap.
           if (
             account.startMonth > s.config.forecast.startMonth &&
             account.openingBalance > getAvailableCash(s.config, s.overrides, account.startMonth)
@@ -497,9 +457,6 @@ export const usePlannerStore = create<PlannerStore>()(
             return s;
           }
 
-          // A scenario-created account is a "what-if": it lives in overrides.scenarioAccounts,
-          // never in baseConfig, so it stays out of the Plan Builder and is cleared by Reset.
-          // Uniquify against the EFFECTIVE accounts (base + already-added scenario accounts).
           const existingNames = s.config.investments.accounts.map((a) => a.name);
           const id = crypto.randomUUID();
           const newAccount: InvestmentAccount = {
@@ -517,9 +474,6 @@ export const usePlannerStore = create<PlannerStore>()(
 
       deleteInvestmentAccount: (accountId) =>
         set((s) => {
-          // A scenario-created account is removed outright; a base ("original") account
-          // is HIDDEN via a reversible what-if (deletedAccountIds) — baseConfig is never
-          // mutated, so Reset can bring it back. Either way, cascade its scenario events.
           const scenarioAccounts = (s.overrides.scenarioAccounts ?? []).filter(
             (a) => a.id !== accountId
           );
@@ -601,8 +555,6 @@ export const usePlannerStore = create<PlannerStore>()(
         set((s) => {
           const account = s.config.investments.accounts.find((a) => a.id === accountId);
           if (!account || month < account.startMonth) return s;
-          // A deposit moves cash into the account, so it can't exceed the cash
-          // available that month (the authority for this cap; the UI form mirrors it).
           if (amount > getAvailableCash(s.config, s.overrides, month)) return s;
 
           const events = appendEvent(s.overrides.runtimeEvents ?? [], {
@@ -632,10 +584,6 @@ export const usePlannerStore = create<PlannerStore>()(
           const target = current.find((e) => e.id === id);
           if (!target) return s;
           const merged = { ...target, ...changes } as RuntimeEvent;
-          // Store-level backstop: reject an edit that breaks the same structural
-          // invariants creation enforces (window/range/account-start/overlap), measured
-          // against the OTHER events. The edit form and AI feasibility check still own
-          // the simulation-based cash/balance caps. A rejected edit is a no-op.
           const others = current.filter((e) => e.id !== id);
           if (!isRuntimeEventStructurallyValid(merged, s.config, others)) return s;
           const events = current.map((e) => (e.id === id ? merged : e));
@@ -648,11 +596,6 @@ export const usePlannerStore = create<PlannerStore>()(
           return commit(s, s.baseConfig, { ...s.overrides, runtimeEvents: events });
         }),
 
-      // Attach an AI proposal's id to the change it just created (event or scenario
-      // account). Unlike the mutations above this does NOT push a history entry: the
-      // tag is provenance metadata coalesced into the CURRENT step, so the AI's add and
-      // its tag undo together as one. The undo/redo snapshots therefore carry the tag,
-      // keeping the proposal card's derived "applied" state correct across undo/redo.
       tagAppliedChange: (changeId, proposalId) =>
         set((s) => {
           let touched = false;
@@ -698,11 +641,6 @@ export const usePlannerStore = create<PlannerStore>()(
         });
       },
 
-      // Loads a freshly builder-generated plan. Unlike loadPlan (used for cloud saves,
-      // which ARE the clean baseline), this leaves the plan DIRTY until a real cloud
-      // save calls markSaved(). pristineSnapshot = "" is the "no saved baseline yet"
-      // sentinel: serializePristine always returns a "{...}" JSON string, so the plan
-      // reads as dirty and autoLoadLatest() will preserve it across a refresh.
       loadGeneratedPlan: (baseConfig) =>
         set({
           baseConfig,
@@ -715,9 +653,6 @@ export const usePlannerStore = create<PlannerStore>()(
           history: emptyHistory,
         }),
 
-      // Reset the scenario: clear all overrides AND restore the base plan to its
-      // baseline, so investment accounts created during the scenario are removed and
-      // any deleted baseline accounts return. Fully restores the last loaded/saved plan.
       resetOverrides: () =>
         set((s) => {
           const baseConfig = structuredClone(s.baselineConfig);
@@ -757,9 +692,6 @@ export const usePlannerStore = create<PlannerStore>()(
         usePlannerStore.persist.clearStorage()
       },
 
-      // Marks the current plan as the saved baseline (call after a successful cloud save).
-      // The current base config becomes the new baseline a later reset restores to, so an
-      // account created and then SAVED is permanent (reset no longer removes it).
       markSaved: () => {
         const s = get()
         set({
@@ -768,8 +700,6 @@ export const usePlannerStore = create<PlannerStore>()(
         })
       },
 
-      // True when the live plan differs from the last loaded/saved baseline.
-      // Computed on demand (not reactive) so it costs nothing during editing.
       isPlanDirty: () => {
         const s = get()
         return serializePristine(s.baseConfig, s.overrides, s.savedScenarios) !== s.pristineSnapshot
@@ -818,14 +748,8 @@ export const usePlannerStore = create<PlannerStore>()(
         const overrides = p.overrides ?? current.overrides;
         const savedScenarios = p.savedScenarios ?? current.savedScenarios;
         const baselineAccountIds = p.baselineAccountIds ?? captureBaselineAccountIds(baseConfig);
-        // Pre-existing persisted state (before this field) is treated as clean.
-        const pristineSnapshot =
-          p.pristineSnapshot ?? serializePristine(baseConfig, overrides, savedScenarios);
-        // Pre-existing persisted state (before this field) treats the current base as
-        // its own baseline, so a reset is a no-op rather than wiping the plan.
+        const pristineSnapshot = p.pristineSnapshot ?? serializePristine(baseConfig, overrides, savedScenarios);
         const baselineConfig = p.baselineConfig ?? baseConfig;
-        // Pre-existing persisted state (before undo/redo existed) starts with an empty
-        // history rather than a half-formed one.
         const history = p.history ?? emptyHistory;
         return {
           ...current,

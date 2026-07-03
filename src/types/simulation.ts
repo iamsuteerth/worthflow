@@ -28,8 +28,6 @@ export interface SimulationSummary {
   xirr: number | null;
   accountXirr: Record<string, number | null>;
   accountContributions: Record<string, number>;
-  // Opening balance actually funded for each future-dated account, when it was
-  // clamped to available cash (absent for forecast-start / pre-existing accounts).
   accountFundedOpening: Record<string, number>;
 }
 
@@ -39,15 +37,9 @@ export interface MonthlyCashflow {
   creditCardExpense: number;
   oneOffExpense: number;
   recurringExpense: number;
-  // Monthly account contributions only (an outflow). Runtime deposits/withdrawals
-  // are tracked separately in `proceeds`.
   investmentAmount: number;
-  // Net cash from runtime investment deposits/withdrawals: positive for withdrawal
-  // proceeds (cash in), negative for deposits (cash out).
-  proceeds: number;
-  // Net cash movement from FD/RD instruments this month: negative for RD monthly
-  // contributions and FD principal outflows, positive for maturity payouts.
-  instrumentFlow: number;
+  proceeds: number; // + for withdrawals, - for deposits
+  instrumentFlow: number; // + for maturity, - for contributions
   totalInflow: number;
   totalOutflow: number;
 }

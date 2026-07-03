@@ -1,16 +1,9 @@
 import type { PlannerConfig } from "@/types/config";
-import type { MonthKey } from "@/types/simulation";
 import type { AccountSnapshot } from "@/types/investmentAccount";
-import type {
-  RuntimeInvestmentDeposit,
-  RuntimeInvestmentWithdrawal,
-} from "@/types/runtimeEvent";
+import type { MonthKey } from "@/types/simulation";
+import type { RuntimeInvestmentDeposit, RuntimeInvestmentWithdrawal } from "@/types/runtimeEvent";
 
-export function getAccountReturn(
-  config: PlannerConfig,
-  accountId: string,
-  month: MonthKey
-): number {
+export function getAccountReturn(config: PlannerConfig, accountId: string, month: MonthKey): number {
   const account = config.investments.accounts.find((a) => a.id === accountId);
   if (!account) return 0;
 
@@ -24,11 +17,7 @@ export function getAccountReturn(
   return override?.annualReturn ?? account.defaultAnnualReturn;
 }
 
-export function getAccountContribution(
-  config: PlannerConfig,
-  accountId: string,
-  month: MonthKey
-): number {
+export function getAccountContribution(config: PlannerConfig, accountId: string, month: MonthKey): number {
   const account = config.investments.accounts.find((a) => a.id === accountId);
   if (!account) return 0;
 
@@ -46,7 +35,6 @@ export interface AccountMonthResult {
   accountBalances: Record<string, number>;
   totalContribution: number;
   accountSnapshots: AccountSnapshot[];
-  /** negative = outflow, positive = inflow */
   xirrEntries: { amount: number; date: Date; accountId: string }[];
 }
 
@@ -56,10 +44,8 @@ export function processAccountMonth(
   month: MonthKey,
   deposits: RuntimeInvestmentDeposit[],
   withdrawals: RuntimeInvestmentWithdrawal[],
-  // The opening balance actually seeded for an account starting this month. `simulate`
-  // supplies this for future-dated accounts, where the opening is funded from cash and
-  // clamped to what's available. When absent, the configured opening is used (the
-  // pre-existing-wealth case for accounts that start at the forecast start).
+  // Opening balance override for future-dated accounts. Falls back to the configured
+  // opening balance when absent.
   seededOpenings?: Record<string, number>
 ): AccountMonthResult {
   const accounts = config.investments.accounts;
