@@ -646,17 +646,17 @@ Restores a previously exported `.wfplan` file. Imported plans are validated befo
 
 # 14. AI Assistant
 
-Worth Flow includes an optional AI assistant powered by Google Gemini. You supply your own API key — Worth Flow never has access to it.
+Worth Flow includes an optional AI assistant. You bring your own API key — from **Google Gemini**, or from **OpenRouter** (which reaches many models, free and paid, on one key). Worth Flow never has access to your key.
 
 ## How it works
 
-The assistant reads a compact, anonymised snapshot of your current forecast (totals, a monthly cash series, account summaries, and your active scenario in plain language) and answers questions about it. It cannot see your credentials, internal IDs, or raw configuration. All inference runs between your browser and Google's servers; no data passes through Worth Flow's infrastructure.
+The assistant reads your current forecast through in-browser tools — it queries the engine for exactly the figures it needs (a month's cash, an account's XIRR, the lowest-cash point) and can simulate a change before proposing it. Every number it quotes comes straight from the engine, never the model's own arithmetic. It cannot see your credentials, internal IDs, or raw configuration. All inference runs between your browser and the provider you chose; no data passes through Worth Flow's infrastructure.
 
-## Setting up your Gemini key
+## Setting up your key
 
-1. Get a key from [Google AI Studio](https://aistudio.google.com). A free-tier key is sufficient for typical use.
+1. Pick a provider and get a key: **Gemini** from [Google AI Studio](https://aistudio.google.com) (a free-tier key is enough), or **OpenRouter** from [openrouter.ai/keys](https://openrouter.ai/keys) (start free by choosing a free model). Worth Flow never has access to your key.
 2. Open the **Forecast** view and click the floating **sparkle (✦)** button in the bottom-right corner to open the AI panel.
-3. Click **Set up your Gemini key** and paste your key.
+3. Click **Set up your AI key**, pick your provider and model, and paste your key.
 4. Choose an **AI passphrase** (at least 8 characters). This is separate from your account password — Worth Flow uses it to encrypt the key and your chat before storing them.
 5. Confirm the passphrase and click **Encrypt & Save Key**.
 
@@ -712,7 +712,7 @@ It works on **one change at a time** — if you ask for several at once, it'll s
 
 ## Passphrase and security
 
-**There is no passphrase reset.** If you forget your AI passphrase, you must use **Forgot passphrase** (available in Key Settings) to start fresh — this permanently erases your saved key and chat, and you will need to re-enter your Gemini API key and choose a new passphrase. Your financial plan is not affected.
+**There is no passphrase reset.** If you forget your AI passphrase, you must use **Forgot passphrase** (available in Key Settings) to start fresh — this permanently erases your saved key and chat, and you will need to re-enter your AI provider API key and choose a new passphrase. Your financial plan is not affected.
 
 Your chat is encrypted with the same passphrase-derived key as your API key. Only you can decrypt it — not even Worth Flow.
 

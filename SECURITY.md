@@ -171,15 +171,19 @@ cancels pending writes, and clears the session + cached KEK; S3 stays encrypted.
 
 ### Egress
 
-CSP `connect-src` allow-lists **only** `generativelanguage.googleapis.com` (alongside AWS
-and Cognito). Only forecast figures and plan summaries are sent — never credentials,
-account email, or internal record IDs (asserted by a redaction test).
+CSP `connect-src` allow-lists **only** the AI-provider endpoints the user can choose —
+`generativelanguage.googleapis.com` (Gemini) and `openrouter.ai` (OpenRouter) — alongside
+AWS and Cognito. Only forecast figures and plan summaries are sent, and only to the one
+provider the user picked — never credentials, account email, or internal record IDs
+(asserted by a redaction test). The assistant's tools run **in the browser** against the
+local engine; they send nothing anywhere.
 
 ### Honest threat model / limits
 
-- **In use, the key is exposed to Google** (by design — it's their API) and to any
-  script executing on the origin. Encryption-at-rest protects the *stored* key, not the
-  *in-use* key. "Zero-knowledge" describes the Worth Flow/S3 backend, not Google.
+- **In use, the key is exposed to the AI provider you chose** (by design — it's their API;
+  with OpenRouter, also the downstream model host it routes to) and to any script executing
+  on the origin. Encryption-at-rest protects the *stored* key, not the *in-use* key.
+  "Zero-knowledge" describes the Worth Flow/S3 backend, not the AI provider.
 - **XSS is the ceiling.** A script on the origin could use the cached (non-extractable) KEK
   to decrypt the blob, or read the plaintext key in memory. Non-extractability prevents
   raw-key *exfiltration*, not in-page *use* — so the client hardening in §5 matters.
