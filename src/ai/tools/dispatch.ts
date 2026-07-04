@@ -7,12 +7,15 @@ import { describeAction } from '@/ai/actions/describeAction';
 
 // ---------------------------------------------------------------------------
 // toolDispatch — runs a model's ToolCall in-process against the pure engine and
-// returns an engine-computed answer. This is the load-bearing invariant of V4:
-// the model can only obtain a figure by calling a tool that returns an
-// engine-computed value — it can never read the series itself. Read tools slice
-// the shared per-turn snapshot; action tools reuse the exact Phase-2 pipeline
-// (validateAction → dryRun / the confirmable card), so the trust boundary is
-// unchanged.
+// returns an engine-computed answer. The load-bearing invariant of V4 is that
+// every figure ORIGINATES from the engine: read tools only return values the
+// engine produced (headline/rows/series), never model-authored numbers. It does
+// NOT stop the model from misreading a series it fetched (get_series returns the
+// arrays) — the point is that the authoritative values (get_month, find_lowest_cash,
+// the summary) come straight from simulate(), so a grounded answer is always
+// available. Read tools slice the shared per-turn snapshot; action tools reuse the
+// exact Phase-2 pipeline (validateAction → dryRun / the confirmable card), so the
+// trust boundary is unchanged.
 // ---------------------------------------------------------------------------
 
 const r = (n: number): number => Math.round(n);

@@ -370,7 +370,7 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
             description={
               providerId === 'openrouter'
                 ? 'Free models cost nothing; paid models draw on your OpenRouter credits. Type to search.'
-                : `Which ${PROVIDER_LABELS[providerId]} model to use for this assistant.`
+                : 'Flash is free; Pro needs billing enabled on your Google account.'
             }
             data={getModelSelectData(providerId)}
             value={modelId}

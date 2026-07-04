@@ -69,18 +69,26 @@ describe('modelCatalog — integrity', () => {
     expect(def?.modelId).toBe('google/gemma-4-31b-it:free');
   });
 
-  it('every OpenRouter model is tagged free or paid', () => {
-    for (const m of getModelsForProvider('openrouter')) {
+  it('every model is tagged free or paid', () => {
+    for (const m of MODEL_CATALOG) {
       expect(m.tier === 'free' || m.tier === 'paid').toBe(true);
     }
   });
 
-  it('groups OpenRouter select data Free-first; Gemini stays a flat list', () => {
-    const or = getModelSelectData('openrouter');
-    expect('group' in or[0]).toBe(true);
-    expect((or[0] as { group: string }).group.toLowerCase()).toContain('free');
+  it('tags Gemini Flash free (the default) and Pro paid', () => {
+    // Pro is not on Google's free tier, so it must be flagged paid in the picker.
+    expect(getModelEntry('gemini', 'gemini-2.5-flash')?.tier).toBe('free');
+    expect(getDefaultModelId('gemini')).toBe('gemini-2.5-flash');
+    expect(getModelEntry('gemini', 'gemini-2.5-pro')?.tier).toBe('paid');
+  });
 
-    const gem = getModelSelectData('gemini');
-    expect('value' in gem[0]).toBe(true); // flat items, not groups
+  it('groups every provider Free-first, with a Paid group when present', () => {
+    for (const p of OFFERED) {
+      const data = getModelSelectData(p);
+      expect('group' in data[0]).toBe(true);
+      expect((data[0] as { group: string }).group.toLowerCase()).toContain('free');
+      const paidGroup = data.find((d) => 'group' in d && (d as { group: string }).group.toLowerCase().includes('paid'));
+      expect(paidGroup).toBeDefined();
+    }
   });
 });

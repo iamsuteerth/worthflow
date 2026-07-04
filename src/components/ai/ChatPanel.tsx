@@ -153,7 +153,10 @@ export default function ChatPanel() {
         </Group>
       </Group>
 
-      {isAbsent && (
+      {/* Keep the setup form mounted through 'validating' so a validation error
+          (e.g. a 429 quota rejection) lands on the same instance and stays visible.
+          KeySettings shows its own button spinner while the key is being checked. */}
+      {(isAbsent || isValidating) && (
         <Box style={{ flex: 1, overflowY: 'auto' }}>
           <Stack p="md" gap="md">
             <Alert color="blue" variant="light" icon={<IconSparkles size={14} />}>
@@ -171,12 +174,6 @@ export default function ChatPanel() {
         <Box style={{ flex: 1 }}>
           <UnlockPrompt onForgotPassphrase={handleForgotPassphrase} />
         </Box>
-      )}
-
-      {isValidating && (
-        <Stack p="lg" align="center" justify="center" style={{ flex: 1 }}>
-          <Text size="sm" c="dimmed">Validating your key…</Text>
-        </Stack>
       )}
 
       {isReady && (

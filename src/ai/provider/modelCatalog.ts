@@ -9,7 +9,9 @@ import type { ProviderId } from '@/ai/provider/types';
 // Launch providers: Gemini (direct) + OpenRouter (aggregator). OpenRouter itself
 // fronts OpenAI / Anthropic / Google / DeepSeek / Qwen / NVIDIA models, so a
 // single OpenRouter key reaches all of them — no separate direct adapters needed.
-// OpenRouter models carry a `tier` so the picker can lead with the free options.
+// Every model carries a `tier` (free vs paid) so the picker leads with the free
+// options and a dabbler is never surprised by a model that needs billing (e.g.
+// Gemini 2.5 Pro, which is not on Google's free tier).
 // ---------------------------------------------------------------------------
 
 export type ModelTier = 'free' | 'paid';
@@ -20,15 +22,16 @@ export interface ModelEntry {
   label: string; // UI, e.g. 'Google Gemma 4 31B'
   tools: boolean; // supports native tool/function calling (matters in Phase B)
   promptCaching: boolean; // supports provider-side prefix caching
-  tier?: ModelTier; // OpenRouter only — free vs paid, drives grouping
+  tier?: ModelTier; // free vs paid — drives the Free/Paid grouping in the picker
   default?: boolean; // the default pick for that provider
   notes?: string; // short UI hint, e.g. 'fast / cheap'
 }
 
 export const MODEL_CATALOG: readonly ModelEntry[] = [
   // Gemini — the default provider; the existing flow is unchanged for these users.
-  { providerId: 'gemini', modelId: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', tools: true, promptCaching: true, default: true, notes: 'fast / cheap' },
-  { providerId: 'gemini', modelId: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', tools: true, promptCaching: true, notes: 'best reasoning' },
+  // Flash is on Google's free tier (the default); Pro needs billing enabled.
+  { providerId: 'gemini', modelId: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', tools: true, promptCaching: true, tier: 'free', default: true, notes: 'fast / cheap' },
+  { providerId: 'gemini', modelId: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', tools: true, promptCaching: true, tier: 'paid', notes: 'best reasoning' },
 
   // OpenRouter — FREE tier (an OpenRouter free key works; no credits needed).
   // Default pick = Gemma: the easiest zero-cost way to dabble.
@@ -96,10 +99,10 @@ export function isValidModel(providerId: ProviderId, modelId: string): boolean {
   return getModelEntry(providerId, modelId) !== undefined;
 }
 
-// A Mantine-shaped `data` array for a model Select. Providers whose models carry a
-// `tier` (OpenRouter) come back grouped Free-first so the free options lead and a
-// long paid list doesn't overwhelm; flat providers (Gemini) come back as a simple
-// list. Returned as plain objects so the catalog stays UI-framework-free.
+// A Mantine-shaped `data` array for a model Select. Every offered provider tags its
+// models with a `tier`, so the picker comes back grouped Free-first — the free
+// options lead and a paid pick is clearly labelled as such (no surprise billing).
+// Returned as plain objects so the catalog stays UI-framework-free.
 export type SelectItem = { value: string; label: string };
 export type SelectGroup = { group: string; items: SelectItem[] };
 
@@ -107,16 +110,27 @@ function itemLabel(m: ModelEntry, withNotes: boolean): string {
   return withNotes && m.notes ? `${m.label} — ${m.notes}` : m.label;
 }
 
+// Provider-appropriate group headers, so "Paid" reads accurately for each provider
+// (Google billing vs OpenRouter credits) rather than a one-size-fits-all label.
+function tierGroupLabels(providerId: ProviderId): { free: string; paid: string } {
+  if (providerId === 'openrouter') return { free: 'Free · no credits needed', paid: 'Paid · uses OpenRouter credits' };
+  if (providerId === 'gemini') return { free: 'Free tier', paid: 'Paid · needs Google billing' };
+  return { free: 'Free', paid: 'Paid' };
+}
+
 export function getModelSelectData(providerId: ProviderId): Array<SelectItem | SelectGroup> {
   const models = getModelsForProvider(providerId);
-  const tiered = models.some((m) => m.tier);
+  // Group only when every model is tagged, so a partially-tagged provider can't
+  // silently drop its untagged rows; such a provider falls back to a flat list.
+  const tiered = models.length > 0 && models.every((m) => m.tier);
   if (!tiered) {
     return models.map((m) => ({ value: m.modelId, label: itemLabel(m, true) }));
   }
+  const labels = tierGroupLabels(providerId);
   const groups: SelectGroup[] = [];
   const free = models.filter((m) => m.tier === 'free');
   const paid = models.filter((m) => m.tier === 'paid');
-  if (free.length) groups.push({ group: 'Free · no credits needed', items: free.map((m) => ({ value: m.modelId, label: itemLabel(m, true) })) });
-  if (paid.length) groups.push({ group: 'Paid · uses OpenRouter credits', items: paid.map((m) => ({ value: m.modelId, label: itemLabel(m, true) })) });
+  if (free.length) groups.push({ group: labels.free, items: free.map((m) => ({ value: m.modelId, label: itemLabel(m, true) })) });
+  if (paid.length) groups.push({ group: labels.paid, items: paid.map((m) => ({ value: m.modelId, label: itemLabel(m, true) })) });
   return groups;
 }
