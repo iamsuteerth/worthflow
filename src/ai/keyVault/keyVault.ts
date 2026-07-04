@@ -82,7 +82,8 @@ export async function revealKey(blob: KeyBlob): Promise<string> {
 }
 
 export interface EncryptKeyResult {
-  blob: Omit<KeyBlob, 'providerId' | 'createdAt' | 'updatedAt'>;
+  // The caller stamps providerId + modelId (and timestamps) to complete the blob.
+  blob: Omit<KeyBlob, 'providerId' | 'modelId' | 'createdAt' | 'updatedAt'>;
   kek: CryptoKey;
 }
 
@@ -93,7 +94,7 @@ export async function encryptNewKey(plaintextApiKey: string, passphrase: string)
   const { iv, ciphertext } = await aesGcmEncrypt(kek, plaintextApiKey);
   return {
     blob: {
-      v: 1,
+      v: 2,
       keyEpoch,
       kdf: { algo: 'PBKDF2', hash: 'SHA-256', iterations: AI_KDF_ITERATIONS },
       salt,

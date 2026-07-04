@@ -53,7 +53,7 @@ function conv(messages: Message[]): Conversation {
 async function sessionBlob(): Promise<KeyBlob> {
   const { blob, kek } = await encryptNewKey('AIzaSYNC', 'passphrase1');
   await activateKek(kek, blob.keyEpoch);
-  return { ...blob, providerId: 'gemini', createdAt: 'c', updatedAt: 'c' };
+  return { ...blob, providerId: 'gemini', modelId: 'gemini-2.5-flash', createdAt: 'c', updatedAt: 'c' };
 }
 
 function makeHost(conversation: Conversation, keyBlob: KeyBlob | null) {

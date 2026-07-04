@@ -14,6 +14,7 @@ export async function compactConversation(
   conversation: Conversation,
   provider: AIProvider,
   key: string,
+  modelId?: string,
 ): Promise<Conversation> {
   const { messages } = conversation;
   if (messages.length <= KEEP_TAIL_MESSAGES) return conversation;
@@ -39,6 +40,7 @@ export async function compactConversation(
         contextBlock: '',
         history: [],
         userMessage: prompt,
+        modelId,
       },
       key,
     )) {

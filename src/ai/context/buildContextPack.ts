@@ -28,7 +28,7 @@ function xirrToPercent(xirr: number | null): number | null {
 const FULL_MONTH_LIMIT = 120;
 const LEAD_MONTHS = 36;
 
-function buildFullSeries(
+export function buildFullSeries(
   result: SimulationResult,
   focusFrom?: string,
   focusTo?: string,

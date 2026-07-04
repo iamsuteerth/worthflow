@@ -10,6 +10,7 @@ interface ImportMetaEnv {
   readonly VITE_S3_ENDPOINT?: string
   readonly VITE_AI_ENABLED?: string
   readonly VITE_AI_PROVIDER?: 'mock' | 'gemini'
+  readonly VITE_AI_TOOLS?: string
 }
 
 interface ImportMeta {

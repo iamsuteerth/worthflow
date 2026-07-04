@@ -10,9 +10,10 @@ import {
 } from '@/ai/keyVault/keyVault';
 import type { KeyBlob } from '@/ai/cloud/aiCloud';
 
-const full = (b: Omit<KeyBlob, 'providerId' | 'createdAt' | 'updatedAt'>): KeyBlob => ({
+const full = (b: Omit<KeyBlob, 'providerId' | 'modelId' | 'createdAt' | 'updatedAt'>): KeyBlob => ({
   ...b,
   providerId: 'gemini',
+  modelId: 'gemini-2.5-flash',
   createdAt: 'c',
   updatedAt: 'c',
 });

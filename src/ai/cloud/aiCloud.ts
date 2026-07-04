@@ -1,10 +1,13 @@
 import { getUserObject, putUserObject, deleteUserObject } from '@/lib/storage';
+import type { ProviderId } from '@/ai/provider/types';
+import { getDefaultModelId } from '@/ai/provider/modelCatalog';
 
 // ---------------------------------------------------------------------------
 // Shapes
 // ---------------------------------------------------------------------------
 
-export interface KeyBlob {
+// v1: the original Gemini-only blob (still readable on disk; migrated in memory).
+interface KeyBlobV1 {
   v: 1;
   providerId: 'gemini';
   keyEpoch: string;
@@ -14,6 +17,38 @@ export interface KeyBlob {
   ciphertext: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// v2: adds a widened providerId + the catalog wire id the key is bound to.
+// This is the in-memory + on-disk shape from V4 on. `KeyBlob` is the current
+// shape everything else uses; the reader migrates v1 → v2 transparently.
+export interface KeyBlobV2 {
+  v: 2;
+  providerId: ProviderId;
+  modelId: string;
+  keyEpoch: string;
+  kdf: { algo: 'PBKDF2'; hash: 'SHA-256'; iterations: number };
+  salt: string;
+  iv: string;
+  ciphertext: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type KeyBlob = KeyBlobV2;
+
+// Carry a v1 Gemini blob forward: same crypto material, provider pinned to
+// 'gemini', model defaulted to the Gemini default. Never re-keys (epoch kept),
+// so the existing chat stays readable. The v2 form is written back lazily on the
+// next blob write (change-passphrase / re-key / setup) — no forced migration.
+function migrateKeyBlob(raw: KeyBlobV1 | KeyBlobV2): KeyBlob {
+  if (raw.v === 2) return raw;
+  return {
+    ...raw,
+    v: 2,
+    providerId: 'gemini',
+    modelId: getDefaultModelId('gemini'),
+  };
 }
 
 export interface EncryptedEnvelope {
@@ -38,7 +73,7 @@ export async function getKeyBlob(): Promise<KeyBlob | null> {
   const { body } = await getUserObject(KEY_BLOB_PATH);
   if (!body) return null;
   try {
-    return JSON.parse(body) as KeyBlob;
+    return migrateKeyBlob(JSON.parse(body) as KeyBlobV1 | KeyBlobV2);
   } catch {
     // Corrupted blob — treat as absent (aiStore will surface an error note)
     return null;

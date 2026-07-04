@@ -46,7 +46,11 @@ const h = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('@/ai/provider/index', () => ({ aiProvider: h.provider }));
+vi.mock('@/ai/provider/index', () => ({
+  aiProvider: h.provider,
+  getProvider: () => h.provider,
+  isProviderRegistered: () => true,
+}));
 
 vi.mock('@/ai/cloud/aiCloud', () => ({
   getKeyBlob: async () => h.cloud.keyBlob,

@@ -19,6 +19,7 @@ type PartialBlob = Awaited<ReturnType<typeof encryptNewKey>>['blob'];
 const full = (b: PartialBlob): KeyBlob => ({
   ...b,
   providerId: 'gemini',
+  modelId: 'gemini-2.5-flash',
   createdAt: '2026-01-01',
   updatedAt: '2026-01-01',
 });
@@ -109,8 +110,9 @@ describe('keyVault', () => {
     const kek = await deriveKek('legacypass', salt, iterations);
     const { iv, ciphertext } = await aesGcmEncrypt(kek, 'AIzaLEGACY');
     const blob: KeyBlob = {
-      v: 1,
+      v: 2,
       providerId: 'gemini',
+      modelId: 'gemini-2.5-flash',
       keyEpoch: 'epoch-legacy',
       kdf: { algo: 'PBKDF2', hash: 'SHA-256', iterations },
       salt,

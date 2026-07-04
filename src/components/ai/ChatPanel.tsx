@@ -27,6 +27,7 @@ import {
 
 import { useAiStore } from '@/store/aiStore';
 import { useUiStore } from '@/store/uiStore';
+import { getModelEntry, PROVIDER_LABELS } from '@/ai/provider/modelCatalog';
 import MessageList from '@/components/ai/MessageList';
 import MessageComposer from '@/components/ai/MessageComposer';
 import UnlockPrompt from '@/components/ai/UnlockPrompt';
@@ -43,8 +44,22 @@ export default function ChatPanel() {
   const reloadChat = useAiStore((s) => s.reloadChat);
   const disclosureAcknowledged = useAiStore((s) => s.settings.disclosureAcknowledged);
   const acknowledgeDisclosure = useAiStore((s) => s.acknowledgeDisclosure);
+  const keyBlob = useAiStore((s) => s.keyBlob);
 
   const closeAiPanel = useUiStore((s) => s.closeAiPanel);
+
+  // Active provider/model, for provider-aware header + disclosure copy.
+  const activeProviderId = keyBlob?.providerId;
+  const activeModelLabel = keyBlob
+    ? getModelEntry(keyBlob.providerId, keyBlob.modelId)?.label ?? keyBlob.modelId
+    : '';
+  const providerName =
+    activeProviderId && activeProviderId !== 'mock' ? PROVIDER_LABELS[activeProviderId] : 'AI';
+  // Where the forecast data actually goes, stated honestly per provider.
+  const disclosureTarget =
+    activeProviderId === 'openrouter'
+      ? 'OpenRouter — and on to the model you chose —'
+      : 'Google Gemini';
 
   useEffect(() => () => useAiStore.getState().stopStreaming(), []);
 
@@ -80,11 +95,11 @@ export default function ChatPanel() {
             <Text fw={600} size="sm">AI Assistant</Text>
             <Text size="xs" c="dimmed">
               {isReady
-                ? 'Gemini · Your key, your data'
+                ? `${activeModelLabel || providerName} · Your key, your data`
                 : isLocked
                 ? 'Locked — enter your passphrase'
                 : isAbsent
-                ? 'Set up your Gemini key to start'
+                ? 'Set up your AI key to start'
                 : 'Validating…'}
             </Text>
           </Stack>
@@ -143,7 +158,8 @@ export default function ChatPanel() {
           <Stack p="md" gap="md">
             <Alert color="blue" variant="light" icon={<IconSparkles size={14} />}>
               <Text size="sm">
-                Add your Gemini API key to enable the assistant. Your key is encrypted before leaving your browser.
+                Add an AI API key to enable the assistant — Gemini, or many models via OpenRouter. Your
+                key is encrypted before leaving your browser.
               </Text>
             </Alert>
             <KeySettings onDone={closeSettings} />
@@ -177,7 +193,7 @@ export default function ChatPanel() {
               <Group justify="space-between" align="flex-start" wrap="nowrap" gap={8}>
                 <Text size="xs">
                   Your forecast figures, account/instrument summaries and active scenario are sent to
-                  Google Gemini with <b>your</b> key. Your credentials and internal IDs never are.
+                  {' '}{disclosureTarget} with <b>your</b> key. Your credentials and internal IDs never are.
                 </Text>
                 <CloseButton size="sm" aria-label="Dismiss notice" onClick={acknowledgeDisclosure} />
               </Group>

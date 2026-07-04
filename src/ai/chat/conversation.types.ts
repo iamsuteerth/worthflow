@@ -12,6 +12,15 @@ export type MessageRole = 'user' | 'assistant';
 //   failed    — the last Apply couldn't take effect; `actionError` holds the reason
 export type ActionStatus = 'pending' | 'dismissed' | 'failed';
 
+// A lightweight, human-readable record of one tool the assistant used this turn
+// (e.g. "Checked 2027-03", "Simulated a change"). Rendered as collapsible chips
+// under the message — never raw args/JSON. Persisted in the encrypted conversation;
+// old messages without it render exactly as before.
+export interface ToolTraceEntry {
+  tool: string;
+  summary: string;
+}
+
 export interface Message {
   id: string;
   role: MessageRole;
@@ -24,6 +33,8 @@ export interface Message {
   proposedAction?: ResolvedProposedAction;
   actionStatus?: ActionStatus;
   actionError?: string;
+  // Phase B: the tools the assistant used to reach this answer (agent loop).
+  toolTrace?: ToolTraceEntry[];
 }
 
 export interface Conversation {
