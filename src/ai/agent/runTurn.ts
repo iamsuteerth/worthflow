@@ -26,6 +26,9 @@ export interface RunTurnArgs {
   tools: ToolDef[];
   messages: AgentMessage[];
   mode?: 'chat' | 'propose';
+  // A pre-built context (one simulate per turn) shared with the headline seed.
+  // Built here if omitted.
+  toolContext?: ToolContext;
 }
 
 export interface RunTurnCallbacks {
@@ -68,10 +71,10 @@ export async function runTurn(
   cbs: RunTurnCallbacks,
   signal?: AbortSignal,
 ): Promise<RunTurnResult> {
-  const { provider, key, modelId, systemPrompt, tools, messages, mode } = args;
+  const { provider, key, modelId, systemPrompt, tools, messages, mode, toolContext } = args;
   if (!provider.runToolStep) throw new Error('Provider does not support tool use.');
 
-  const ctx = buildToolContext();
+  const ctx = toolContext ?? buildToolContext();
   const convo: AgentMessage[] = [...messages];
   const trace: ToolTraceEntry[] = [];
   let finalText = '';

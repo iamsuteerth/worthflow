@@ -46,6 +46,7 @@ import { getContextBlock, clearContextCache } from '@/ai/context/contextCache';
 import { SYSTEM_PROMPT, ACTION_CONTRACT, TOOL_SYSTEM_PROMPT, PROPOSE_HINT } from '@/ai/config';
 import { runTurn, type RunTurnResult } from '@/ai/agent/runTurn';
 import { ALL_TOOL_DEFS } from '@/ai/tools/defs';
+import { buildToolContext, headlineSeed } from '@/ai/tools/context';
 import { AI_TOOLS } from '@/lib/featureFlags';
 import { getModelEntry } from '@/ai/provider/modelCatalog';
 import type { AgentMessage } from '@/ai/provider/types';
@@ -789,8 +790,14 @@ async function runAgentTurn(set: SetFn, get: GetFn, text: string, mode: 'chat' |
   while (messages.length && messages[0].role === 'assistant') messages.shift();
   messages.push({ role: 'user', content: text });
 
+  // Build the turn's simulation snapshot ONCE — shared by the headline seed and
+  // every tool call this turn (one simulate per turn).
+  const toolCtx = buildToolContext();
+
   let systemPrompt = mode === 'propose' ? `${TOOL_SYSTEM_PROMPT}\n\n${PROPOSE_HINT}` : TOOL_SYSTEM_PROMPT;
   if (conversation.summary) systemPrompt += `\n\n[Earlier conversation summary: ${conversation.summary}]`;
+  // Seed the headline totals so the model is oriented without a first-call round-trip.
+  systemPrompt += `\n\n[Current forecast snapshot — engine values; use tools for anything not here]\n${headlineSeed(toolCtx)}`;
 
   const setPlaceholderText = (t: string) =>
     set((state) => ({
@@ -809,7 +816,7 @@ async function runAgentTurn(set: SetFn, get: GetFn, text: string, mode: 'chat' |
 
   try {
     result = await runTurn(
-      { provider, key: apiKey, modelId: blob.modelId, systemPrompt, tools: ALL_TOOL_DEFS, messages, mode },
+      { provider, key: apiKey, modelId: blob.modelId, systemPrompt, tools: ALL_TOOL_DEFS, messages, mode, toolContext: toolCtx },
       {
         onReset: () => { accumulated = ''; setPlaceholderText(''); },
         onText: (delta) => { accumulated += delta; setPlaceholderText(accumulated); },

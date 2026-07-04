@@ -30,6 +30,28 @@ export interface ToolContext {
   proposedActions: ResolvedProposedAction[];
 }
 
+// A tiny (~200-byte) snapshot of the headline totals, seeded into the system
+// prompt so the model starts oriented WITHOUT spending a round-trip on
+// get_forecast_summary. Everything month/account/instrument-specific still goes
+// through tools. These are engine-computed values, so the "numbers come from the
+// engine" invariant holds. Kept small + prefix-stable so provider prompt caching
+// discounts it across a conversation on the same plan.
+export function headlineSeed(ctx: ToolContext): string {
+  const h = ctx.pack.headline;
+  const meta = ctx.pack.meta;
+  return JSON.stringify({
+    startMonth: meta.startMonth,
+    horizonMonths: meta.horizonMonths,
+    hasActiveScenario: meta.hasActiveScenario,
+    finalNetWorth: h.finalNetWorth,
+    finalCash: h.finalCash,
+    finalInvestmentCorpus: h.finalInvestmentCorpus,
+    lowestCash: h.lowestCash,
+    lowestCashMonth: h.lowestCashMonth,
+    portfolioXirrPct: h.portfolioXirrPct,
+  });
+}
+
 export function buildToolContext(): ToolContext {
   const s = usePlannerStore.getState();
   const result = simulate(s.config, s.overrides);

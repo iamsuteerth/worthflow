@@ -3,7 +3,7 @@ import { usePlannerStore } from '@/store/plannerStore';
 import { simulate } from '@/engine/simulate';
 import { dryRun } from '@/ai/actions/dryRun';
 import { baseConfig, account, m } from '@/engine/__tests__/factories';
-import { buildToolContext, type ToolContext } from '@/ai/tools/context';
+import { buildToolContext, headlineSeed, type ToolContext } from '@/ai/tools/context';
 import { toolDispatch } from '@/ai/tools/dispatch';
 import { ALL_TOOL_DEFS } from '@/ai/tools/defs';
 import { TOOL_NAMES } from '@/ai/tools/dispatch';
@@ -98,6 +98,16 @@ describe('read tools return engine-computed values', () => {
 
   it('get_scenario_effect reports no active scenario for a base plan', () => {
     expect(call('get_scenario_effect').data.hasActiveScenario).toBe(false);
+  });
+
+  it('headlineSeed is compact JSON of the engine headline totals', () => {
+    const raw = headlineSeed(ctx);
+    expect(raw.length).toBeLessThan(400); // stays a tiny prefix-cache-friendly seed
+    const seed = JSON.parse(raw) as Record<string, unknown>;
+    expect(seed.startMonth).toBe('2025-01');
+    expect(seed.horizonMonths).toBe(12);
+    expect(seed.finalNetWorth).toBe(ctx.pack.headline.finalNetWorth);
+    expect(seed.lowestCashMonth).toBe(ctx.pack.headline.lowestCashMonth);
   });
 });
 

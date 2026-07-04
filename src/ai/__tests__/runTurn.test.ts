@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { usePlannerStore } from '@/store/plannerStore';
 import { baseConfig, account, m } from '@/engine/__tests__/factories';
 import { runTurn } from '@/ai/agent/runTurn';
+import { buildToolContext } from '@/ai/tools/context';
 import mockProvider from '@/ai/provider/mockProvider';
 import { ALL_TOOL_DEFS } from '@/ai/tools/defs';
 import type { AIProvider, AgentMessage } from '@/ai/provider/types';
@@ -58,6 +59,18 @@ describe('runTurn — propose mode', () => {
     expect(res.toolTrace.some((t) => t.tool === 'propose_change')).toBe(true);
     // The live plan is never mutated by a proposal.
     expect(usePlannerStore.getState().overrides.runtimeEvents ?? []).toHaveLength(0);
+  });
+});
+
+describe('runTurn — shared tool context', () => {
+  it('uses a caller-provided context (one simulate) and records proposals into it', async () => {
+    const shared = buildToolContext();
+    const res = await runTurn(
+      { ...base('propose', [{ role: 'user', content: 'suggest something' }]), toolContext: shared },
+      noopCbs(),
+    );
+    expect(res.proposedAction).toBeDefined();
+    expect(shared.proposedActions).toHaveLength(1);
   });
 });
 
