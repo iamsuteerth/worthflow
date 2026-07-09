@@ -1,36 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { Alert, Box, Group, Loader, Stack, Text, UnstyledButton } from '@mantine/core';
-import { IconAlertCircle, IconSearch, IconSparkles, IconUser } from '@tabler/icons-react';
-import type { Message, ToolTraceEntry } from '@/ai/chat/conversation.types';
+import { useEffect, useRef } from 'react';
+import { Alert, Box, Group, Loader, Stack, Text } from '@mantine/core';
+import { IconAlertCircle, IconSparkles, IconUser } from '@tabler/icons-react';
+import type { Message } from '@/ai/chat/conversation.types';
 import { Markdown } from '@/components/ai/Markdown';
 import ProposedActionCard from '@/components/ai/ProposedActionCard';
-
-// Collapsible, human-readable trace of the tools the assistant used this turn.
-// Never shows raw args/JSON — just the plain-language step summaries.
-function ToolTrace({ entries }: { entries: ToolTraceEntry[] }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Box>
-      <UnstyledButton onClick={() => setOpen((o) => !o)}>
-        <Group gap={4} wrap="nowrap">
-          <IconSearch size={11} style={{ opacity: 0.6 }} />
-          <Text size="xs" c="dimmed">
-            {open ? 'Hide steps' : `Checked the forecast · ${entries.length} step${entries.length > 1 ? 's' : ''}`}
-          </Text>
-        </Group>
-      </UnstyledButton>
-      {open && (
-        <Stack gap={2} mt={4} pl={6}>
-          {entries.map((e, i) => (
-            <Text key={i} size="xs" c="dimmed">
-              • {e.summary}
-            </Text>
-          ))}
-        </Stack>
-      )}
-    </Box>
-  );
-}
 
 interface Props {
   messages: Message[];
@@ -79,10 +52,6 @@ function MessageBubble({ message }: { message: Message }) {
             <Markdown>{message.text}</Markdown>
             {message.streaming && <Text span size="sm" style={{ opacity: 0.5 }}>▋</Text>}
           </Box>
-        )}
-
-        {!isUser && !message.streaming && message.toolTrace && message.toolTrace.length > 0 && (
-          <ToolTrace entries={message.toolTrace} />
         )}
 
         {message.error && (

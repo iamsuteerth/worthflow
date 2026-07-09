@@ -183,13 +183,12 @@ secrets (the Cognito client has no secret; there are no static AWS keys).
 > `region_ShortCode`; the **Identity Pool** ID looks like `region:UUID`. Mixing them up causes
 > "Sign up failed" with no useful client error.
 
-> **AI assistant (BYOK, optional).** When `VITE_AI_ENABLED=true`, the browser calls the user's
-> chosen AI provider directly (Google Gemini, or OpenRouter for many models) with the user's own
-> key — there is **no owner-side proxy, server, or house API key**, and no inference cost to the
-> owner. The build flag is a true kill-switch: when off, no AI module is reachable and the AI
-> chunk (including the `@google/genai` SDK) is not loaded. The only server-side requirement is the
-> CSP `connect-src` allowance for the provider endpoints (`https://generativelanguage.googleapis.com`,
-> `https://openrouter.ai`) — already set in [`vercel.json`](./vercel.json).
+> **AI assistant (BYOK, optional).** When `VITE_AI_ENABLED=true`, the browser calls Google Gemini
+> directly with the user's own key — there is **no owner-side proxy, server, or house API key**, and
+> no inference cost to the owner. The build flag is a true kill-switch: when off, no AI module is
+> reachable and the AI chunk (including the `@google/genai` SDK) is not loaded. The only server-side
+> requirement is the CSP `connect-src` allowance for the Gemini endpoint
+> (`https://generativelanguage.googleapis.com`) — already set in [`vercel.json`](./vercel.json).
 
 A committed template lives at [`.env.production.example`](./.env.production.example).
 

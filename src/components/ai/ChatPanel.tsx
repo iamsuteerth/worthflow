@@ -48,18 +48,15 @@ export default function ChatPanel() {
 
   const closeAiPanel = useUiStore((s) => s.closeAiPanel);
 
-  // Active provider/model, for provider-aware header + disclosure copy.
+  // Active model, for the header + disclosure copy.
   const activeProviderId = keyBlob?.providerId;
   const activeModelLabel = keyBlob
     ? getModelEntry(keyBlob.providerId, keyBlob.modelId)?.label ?? keyBlob.modelId
     : '';
   const providerName =
     activeProviderId && activeProviderId !== 'mock' ? PROVIDER_LABELS[activeProviderId] : 'AI';
-  // Where the forecast data actually goes, stated honestly per provider.
-  const disclosureTarget =
-    activeProviderId === 'openrouter'
-      ? 'OpenRouter — and on to the model you chose —'
-      : 'Google Gemini';
+  // Where the forecast data actually goes.
+  const disclosureTarget = 'Google Gemini';
 
   useEffect(() => () => useAiStore.getState().stopStreaming(), []);
 
@@ -161,8 +158,8 @@ export default function ChatPanel() {
           <Stack p="md" gap="md">
             <Alert color="blue" variant="light" icon={<IconSparkles size={14} />}>
               <Text size="sm">
-                Add an AI API key to enable the assistant — Gemini, or many models via OpenRouter. Your
-                key is encrypted before leaving your browser.
+                Add your Gemini API key to enable the assistant. Your key is encrypted before leaving
+                your browser.
               </Text>
             </Alert>
             <KeySettings onDone={closeSettings} />

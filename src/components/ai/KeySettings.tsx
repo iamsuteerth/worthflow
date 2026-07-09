@@ -19,18 +19,10 @@ import { IconAlertTriangle, IconCheck, IconKey, IconShieldCheck, IconTrash } fro
 import { useAiStore } from '@/store/aiStore';
 import { AiError } from '@/ai/provider/types';
 import { AI_PASSPHRASE_MIN } from '@/ai/config';
-import { getModelSelectData, getDefaultModelId, PROVIDER_LABELS } from '@/ai/provider/modelCatalog';
-import { isProviderRegistered } from '@/ai/provider/index';
+import { getModelSelectData, getDefaultModelId } from '@/ai/provider/modelCatalog';
 
-// BYOK providers offered in the picker, in display order (mock is never shown),
-// filtered to those with a usable adapter in this build. Gemini is the default;
-// OpenRouter is the opt-in path to many other models (free + paid) on one key.
-type PickerProvider = 'gemini' | 'openrouter';
-const PROVIDER_ORDER: PickerProvider[] = ['gemini', 'openrouter'];
-const SELECTABLE_PROVIDERS: PickerProvider[] = PROVIDER_ORDER.filter((p) => isProviderRegistered(p));
-
-// Per-provider setup copy: how to get a key, and how to harden it. The key vault
-// is provider-agnostic; only this copy and the endpoint differ.
+// Gemini setup copy: how to get a key, and how to harden it. The key vault is
+// provider-agnostic; only this copy and the endpoint differ.
 interface ProviderCopy {
   keyLabel: string;
   keyPlaceholder: string;
@@ -38,55 +30,29 @@ interface ProviderCopy {
   hardening: { intro: string; steps?: ReactNode[]; note: ReactNode };
 }
 
-const PROVIDER_UI: Record<PickerProvider, ProviderCopy> = {
-  gemini: {
-    keyLabel: 'Gemini API Key',
-    keyPlaceholder: 'AIza...',
-    getKey: {
-      url: 'https://aistudio.google.com/api-keys',
-      urlLabel: 'Google AI Studio → API keys',
-      free: true,
-      freeNote: 'The default free tier is enough for this assistant.',
-      steps: [
-        <>Open the link above and sign in.</>,
-        <>Click <b>Create API key</b> (create a new project if asked).</>,
-        <><b>Copy</b> the key (it starts with <code>AIza…</code>) and paste it below.</>,
-      ],
-    },
-    hardening: {
-      intro: 'To limit the blast radius of a leaked key, lock it to your site (about 2 minutes):',
-      steps: [
-        <>Open <b>Google Cloud Console → APIs &amp; Services → Credentials</b>, and click your API key.</>,
-        <>Under <b>Application restrictions</b>, choose <b>HTTP referrers</b> and add your site(s) — <code>https://worthflow.in/*</code> and <code>https://worthflow.vercel.app/*</code>.</>,
-        <>Under <b>API restrictions</b>, choose <b>Restrict key</b> and select the <b>Generative Language API</b> only.</>,
-        <>Click <b>Save</b> — the key now works only from your site, only for Gemini.</>,
-      ],
-      note: <>Tip: use a <b>dedicated key</b> for Worth Flow so you can revoke it independently.</>,
-    },
+const GEMINI_UI: ProviderCopy = {
+  keyLabel: 'Gemini API Key',
+  keyPlaceholder: 'AIza...',
+  getKey: {
+    url: 'https://aistudio.google.com/api-keys',
+    urlLabel: 'Google AI Studio → API keys',
+    free: true,
+    freeNote: 'The default free tier is enough for this assistant.',
+    steps: [
+      <>Open the link above and sign in.</>,
+      <>Click <b>Create API key</b> (create a new project if asked).</>,
+      <><b>Copy</b> the key (it starts with <code>AIza…</code>) and paste it below.</>,
+    ],
   },
-  openrouter: {
-    keyLabel: 'OpenRouter API Key',
-    keyPlaceholder: 'sk-or-...',
-    getKey: {
-      url: 'https://openrouter.ai/keys',
-      urlLabel: 'OpenRouter → Keys',
-      // You can use OpenRouter entirely for free by picking a Free model below.
-      free: true,
-      freeNote: 'Pick a model from the Free group below and it costs nothing — no credits needed.',
-      steps: [
-        <>Open the link above and sign in (no card needed to start).</>,
-        <>Click <b>Create Key</b> — you can add credits later if you want paid models.</>,
-        <><b>Copy</b> the key (it starts with <code>sk-or-…</code>) and paste it below.</>,
-      ],
-    },
-    hardening: {
-      intro: 'OpenRouter routes your request through its servers and on to the model host:',
-      steps: [
-        <>Your prompt and forecast figures transit <b>OpenRouter</b> <i>and</i> the model provider it routes to — not just one company.</>,
-        <>Use a <b>dedicated key</b>; if you add credits, set a <b>spend limit</b> and a <b>referrer allow-list</b> on the key.</>,
-      ],
-      note: <>Want your data to reach only one company? Use <b>Gemini</b> instead — it talks to Google directly.</>,
-    },
+  hardening: {
+    intro: 'To limit the blast radius of a leaked key, lock it to your site (about 2 minutes):',
+    steps: [
+      <>Open <b>Google Cloud Console → APIs &amp; Services → Credentials</b>, and click your API key.</>,
+      <>Under <b>Application restrictions</b>, choose <b>HTTP referrers</b> and add your site(s) — <code>https://worthflow.in/*</code> and <code>https://worthflow.vercel.app/*</code>.</>,
+      <>Under <b>API restrictions</b>, choose <b>Restrict key</b> and select the <b>Generative Language API</b> only.</>,
+      <>Click <b>Save</b> — the key now works only from your site, only for Gemini.</>,
+    ],
+    note: <>Tip: use a <b>dedicated key</b> for Worth Flow so you can revoke it independently.</>,
   },
 };
 
@@ -106,9 +72,9 @@ function PassphraseWarning() {
   );
 }
 
-function HardeningTips({ providerId }: { providerId: PickerProvider }) {
+function HardeningTips() {
   const [open, setOpen] = useState(false);
-  const { hardening } = PROVIDER_UI[providerId];
+  const { hardening } = GEMINI_UI;
   return (
     <Stack gap={4}>
       <Anchor size="xs" onClick={() => setOpen((o) => !o)} style={{ cursor: 'pointer' }}>
@@ -141,23 +107,12 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
   const changePassphrase = useAiStore((s) => s.changePassphrase);
   const removeKey = useAiStore((s) => s.removeKey);
   const keyStatus = useAiStore((s) => s.keyStatus);
-  const keyBlob = useAiStore((s) => s.keyBlob);
 
   const hasKey = keyStatus === 'ready' || keyStatus === 'locked' || keyStatus === 'invalid';
-  // The provider a stored key belongs to (mock never reaches this UI).
-  const activeProviderId: PickerProvider =
-    keyBlob && keyBlob.providerId === 'openrouter' ? 'openrouter' : 'gemini';
 
-  const [providerId, setProviderId] = useState<PickerProvider>('gemini');
   const [modelId, setModelId] = useState(getDefaultModelId('gemini'));
 
-  // Switching provider resets the model to that provider's default.
-  function changeProvider(p: PickerProvider) {
-    setProviderId(p);
-    setModelId(getDefaultModelId(p));
-  }
-
-  const providerCopy = PROVIDER_UI[providerId];
+  const providerCopy = GEMINI_UI;
 
   const [apiKey, setApiKey] = useState('');
   const [passphrase, setPassphrase] = useState('');
@@ -190,9 +145,9 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
     setError('');
     try {
       if (forgotMode && forgotConfirmed) {
-        await forgotPassphrase(apiKey.trim(), passphrase, providerId, modelId);
+        await forgotPassphrase(apiKey.trim(), passphrase, 'gemini', modelId);
       } else {
-        await setupKey(apiKey.trim(), passphrase, providerId, modelId);
+        await setupKey(apiKey.trim(), passphrase, 'gemini', modelId);
       }
       onDone();
     } catch (e) {
@@ -326,19 +281,6 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
             before being stored.
           </Text>
 
-          {SELECTABLE_PROVIDERS.length > 1 && (
-            <Select
-              label="Provider"
-              description="Bring your own key from any of these. You can switch later by re-adding a key."
-              data={SELECTABLE_PROVIDERS.map((p) => ({ value: p, label: PROVIDER_LABELS[p] }))}
-              value={providerId}
-              onChange={(v) => v && changeProvider(v as PickerProvider)}
-              disabled={loading}
-              allowDeselect={false}
-              comboboxProps={{ withinPortal: true }}
-            />
-          )}
-
           <Stack gap={4} p="xs" style={{ background: 'var(--mantine-color-default)', borderRadius: 8 }}>
             <Text size="xs" fw={500}>{providerCopy.getKey.free ? 'Get a free key:' : 'Get a key:'}</Text>
             <List type="ordered" size="xs" spacing={2}>
@@ -367,18 +309,12 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
 
           <Select
             label="Model"
-            description={
-              providerId === 'openrouter'
-                ? 'Free models cost nothing; paid models draw on your OpenRouter credits. Type to search.'
-                : 'Flash is free; Pro needs billing enabled on your Google account.'
-            }
-            data={getModelSelectData(providerId)}
+            description="Flash is free; Pro needs billing enabled on your Google account."
+            data={getModelSelectData('gemini')}
             value={modelId}
             onChange={(v) => v && setModelId(v)}
             disabled={loading}
             allowDeselect={false}
-            searchable={providerId === 'openrouter'}
-            nothingFoundMessage="No matching model"
             maxDropdownHeight={280}
             comboboxProps={{ withinPortal: true }}
           />
@@ -406,7 +342,7 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
           />
 
           <PassphraseWarning />
-          <HardeningTips providerId={providerId} />
+          <HardeningTips />
 
           {error && <Text size="xs" c="red">{error}</Text>}
 
@@ -443,7 +379,7 @@ export default function KeySettings({ onDone, forgotMode = false }: Props) {
             <Text size="xs" c="dimmed">Never your credentials or internal IDs.</Text>
           </Stack>
 
-          <HardeningTips providerId={activeProviderId} />
+          <HardeningTips />
 
           <Divider />
 

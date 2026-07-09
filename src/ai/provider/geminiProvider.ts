@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import type { Content, FunctionDeclaration, Part } from '@google/genai';
+import type { Content } from '@google/genai';
 import { AI_MODEL_ID } from '@/ai/config';
 import {
   AiError,
@@ -8,12 +8,7 @@ import {
   type AiRequest,
   type AiResult,
   type AiStreamChunk,
-  type AgentStep,
-  type AgentStepRequest,
-  type AgentMessage,
-  type RunToolStepCallbacks,
 } from '@/ai/provider/types';
-import type { ToolCall } from '@/ai/tools/types';
 
 // Strip a ```json … ``` fence if the model wraps its JSON despite the
 // application/json response mode (occasionally happens).
@@ -82,44 +77,9 @@ export function buildContents(req: AiRequest): Content[] {
   return merged.map((t) => ({ role: t.role, parts: [{ text: t.text }] }));
 }
 
-// Coerce a tool result's JSON string into the object Gemini's functionResponse
-// expects (it must be an object; wrap primitives/arrays).
-function toResponseObject(content: string): Record<string, unknown> {
-  try {
-    const parsed = JSON.parse(content);
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed as Record<string, unknown>;
-    return { result: parsed };
-  } catch {
-    return { result: content };
-  }
-}
-
-// Translate the neutral agent conversation to Gemini Content[]. Assistant tool
-// calls become model `functionCall` parts; tool results become user
-// `functionResponse` parts — the shape Gemini's function-calling requires.
-function toGeminiContents(messages: AgentMessage[]): Content[] {
-  return messages.map((m): Content => {
-    if (m.role === 'user') {
-      return { role: 'user', parts: [{ text: m.content }] };
-    }
-    if (m.role === 'assistant') {
-      const parts: Part[] = [];
-      if (m.content) parts.push({ text: m.content });
-      for (const tc of m.toolCalls ?? []) {
-        parts.push({ functionCall: { name: tc.name, args: (tc.args ?? {}) as Record<string, unknown> } });
-      }
-      return { role: 'model', parts: parts.length ? parts : [{ text: '' }] };
-    }
-    return {
-      role: 'user',
-      parts: m.toolResults.map((tr) => ({ functionResponse: { name: tr.name, response: toResponseObject(tr.content) } })),
-    };
-  });
-}
-
 const geminiProvider: AIProvider = {
   id: 'gemini',
-  capabilities: { tools: true, promptCaching: true, browserDirect: true, streaming: true },
+  capabilities: { promptCaching: true, browserDirect: true, streaming: true },
 
   async *complete(
     req: AiRequest,
@@ -184,55 +144,6 @@ const geminiProvider: AIProvider = {
       // it to INVALID_ACTION and renders nothing.
       return { text: raw, proposedActionJson: undefined, finishReason: 'error' };
     }
-  },
-
-  async runToolStep(
-    req: AgentStepRequest,
-    key: string,
-    cbs: RunToolStepCallbacks,
-    signal?: AbortSignal,
-  ): Promise<AgentStep> {
-    const ai = new GoogleGenAI({ apiKey: key });
-    const functionDeclarations: FunctionDeclaration[] = req.tools.map((t) => ({
-      name: t.name,
-      description: t.description,
-      parameters: t.inputSchema as FunctionDeclaration['parameters'],
-    }));
-
-    let stream: AsyncIterable<{ text?: string; functionCalls?: Array<{ name?: string; args?: Record<string, unknown> }> }>;
-    try {
-      stream = await ai.models.generateContentStream({
-        model: req.modelId ?? AI_MODEL_ID,
-        config: {
-          systemInstruction: req.systemPrompt,
-          abortSignal: signal,
-          ...(functionDeclarations.length ? { tools: [{ functionDeclarations }] } : {}),
-        },
-        contents: toGeminiContents(req.messages),
-      });
-    } catch (err) {
-      throw translateError(err);
-    }
-
-    let text = '';
-    const toolCalls: ToolCall[] = [];
-    try {
-      for await (const chunk of stream) {
-        if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-        if (chunk.text) {
-          text += chunk.text;
-          cbs.onText(chunk.text);
-        }
-        for (const fc of chunk.functionCalls ?? []) {
-          toolCalls.push({ id: crypto.randomUUID(), name: fc.name ?? '', args: fc.args ?? {} });
-        }
-      }
-    } catch (err) {
-      if (isAbortError(err)) throw err;
-      throw translateError(err);
-    }
-
-    return { text, toolCalls };
   },
 
   async validateKey(key: string, modelId?: string, signal?: AbortSignal): Promise<boolean> {

@@ -9,7 +9,7 @@ import type { AIProvider } from '@/ai/provider/types';
 
 const summarizer: AIProvider = {
   id: 'mock',
-  capabilities: { tools: false, promptCaching: false, browserDirect: true, streaming: true },
+  capabilities: { promptCaching: false, browserDirect: true, streaming: true },
   async *complete() {
     yield { textDelta: 'Concise faithful summary.' };
   },
@@ -23,7 +23,7 @@ const summarizer: AIProvider = {
 
 const failing: AIProvider = {
   id: 'mock',
-  capabilities: { tools: false, promptCaching: false, browserDirect: true, streaming: true },
+  capabilities: { promptCaching: false, browserDirect: true, streaming: true },
   // An async iterable that rejects as soon as it's iterated (simulates a failed
   // summarisation call) without being a yield-less generator.
   complete: () => ({

@@ -3,9 +3,6 @@ import type {
   AiRequest,
   AiResult,
   AiStreamChunk,
-  AgentStep,
-  AgentStepRequest,
-  RunToolStepCallbacks,
 } from '@/ai/provider/types';
 
 // Pull the forecast's first month out of the serialized context pack so the
@@ -48,69 +45,13 @@ async function* mockStream(text: string): AsyncIterable<AiStreamChunk> {
 
 const mockProvider: AIProvider = {
   id: 'mock',
-  capabilities: { tools: true, promptCaching: false, browserDirect: true, streaming: true },
+  capabilities: { promptCaching: false, browserDirect: true, streaming: true },
 
   async *complete(req: AiRequest, _key: string, signal?: AbortSignal): AsyncIterable<AiStreamChunk> {
     await new Promise((r) => setTimeout(r, 300));
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
     void req; // used only to satisfy the interface
     yield* mockStream(nextMockResponse());
-  },
-
-  // Deterministic tool loop: orient with get_forecast_summary, then either
-  // propose a canned (schema-valid, in-window) change (wand) or answer (chat).
-  async runToolStep(
-    req: AgentStepRequest,
-    _key: string,
-    cbs: RunToolStepCallbacks,
-    signal?: AbortSignal,
-  ): Promise<AgentStep> {
-    await new Promise((r) => setTimeout(r, 120));
-    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-    const id = () => crypto.randomUUID();
-    const last = req.messages[req.messages.length - 1];
-
-    // Opening step: read the summary first.
-    if (!last || last.role !== 'tool') {
-      return { text: '', toolCalls: [{ id: id(), name: 'get_forecast_summary', args: {} }] };
-    }
-
-    const lastName = last.toolResults[0]?.name;
-    let startMonth = '2025-01';
-    const summary = last.toolResults.find((r) => r.name === 'get_forecast_summary');
-    if (summary) {
-      try {
-        const parsed = JSON.parse(summary.content) as { startMonth?: string };
-        if (parsed.startMonth) startMonth = parsed.startMonth;
-      } catch {
-        // keep default
-      }
-    }
-
-    // After orienting, the wand path proposes exactly one canned change.
-    if (lastName === 'get_forecast_summary' && req.mode === 'propose') {
-      return {
-        text: '',
-        toolCalls: [
-          {
-            id: id(),
-            name: 'propose_change',
-            args: { kind: 'ADD_ONE_OFF_EXPENSE', month: startMonth, amount: 50000, label: 'Suggested expense' },
-          },
-        ],
-      };
-    }
-
-    // Final answer (streamed word-by-word for realism).
-    const text = req.mode === 'propose'
-      ? "Here's a change you can apply based on your forecast."
-      : nextMockResponse();
-    for (const w of text.split(' ')) {
-      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-      await new Promise((r) => setTimeout(r, 12));
-      cbs.onText(w + ' ');
-    }
-    return { text, toolCalls: [] };
   },
 
   async proposeAction(req: AiRequest, _key: string, signal?: AbortSignal): Promise<AiResult> {

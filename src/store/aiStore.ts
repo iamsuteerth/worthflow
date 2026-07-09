@@ -43,13 +43,7 @@ import {
   cancelConversationWrite,
 } from '@/ai/chat/conversationSync';
 import { getContextBlock, clearContextCache } from '@/ai/context/contextCache';
-import { SYSTEM_PROMPT, ACTION_CONTRACT, TOOL_SYSTEM_PROMPT, PROPOSE_HINT } from '@/ai/config';
-import { runTurn, type RunTurnResult } from '@/ai/agent/runTurn';
-import { ALL_TOOL_DEFS } from '@/ai/tools/defs';
-import { buildToolContext, headlineSeed } from '@/ai/tools/context';
-import { AI_TOOLS } from '@/lib/featureFlags';
-import { getModelEntry } from '@/ai/provider/modelCatalog';
-import type { AgentMessage } from '@/ai/provider/types';
+import { SYSTEM_PROMPT, ACTION_CONTRACT } from '@/ai/config';
 
 import { validateAction } from '@/ai/actions/validateAction';
 import { applyAction } from '@/ai/actions/applyAction';
@@ -286,13 +280,6 @@ export const useAiStore = create<AiStore>()(
       // Send a message
       // ------------------------------------------------------------------
       send: async (text) => {
-        // Tool-capable provider+model → the V4 agent loop. Otherwise the exact
-        // v3.3 static-pack streaming path below (kill-switch / non-tool models).
-        if (agentEnabled(get)) {
-          await runAgentTurn(set, get, text, 'chat');
-          return;
-        }
-
         const apiKey = await claimTurnKey(set, get);
         if (apiKey === null) return;
 
@@ -461,13 +448,6 @@ export const useAiStore = create<AiStore>()(
       },
 
       proposeAction: async (text) => {
-        // The wand becomes a hint biasing the agent toward propose_change — no
-        // separate code path once tools are on.
-        if (agentEnabled(get)) {
-          await runAgentTurn(set, get, text, 'propose');
-          return;
-        }
-
         const apiKey = await claimTurnKey(set, get);
         if (apiKey === null) return;
 
@@ -729,161 +709,6 @@ async function mintKeyAndResetChat(
       ? { settings: { ...get().settings, disclosureAcknowledged: false } }
       : {}),
   });
-}
-
-// Whether the current key's provider+model can drive the V4 agent loop. Gated by
-// the AI_TOOLS kill-switch, the adapter having runToolStep, and the catalog model
-// being tool-capable. When false, send/proposeAction fall back to the v3.3 path.
-function agentEnabled(get: GetFn): boolean {
-  if (!AI_TOOLS) return false;
-  const blob = get().keyBlob;
-  if (!blob) return false;
-  const provider = getProvider(blob.providerId);
-  if (typeof provider.runToolStep !== 'function') return false;
-  return getModelEntry(blob.providerId, blob.modelId)?.tools ?? false;
-}
-
-// Prior turns → the neutral agent conversation. Skips streaming/failed/empty
-// messages and merges adjacent same-role turns (some providers require strict
-// alternation). Token-pruned + leading-assistant-trimmed by the caller.
-type SimpleAgentMsg = { role: 'user' | 'assistant'; content: string };
-function toAgentMessages(conversation: Conversation): SimpleAgentMsg[] {
-  const msgs: SimpleAgentMsg[] = [];
-  for (const m of conversation.messages) {
-    if (m.streaming || m.error || !m.text.trim()) continue;
-    const last = msgs[msgs.length - 1];
-    if (last && last.role === m.role) last.content = `${last.content}\n${m.text}`;
-    else msgs.push({ role: m.role, content: m.text });
-  }
-  return msgs;
-}
-
-// The V4 agent turn: append the user + a streaming placeholder, run the bounded
-// tool loop, then finalise with the answer text, any tool trace, and any
-// confirmable proposed action. Mirrors send()'s streaming/abort/compaction/
-// write-back so behaviour (and error handling) matches the legacy path.
-async function runAgentTurn(set: SetFn, get: GetFn, text: string, mode: 'chat' | 'propose'): Promise<void> {
-  const apiKey = await claimTurnKey(set, get);
-  if (apiKey === null) return;
-
-  const blob = get().keyBlob!;
-  const provider = getProvider(blob.providerId);
-  const conversation = get().conversation;
-
-  const userMsg: Message = { id: crypto.randomUUID(), role: 'user', text, createdAt: new Date().toISOString() };
-  const assistantMsgId = crypto.randomUUID();
-  const placeholder: Message = { id: assistantMsgId, role: 'assistant', text: '', createdAt: new Date().toISOString(), streaming: true };
-  set({
-    conversation: {
-      ...conversation,
-      messages: [...conversation.messages, userMsg, placeholder],
-      updatedAt: new Date().toISOString(),
-    },
-  });
-
-  // Build the agent conversation from the PRE-append snapshot + this user turn.
-  const prior = pruneHistoryTokens(
-    toAgentMessages(conversation).map((m) => ({ role: m.role, text: m.content })),
-    MAX_HISTORY_TOKENS,
-  );
-  const messages: AgentMessage[] = prior.map((p) => ({ role: p.role, content: p.text }));
-  while (messages.length && messages[0].role === 'assistant') messages.shift();
-  messages.push({ role: 'user', content: text });
-
-  // Build the turn's simulation snapshot ONCE — shared by the headline seed and
-  // every tool call this turn (one simulate per turn).
-  const toolCtx = buildToolContext();
-
-  let systemPrompt = mode === 'propose' ? `${TOOL_SYSTEM_PROMPT}\n\n${PROPOSE_HINT}` : TOOL_SYSTEM_PROMPT;
-  if (conversation.summary) systemPrompt += `\n\n[Earlier conversation summary: ${conversation.summary}]`;
-  // Seed the headline totals so the model is oriented without a first-call round-trip.
-  systemPrompt += `\n\n[Current forecast snapshot — engine values; use tools for anything not here]\n${headlineSeed(toolCtx)}`;
-
-  const setPlaceholderText = (t: string) =>
-    set((state) => ({
-      conversation: {
-        ...state.conversation,
-        messages: state.conversation.messages.map((m) => (m.id === assistantMsgId ? { ...m, text: t } : m)),
-      },
-    }));
-
-  const controller = new AbortController();
-  _abortController = controller;
-  let accumulated = '';
-  let errorOccurred: { kind: AiErrorKind; message: string } | null = null;
-  let aborted = false;
-  let result: RunTurnResult | null = null;
-
-  try {
-    result = await runTurn(
-      { provider, key: apiKey, modelId: blob.modelId, systemPrompt, tools: ALL_TOOL_DEFS, messages, mode, toolContext: toolCtx },
-      {
-        onReset: () => { accumulated = ''; setPlaceholderText(''); },
-        onText: (delta) => { accumulated += delta; setPlaceholderText(accumulated); },
-      },
-      controller.signal,
-    );
-  } catch (err) {
-    if (isAbortError(err)) {
-      aborted = true;
-    } else {
-      const kind = err instanceof AiError ? err.kind : 'UNKNOWN';
-      const message = err instanceof AiError ? err.message : "I didn't get a complete answer — please retry.";
-      errorOccurred = { kind, message };
-    }
-  } finally {
-    if (_abortController === controller) _abortController = null;
-  }
-
-  const cur = get().conversation;
-  let finalConversation: Conversation;
-
-  if (aborted && !accumulated && !result) {
-    // Stopped before any output — drop the empty placeholder, keep the user turn.
-    finalConversation = {
-      ...cur,
-      messages: cur.messages.filter((m) => m.id !== assistantMsgId),
-      updatedAt: new Date().toISOString(),
-    };
-  } else {
-    const proposal = result?.proposedAction;
-    const baseText = (result?.text || accumulated).trim();
-    const finalText =
-      baseText ||
-      (proposal
-        ? `Here's a change you can apply:\n\n**${describeAction(proposal)}**`
-        : errorOccurred?.message ?? "I didn't get a complete answer — please retry.");
-    const finalMsg: Message = {
-      id: assistantMsgId,
-      role: 'assistant',
-      text: finalText,
-      createdAt: new Date().toISOString(),
-      streaming: false,
-      error: errorOccurred ?? undefined,
-      proposedAction: proposal,
-      actionStatus: proposal ? 'pending' : undefined,
-      toolTrace: result?.toolTrace.length ? result.toolTrace : undefined,
-    };
-    finalConversation = {
-      ...cur,
-      messages: cur.messages.map((m) => (m.id === assistantMsgId ? finalMsg : m)),
-      updatedAt: new Date().toISOString(),
-    };
-  }
-
-  set({ conversation: finalConversation, sending: false });
-
-  if (!aborted && shouldCompact(finalConversation.messages, finalConversation.summary)) {
-    try {
-      const compacted = await compactConversation(finalConversation, provider, apiKey, blob.modelId);
-      set({ conversation: compacted });
-      notifyAiChatCompacted();
-    } catch {
-      // Non-fatal: keep the uncompacted conversation.
-    }
-  }
-
-  scheduleConversationWrite(get, set);
 }
 
 // Shared prologue of send/proposeAction: claim the `sending` flag BEFORE the first

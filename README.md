@@ -134,7 +134,7 @@ Interactive dashboards help you understand:
 
 ### 🤖 Ask the AI Assistant (Requires SETUP)
 
-An optional, **bring-your-own-key** assistant — Google Gemini, or many models (free and paid) via OpenRouter — you can chat with about your forecast:
+An optional, **bring-your-own-key** assistant — powered by Google Gemini (free and paid models) — you can chat with about your forecast:
 
 * Ask things like *"When does my cash dip lowest, and why?"* or *"Summarise my FD maturities for the next two years."* Replies stream in real time, formatted with bold figures, lists, and tables.
 * **Grounded in the engine** — every number it quotes comes straight from Worth Flow's simulation, never from the model's own arithmetic, so answers always match your forecast.
@@ -320,8 +320,8 @@ This README is the product overview and feature tour. Each companion guide has o
 
 **AI assistant (optional)**
 
-* Google Gemini (`@google/genai`) and OpenRouter (thin `fetch` client) — browser-direct, bring-your-own-key
-* In-browser tool-use: the assistant queries the engine and simulates changes through in-process tools
+* Google Gemini (`@google/genai`) — browser-direct, bring-your-own-key
+* The assistant answers from a grounded forecast context block and can propose confirmable plan changes
 * WebCrypto (PBKDF2 + AES-GCM) zero-knowledge key vault; IndexedDB KEK cache
 * `react-markdown` + `remark-gfm` for formatted replies
 

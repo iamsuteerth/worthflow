@@ -646,17 +646,17 @@ Restores a previously exported `.wfplan` file. Imported plans are validated befo
 
 # 14. AI Assistant
 
-Worth Flow includes an optional AI assistant. You bring your own API key — from **Google Gemini**, or from **OpenRouter** (which reaches many models, free and paid, on one key). Worth Flow never has access to your key.
+Worth Flow includes an optional AI assistant powered by **Google Gemini** (free and paid models). You bring your own API key — Worth Flow never has access to it.
 
 ## How it works
 
-The assistant reads your current forecast through in-browser tools — it queries the engine for exactly the figures it needs (a month's cash, an account's XIRR, the lowest-cash point) and can simulate a change before proposing it. Every number it quotes comes straight from the engine, never the model's own arithmetic. It cannot see your credentials, internal IDs, or raw configuration. All inference runs between your browser and the provider you chose; no data passes through Worth Flow's infrastructure.
+The assistant is given a grounded summary of your current forecast — headline totals, pre-computed aggregates (most expensive month, biggest cash dips, per-year totals), a month-by-month series, and your accounts, FDs/RDs, and active scenario. Every number it quotes comes straight from the engine, never the model's own arithmetic. It cannot see your credentials, internal IDs, or raw configuration. It can also propose a plan change you confirm before it's applied. All inference runs between your browser and Gemini; no data passes through Worth Flow's infrastructure.
 
 ## Setting up your key
 
-1. Pick a provider and get a key: **Gemini** from [Google AI Studio](https://aistudio.google.com) (a free-tier key is enough), or **OpenRouter** from [openrouter.ai/keys](https://openrouter.ai/keys) (start free by choosing a free model). Worth Flow never has access to your key.
+1. Get a **Gemini** key from [Google AI Studio](https://aistudio.google.com) — a free-tier key is enough. Worth Flow never has access to your key.
 2. Open the **Forecast** view and click the floating **sparkle (✦)** button in the bottom-right corner to open the AI panel.
-3. Click **Set up your AI key**, pick your provider and model, and paste your key.
+3. Click **Set up your AI key**, pick your model (Flash is free; Pro needs Google billing), and paste your key.
 4. Choose an **AI passphrase** (at least 8 characters). This is separate from your account password — Worth Flow uses it to encrypt the key and your chat before storing them.
 5. Confirm the passphrase and click **Encrypt & Save Key**.
 

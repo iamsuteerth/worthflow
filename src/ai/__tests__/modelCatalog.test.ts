@@ -11,16 +11,14 @@ import {
 } from '@/ai/provider/modelCatalog';
 import type { ProviderId } from '@/ai/provider/types';
 
-// The BYOK providers offered at launch (mock is never in the picker).
-const OFFERED: ProviderId[] = ['gemini', 'openrouter'];
+// The BYOK providers offered (mock is never in the picker).
+const OFFERED: ProviderId[] = ['gemini'];
 
 describe('modelCatalog — integrity', () => {
   it('every entry is well-formed', () => {
     for (const m of MODEL_CATALOG) {
       expect(m.modelId.trim().length).toBeGreaterThan(0);
       expect(m.label.trim().length).toBeGreaterThan(0);
-      expect(typeof m.tools).toBe('boolean');
-      expect(typeof m.promptCaching).toBe('boolean');
       expect(OFFERED).toContain(m.providerId);
     }
   });
@@ -55,18 +53,12 @@ describe('modelCatalog — integrity', () => {
 
   it('rejects unlisted (provider, model) pairs', () => {
     expect(isValidModel('gemini', 'not-a-real-model')).toBe(false);
-    expect(getModelEntry('anthropic', 'nope')).toBeUndefined();
+    expect(getModelEntry('mock', 'nope')).toBeUndefined();
   });
 
   it('pins the Gemini default so v1 blobs migrate to a real model', () => {
     // The KeyBlob v1→v2 migration binds legacy Gemini blobs to this id.
     expect(isValidModel('gemini', getDefaultModelId('gemini'))).toBe(true);
-  });
-
-  it('defaults OpenRouter to a free-tier model (the dabbler path)', () => {
-    const def = getDefaultModel('openrouter');
-    expect(def?.tier).toBe('free');
-    expect(def?.modelId).toBe('google/gemma-4-31b-it:free');
   });
 
   it('every model is tagged free or paid', () => {

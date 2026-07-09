@@ -1,5 +1,4 @@
 import geminiProvider from '@/ai/provider/geminiProvider';
-import openrouterProvider from '@/ai/provider/openrouterProvider';
 import mockProvider from '@/ai/provider/mockProvider';
 import type { AIProvider, ProviderId } from '@/ai/provider/types';
 
@@ -9,11 +8,9 @@ import type { AIProvider, ProviderId } from '@/ai/provider/types';
 const MOCK_MODE =
   import.meta.env.VITE_AI_PROVIDER === 'mock' || import.meta.env.VITE_AUTH_MODE === 'mock';
 
-// The registry: providers with a real adapter. Adding a BYOK provider = one row
-// here (+ catalog rows + CSP origin + KeySettings copy).
+// The registry: providers with a real adapter.
 const REGISTRY: Partial<Record<ProviderId, AIProvider>> = {
   gemini: geminiProvider,
-  openrouter: openrouterProvider,
   mock: mockProvider,
 };
 

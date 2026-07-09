@@ -85,16 +85,16 @@ arn:aws:s3:::worth-flow-saves/users/&lt;your-identity-id&gt;/*</pre>
 
     <h2>AI assistant (optional, bring-your-own-key)</h2>
     <p>
-      The AI assistant is optional and uses <strong>your own</strong> AI provider API key (Google Gemini, or OpenRouter for many models). Its security model:
+      The AI assistant is optional and uses <strong>your own</strong> Google Gemini API key. Its security model:
     </p>
     <ul>
       <li><strong>Zero-knowledge at rest.</strong> Your API key and chat are encrypted in your browser with a
         passphrase only you know (PBKDF2-derived AES-GCM key). We store only ciphertext and can never read
         either; forgetting the passphrase wipes both.</li>
-      <li><strong>No server in the path.</strong> Requests go <strong>browser-direct to the provider you chose</strong>
+      <li><strong>No server in the path.</strong> Requests go <strong>browser-direct to Google Gemini</strong>
         with your key - Worth Flow runs no proxy and never sees your key or your prompts.</li>
       <li><strong>Tight egress.</strong> The Content-Security-Policy allows the assistant to connect only to
-        <code>generativelanguage.googleapis.com</code> and <code>openrouter.ai</code>&ensp;(alongside AWS and
+        <code>generativelanguage.googleapis.com</code>&ensp;(alongside AWS and
         Cognito) - nothing else.</li>
       <li><strong>Least data.</strong> Only forecast figures and plan summaries are sent; credentials and
         internal IDs are never included.</li>
@@ -106,7 +106,7 @@ arn:aws:s3:::worth-flow-saves/users/&lt;your-identity-id&gt;/*</pre>
     </p>
     <ul>
       <li><strong>Strict-Transport-Security</strong> - HSTS with preload, 2-year max-age.</li>
-      <li><strong>Content-Security-Policy</strong> - restricts script, style, and connection sources; outbound connections are allow-listed to AWS, Cognito, and the AI provider APIs you choose (Gemini, OpenRouter) only.</li>
+      <li><strong>Content-Security-Policy</strong> - restricts script, style, and connection sources; outbound connections are allow-listed to AWS, Cognito, and the Gemini API only.</li>
       <li><strong>X-Frame-Options: DENY</strong> - prevents clickjacking.</li>
       <li><strong>X-Content-Type-Options: nosniff</strong> - prevents MIME sniffing.</li>
       <li><strong>Referrer-Policy: strict-origin-when-cross-origin</strong>.</li>
