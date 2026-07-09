@@ -13,6 +13,7 @@ import {
 } from '@/ai/provider/types';
 import type { ToolCall } from '@/ai/tools/types';
 import { buildTurns, unfence, translateHttpError, translateFetchError, safeText, sseDataLines } from '@/ai/provider/providerHttp';
+import { extractTextToolCalls } from '@/ai/provider/toolCallText';
 
 // Translate the neutral agent conversation to OpenAI Chat Completions messages.
 // Assistant tool calls → `tool_calls`; each tool result → a `role:"tool"` message
@@ -179,8 +180,23 @@ export function createOpenAiCompatibleProvider(cfg: OpenAiCompatibleConfig): AIP
         args: parseToolArgs(tc.function?.arguments),
       }));
 
-      if (text) cbs.onText(text);
-      return { text, toolCalls };
+      // Fallback: some open models (e.g. NVIDIA Nemotron) emit a tool call as TEXT
+      // in the Hermes/pythonic format instead of via native `tool_calls`. Recover
+      // it so the call runs the normal validated path instead of leaking raw markup
+      // to the user. Gated on the turn's known tool names; on the overflow step
+      // (req.tools empty) nothing is recovered, so a forced text answer stands.
+      let surfacedText = text;
+      let calls = toolCalls;
+      if (calls.length === 0 && text && req.tools.length) {
+        const extracted = extractTextToolCalls(text, new Set(req.tools.map((t) => t.name)));
+        if (extracted.toolCalls.length) {
+          calls = extracted.toolCalls;
+          surfacedText = extracted.cleanedText;
+        }
+      }
+
+      if (surfacedText) cbs.onText(surfacedText);
+      return { text: surfacedText, toolCalls: calls };
     },
 
     async validateKey(key: string, modelId?: string, signal?: AbortSignal): Promise<boolean> {
