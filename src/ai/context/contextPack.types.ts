@@ -55,6 +55,22 @@ export interface ContextPackInstrument {
 }
 
 /**
+ * Pre-computed answers to the aggregate questions users actually ask, so the model
+ * QUOTES them rather than computing (which is where a single-shot answer would
+ * hallucinate). All figures come straight from the engine rows, full-resolution
+ * (NOT the down-sampled `series`). Expense = flat + credit-card + one-off +
+ * recurring spending (excludes investing/FD funding, which `highestOutflowMonth`
+ * captures separately). Money is integer INR.
+ */
+export interface ContextPackAggregates {
+  avgMonthlyExpense: number;
+  highestExpenseMonth: { month: string; amount: number };   // biggest spending month
+  highestOutflowMonth: { month: string; amount: number };   // biggest total cash outflow (incl. investing)
+  biggestCashDrops: Array<{ month: string; drop: number }>; // top month-over-month cash decreases (the "dips")
+  perYear: Array<{ year: string; income: number; expenses: number; endCash: number; endNetWorth: number }>;
+}
+
+/**
  * Aggregate effect of the active scenario, measured against the base plan. Present
  * ONLY when a scenario is active. Both sides come straight from the engine
  * (simulate) — the model must read these numbers verbatim, never compute the delta
@@ -76,6 +92,7 @@ export interface ContextPackScenarioEffect {
 export interface ContextPack {
   meta: ContextPackMeta;
   headline: ContextPackHeadline;
+  aggregates: ContextPackAggregates;
   series: ContextPackSeries;
   accounts: ContextPackAccount[];
   instruments: ContextPackInstrument[];

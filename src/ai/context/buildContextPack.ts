@@ -4,7 +4,8 @@ import type { PlannerOverrides } from '@/types/overrides';
 import { MAX_CONTEXT_PACK_BYTES } from '@/ai/config';
 import { projectInstrument } from '@/engine/instrumentProjection';
 import { addMonths } from '@/engine/dateUtils';
-import type { ContextPack, ContextPackSeries } from '@/ai/context/contextPack.types';
+import type { MonthlyCashflow } from '@/types/simulation';
+import type { ContextPack, ContextPackSeries, ContextPackAggregates } from '@/ai/context/contextPack.types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -77,6 +78,77 @@ export function buildFullSeries(
     investments: seriesRows.map((r) => Math.round(r.assets.investmentCorpus)),
     fd: seriesRows.map((r) => Math.round(r.assets.fdValue)),
     rd: seriesRows.map((r) => Math.round(r.assets.rdValue)),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Aggregates — pre-computed answers to the common aggregate questions ("most
+// expensive month", "why the big dips", "how does each year look"), so a
+// single-shot answer quotes the engine instead of doing (and fluffing) its own
+// arithmetic. Computed over ALL rows at full resolution.
+// ---------------------------------------------------------------------------
+
+// A month's actual spending: flat + credit-card + one-off + recurring. Excludes
+// investment contributions and FD/RD funding (those are cash out, but not
+// "expenses" the way a user means the word — see highestOutflowMonth).
+function monthExpense(cf: MonthlyCashflow): number {
+  return cf.flatExpense + cf.creditCardExpense + cf.oneOffExpense + cf.recurringExpense;
+}
+
+function buildAggregates(result: SimulationResult): ContextPackAggregates {
+  const rows = result.rows;
+  if (rows.length === 0) {
+    return {
+      avgMonthlyExpense: 0,
+      highestExpenseMonth: { month: '', amount: 0 },
+      highestOutflowMonth: { month: '', amount: 0 },
+      biggestCashDrops: [],
+      perYear: [],
+    };
+  }
+
+  let hiExp = { month: rows[0].month, amount: -Infinity };
+  let hiOut = { month: rows[0].month, amount: -Infinity };
+  let expenseSum = 0;
+
+  const byYear = new Map<string, { income: number; expenses: number; endCash: number; endNetWorth: number }>();
+
+  for (const r of rows) {
+    const exp = monthExpense(r.cashflow);
+    expenseSum += exp;
+    if (exp > hiExp.amount) hiExp = { month: r.month, amount: exp };
+    if (r.cashflow.totalOutflow > hiOut.amount) hiOut = { month: r.month, amount: r.cashflow.totalOutflow };
+
+    // rows are chronological, so the last write per year is that year's December.
+    const year = r.month.slice(0, 4);
+    const y = byYear.get(year) ?? { income: 0, expenses: 0, endCash: 0, endNetWorth: 0 };
+    y.income += r.cashflow.income;
+    y.expenses += exp;
+    y.endCash = r.assets.cash;
+    y.endNetWorth = r.assets.netWorth;
+    byYear.set(year, y);
+  }
+
+  // Month-over-month cash decreases (the visible "dips"), largest first, top 3.
+  const drops: Array<{ month: string; drop: number }> = [];
+  for (let i = 1; i < rows.length; i++) {
+    const delta = rows[i].assets.cash - rows[i - 1].assets.cash;
+    if (delta < 0) drops.push({ month: rows[i].month, drop: Math.round(-delta) });
+  }
+  drops.sort((a, b) => b.drop - a.drop);
+
+  return {
+    avgMonthlyExpense: Math.round(expenseSum / rows.length),
+    highestExpenseMonth: { month: hiExp.month, amount: Math.round(hiExp.amount) },
+    highestOutflowMonth: { month: hiOut.month, amount: Math.round(hiOut.amount) },
+    biggestCashDrops: drops.slice(0, 3),
+    perYear: [...byYear.entries()].map(([year, v]) => ({
+      year,
+      income: Math.round(v.income),
+      expenses: Math.round(v.expenses),
+      endCash: Math.round(v.endCash),
+      endNetWorth: Math.round(v.endNetWorth),
+    })),
   };
 }
 
@@ -207,6 +279,7 @@ export function buildContextPack(
       totalIncome: Math.round(summary.totalIncome),
       totalExpenses: Math.round(summary.totalExpenses),
     },
+    aggregates: buildAggregates(result),
     series: buildFullSeries(result, focusWindow?.from, focusWindow?.to),
     accounts,
     instruments,

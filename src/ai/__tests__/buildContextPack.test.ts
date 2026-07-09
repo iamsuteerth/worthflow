@@ -82,6 +82,53 @@ describe('buildContextPack — series labels', () => {
   });
 });
 
+describe('buildContextPack — aggregates (pre-computed, engine-grounded)', () => {
+  it('pins the highest-expense month to a large one-off, verbatim from the engine', () => {
+    // Baseline spend is 60k/mo; a 300k one-off in 2026-03 must be the peak.
+    const overrides: PlannerOverrides = {
+      runtimeEvents: [
+        { id: 'oneoff', type: 'ONE_OFF_EXPENSE', month: m('2026-03'), amount: 300_000, label: 'Wedding' },
+      ],
+    };
+    const p = buildPack(cfg, overrides);
+    expect(p.aggregates.highestExpenseMonth.month).toBe('2026-03');
+    // 60k flat + 300k one-off = 360k that month.
+    expect(p.aggregates.highestExpenseMonth.amount).toBe(360_000);
+  });
+
+  it('surfaces the biggest cash drops (the visible dips), largest first', () => {
+    const overrides: PlannerOverrides = {
+      runtimeEvents: [
+        { id: 'oneoff', type: 'ONE_OFF_EXPENSE', month: m('2026-03'), amount: 300_000, label: 'Wedding' },
+      ],
+    };
+    const p = buildPack(cfg, overrides);
+    expect(p.aggregates.biggestCashDrops.length).toBeGreaterThan(0);
+    // The 300k one-off month is the deepest month-over-month cash fall.
+    expect(p.aggregates.biggestCashDrops[0].month).toBe('2026-03');
+    // Sorted descending by magnitude.
+    const drops = p.aggregates.biggestCashDrops.map((d) => d.drop);
+    expect([...drops].sort((a, b) => b - a)).toEqual(drops);
+  });
+
+  it('rolls up per-year totals aligned to the engine rows', () => {
+    const p = buildPack(cfg);
+    const rows = simulate(buildEffectiveConfig(cfg, {}), {}).rows;
+    // 60-month plan starting 2025-01 → years 2025..2029.
+    expect(p.aggregates.perYear.map((y) => y.year)).toEqual(['2025', '2026', '2027', '2028', '2029']);
+    // Each year's end-cash equals that year's December engine row.
+    for (const y of p.aggregates.perYear) {
+      const dec = rows.find((r) => r.month === `${y.year}-12`)!;
+      expect(y.endCash).toBe(Math.round(dec.assets.cash));
+      expect(y.endNetWorth).toBe(Math.round(dec.assets.netWorth));
+    }
+  });
+
+  it('keeps the pack under the byte cap with aggregates included', () => {
+    expect(serializeContextPack(buildPack(cfg)).length).toBeLessThanOrEqual(MAX_CONTEXT_PACK_BYTES);
+  });
+});
+
 describe('hasActiveScenario / scenario detection (P2 B-5)', () => {
   it('is false for an empty override layer', () => {
     expect(hasActiveScenario({})).toBe(false);
