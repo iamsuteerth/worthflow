@@ -15,12 +15,14 @@ import {
 } from "@mantine/core";
 
 import {
+  IconAlertTriangle,
   IconBolt,
   IconBuildingBank,
   IconCalendarEvent,
   IconCalendarMonth,
   IconCash,
   IconChartLine,
+  IconChevronsLeft,
   IconCoins,
   IconDownload,
   IconPlayerPlay,
@@ -32,6 +34,8 @@ import { builderToConfig } from "@/engine/builderToConfig";
 import { AdaptiveMoney } from "@/components/ui";
 import { exportPlan } from "@/engine/exportPlan";
 import { formatMonth } from "@/engine/monthFormatting";
+import { forecastEndMonth } from "@/engine/dateUtils";
+import { findOutOfWindowItems, type OutOfWindowKind } from "@/engine/builderWindow";
 import { useBuilderStore } from "@/store/builderStore";
 import { usePlannerStore } from "@/store/plannerStore";
 import { useCloudStore, defaultPlanLabel } from "@/store/cloudStore";
@@ -69,6 +73,15 @@ function summarizeDroppedScenarioData(
   if (savedScenarioCount) items.push(plural(savedScenarioCount, "saved scenario"));
   return items;
 }
+
+const OOW_KIND_LABEL: Record<OutOfWindowKind, string> = {
+  account: "Investment account",
+  oneOff: "One-off expense",
+  creditCard: "Credit card bill",
+  bonus: "Bonus",
+  salary: "Salary change",
+  recurring: "Recurring expense",
+};
 
 function MetricCard({
   label,
@@ -126,6 +139,10 @@ export default function ReviewStep() {
   }, [overrides.runtimeEvents, savedScenarios.length, seedSource]);
 
   const config = useMemo(() => builderToConfig(state), [state]);
+
+  const snapAllIntoWindow = useBuilderStore((store) => store.snapAllIntoWindow);
+  const outOfWindow = useMemo(() => findOutOfWindowItems(state), [state]);
+  const windowEnd = forecastEndMonth(state.startMonth, state.totalMonths);
 
   const totalEvents =
     state.oneOffExpenses.length +
@@ -200,16 +217,52 @@ export default function ReviewStep() {
         </Grid>
       </Card>
 
+      {outOfWindow.length > 0 && (
+        <Alert
+          color="red"
+          variant="light"
+          radius="md"
+          icon={<IconAlertTriangle size={18} />}
+          title={`${outOfWindow.length} item${outOfWindow.length > 1 ? "s" : ""} outside the forecast window`}
+        >
+          <Stack gap="sm">
+            <Text size="sm">
+              These fall outside {formatMonth(state.startMonth)} – {formatMonth(windowEnd)} and must be
+              fixed before you can generate. Edit each on its step, or move them all to the first month:
+            </Text>
+            <List size="sm" spacing={2}>
+              {outOfWindow.map((item) => (
+                <List.Item key={`${item.kind}-${item.id}`}>
+                  <Text span fw={600}>{item.label || OOW_KIND_LABEL[item.kind]}</Text>{" "}
+                  <Text span c="dimmed">({OOW_KIND_LABEL[item.kind]} · {item.current})</Text>
+                </List.Item>
+              ))}
+            </List>
+            <Button
+              color="yellow"
+              variant="filled"
+              leftSection={<IconChevronsLeft size={16} />}
+              onClick={snapAllIntoWindow}
+              style={{ alignSelf: "flex-start" }}
+            >
+              Move all into the window
+            </Button>
+          </Stack>
+        </Alert>
+      )}
+
       <Group grow>
         <Button
           variant="default"
           leftSection={<IconDownload size={16} />}
+          disabled={outOfWindow.length > 0}
           onClick={() => exportPlan({ baseConfig: config, overrides: {} })}
         >
           Export
         </Button>
         <Button
           leftSection={<IconPlayerPlay size={16} />}
+          disabled={outOfWindow.length > 0}
           onClick={() => (droppedItems.length > 0 ? openConfirm() : handleGenerate())}
         >
           Generate Forecast

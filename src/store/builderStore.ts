@@ -14,6 +14,7 @@ import type {
 } from "@/types/builder";
 
 import { isValidAnnualRange } from "@/engine/annualExpense";
+import { snapStateIntoWindow } from "@/engine/builderWindow";
 import { uniquifyAccountName } from "@/utils/uniquifyAccountName";
 
 const initialState: BuilderState = {
@@ -65,6 +66,16 @@ interface BuilderStore {
 
   addInstrument: (instrument: FixedDeposit | RecurringDeposit) => void;
   removeInstrument: (id: string) => void;
+
+  updateInvestmentAccount: (account: InvestmentAccount) => void;
+  updateInstrument: (instrument: FixedDeposit | RecurringDeposit) => void;
+  updateOneOffExpense: (expense: BuilderOneOffExpense) => void;
+  updateCreditCardBill: (bill: BuilderCreditCardBill) => void;
+  updateBonusIncome: (bonus: BuilderBonusIncome) => void;
+  updateSalaryChange: (change: BuilderSalaryChange) => void;
+  updateRecurringExpense: (expense: RecurringExpense) => void;
+
+  snapAllIntoWindow: () => void;
 
   setState: (updater: Partial<BuilderState>) => void;
 
@@ -229,6 +240,84 @@ export const useBuilderStore = create<BuilderStore>((set) => ({
         instruments: store.state.instruments.filter((i) => i.id !== id),
       },
     })),
+
+  updateInvestmentAccount: (account) =>
+    set((store) => {
+      const others = store.state.investmentAccounts.filter((a) => a.id !== account.id);
+      const name = uniquifyAccountName(account.name.trim(), others.map((a) => a.name));
+      return {
+        state: {
+          ...store.state,
+          investmentAccounts: store.state.investmentAccounts.map((a) =>
+            a.id === account.id ? { ...account, name } : a
+          ),
+        },
+      };
+    }),
+
+  updateInstrument: (instrument) =>
+    set((store) => ({
+      state: {
+        ...store.state,
+        instruments: store.state.instruments.map((i) =>
+          i.id === instrument.id
+            ? { ...instrument, durationMonths: Math.min(120, Math.max(1, instrument.durationMonths)) }
+            : i
+        ),
+      },
+    })),
+
+  updateOneOffExpense: (expense) =>
+    set((store) => ({
+      state: {
+        ...store.state,
+        oneOffExpenses: store.state.oneOffExpenses.map((e) => (e.id === expense.id ? expense : e)),
+      },
+    })),
+
+  updateCreditCardBill: (bill) =>
+    set((store) => ({
+      state: {
+        ...store.state,
+        creditCardBills: store.state.creditCardBills.map((b) => (b.id === bill.id ? bill : b)),
+      },
+    })),
+
+  updateBonusIncome: (bonus) =>
+    set((store) => ({
+      state: {
+        ...store.state,
+        bonusIncome: store.state.bonusIncome.map((b) => (b.id === bonus.id ? bonus : b)),
+      },
+    })),
+
+  updateSalaryChange: (change) =>
+    set((store) => ({
+      state: {
+        ...store.state,
+        salaryChanges: store.state.salaryChanges.map((c) => (c.id === change.id ? change : c)),
+      },
+    })),
+
+  updateRecurringExpense: (expense) =>
+    set((store) => {
+      if (expense.startMonth > expense.endMonth) return store;
+      if (
+        expense.frequency === "ANNUAL" &&
+        !isValidAnnualRange(store.state.startMonth, store.state.totalMonths, expense.startMonth, expense.endMonth)
+      ) {
+        return store;
+      }
+      return {
+        state: {
+          ...store.state,
+          recurringExpenses: store.state.recurringExpenses.map((e) => (e.id === expense.id ? expense : e)),
+        },
+      };
+    }),
+
+  snapAllIntoWindow: () =>
+    set((store) => ({ state: snapStateIntoWindow(store.state) })),
 
   setState: (updater) =>
     set((store) => ({ state: { ...store.state, ...updater } })),

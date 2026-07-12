@@ -5,7 +5,7 @@ import type { InvestmentAccount } from "@/types/investmentAccount";
 import type { RecurringExpense } from "@/types/recurringExpense";
 
 import { forecastEndMonth } from "@/engine/dateUtils";
-import { isValidAnnualRange } from "@/engine/annualExpense";
+import { isValidAnnualRange, getMaxAnnualYears, deriveAnnualEndMonth } from "@/engine/annualExpense";
 
 // Investment accounts and dated events must sit inside the forecast window. FD/RD
 // instruments are deliberately exempt — they may start before the window and only their
@@ -123,4 +123,54 @@ export function findOutOfWindowInConfig(config: PlannerConfig): OutOfWindowItem[
 
 export function planHasOutOfWindowItems(config: PlannerConfig): boolean {
   return findOutOfWindowInConfig(config).length > 0;
+}
+
+// ── Snapping (the "Move into window" quick-fix) ────────────────────────────────
+// Pure — returns corrected copies, never mutates. The decision (IMPLEMENTATION.dev.md §2):
+// point events clamp into [start, end]; recurring ranges shift start in and clamp or refit end.
+
+function clampMonth(month: MonthKey, start: MonthKey, end: MonthKey): MonthKey {
+  if (month < start) return start;
+  if (month > end) return end;
+  return month;
+}
+
+// Whole calendar-month gap between two MonthKeys (b − a), independent of any window.
+function monthGap(a: MonthKey, b: MonthKey): number {
+  const [ay, am] = a.split("-").map(Number);
+  const [by, bm] = b.split("-").map(Number);
+  return (by - ay) * 12 + (bm - am);
+}
+
+function snapRecurring(r: RecurringExpense, start: MonthKey, totalMonths: number): RecurringExpense {
+  const end = forecastEndMonth(start, totalMonths);
+  const startMonth = clampMonth(r.startMonth, start, end);
+
+  if ((r.frequency ?? "MONTHLY") === "ANNUAL") {
+    // Preserve the intended number of yearly charges, refit to what the window allows.
+    const years = Math.max(1, Math.floor(monthGap(r.startMonth, r.endMonth) / 12) + 1);
+    const maxYears = Math.max(1, getMaxAnnualYears(start, totalMonths, startMonth));
+    return { ...r, startMonth, endMonth: deriveAnnualEndMonth(startMonth, Math.min(years, maxYears)) };
+  }
+
+  let endMonth = clampMonth(r.endMonth, start, end);
+  if (endMonth < startMonth) endMonth = startMonth;
+  return { ...r, startMonth, endMonth };
+}
+
+// Pull every out-of-window account/event into the window. FD/RD instruments untouched.
+export function snapStateIntoWindow(state: BuilderState): BuilderState {
+  const start = state.startMonth;
+  const end = forecastEndMonth(start, state.totalMonths);
+  const clamp = (m: MonthKey) => clampMonth(m, start, end);
+
+  return {
+    ...state,
+    investmentAccounts: state.investmentAccounts.map((a) => ({ ...a, startMonth: clamp(a.startMonth) })),
+    oneOffExpenses: state.oneOffExpenses.map((e) => ({ ...e, month: clamp(e.month) })),
+    creditCardBills: state.creditCardBills.map((b) => ({ ...b, month: clamp(b.month) })),
+    bonusIncome: state.bonusIncome.map((b) => ({ ...b, month: clamp(b.month) })),
+    salaryChanges: state.salaryChanges.map((s) => ({ ...s, effectiveMonth: clamp(s.effectiveMonth) })),
+    recurringExpenses: (state.recurringExpenses ?? []).map((r) => snapRecurring(r, start, state.totalMonths)),
+  };
 }

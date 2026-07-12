@@ -35,7 +35,7 @@ export default function AddRecurringExpenseForm() {
 
   const validRange =
     frequency === "ANNUAL"
-      ? !!startMonth && maxYears >= 1 && years >= 1 && years <= maxYears
+      ? !!startMonth && years >= 1 && years <= maxYears
       : !!startMonth && !!endMonth && startMonth <= endMonth;
 
   const durationMonths =
@@ -94,7 +94,8 @@ export default function AddRecurringExpenseForm() {
           </Grid.Col>
           <Grid.Col span={6}>
             <NumberInput
-              label="Number of Years"
+              label="How many times?"
+              description="Charged once a year on this month's anniversary"
               value={years}
               min={1}
               max={Math.max(maxYears, 1)}
@@ -125,15 +126,9 @@ export default function AddRecurringExpenseForm() {
         </Grid>
       )}
 
-      {frequency === "ANNUAL" && maxYears < 1 && (
+      {frequency === "ANNUAL" && startMonth && years > maxYears && (
         <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light" p="xs">
-          This start month leaves less than a year before the end of the forecast.
-        </Alert>
-      )}
-
-      {frequency === "ANNUAL" && maxYears >= 1 && years > maxYears && (
-        <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light" p="xs">
-          Number of years exceeds the forecast window. Maximum is {maxYears}.
+          That's more times than fit the forecast — the most from this month is {maxYears}.
         </Alert>
       )}
 

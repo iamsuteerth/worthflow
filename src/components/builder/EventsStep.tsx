@@ -19,20 +19,31 @@ import {
 
 import {
   IconAlertCircle,
+  IconAlertTriangle,
   IconBolt,
   IconCash,
   IconCreditCard,
+  IconPencil,
   IconPlus,
   IconRepeat,
   IconTrash,
   IconTrendingUp,
+  IconX,
 } from "@tabler/icons-react";
 
 import { useMemo, useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
 import { getMaxAnnualYears, deriveAnnualEndMonth } from "@/engine/annualExpense";
+import { findOutOfWindowItems } from "@/engine/builderWindow";
 import { forecastEndMonth } from "@/engine/dateUtils";
+
+// Recover "How many times?" (the charge count) from a stored annual range for editing.
+function annualYearsFromRange(start: MonthKey, end: MonthKey): number {
+  const [ay, am] = start.split("-").map(Number);
+  const [by, bm] = end.split("-").map(Number);
+  return Math.max(1, Math.floor(((by - ay) * 12 + (bm - am)) / 12) + 1);
+}
 import { useBuilderStore } from "@/store/builderStore";
 import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
 import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
@@ -111,6 +122,13 @@ export default function EventsStep() {
   const removeSalaryChange    = useBuilderStore((store) => store.removeSalaryChange);
   const addRecurringExpense   = useBuilderStore((store) => store.addRecurringExpense);
   const removeRecurringExpense = useBuilderStore((store) => store.removeRecurringExpense);
+  const updateOneOffExpense    = useBuilderStore((store) => store.updateOneOffExpense);
+  const updateCreditCardBill   = useBuilderStore((store) => store.updateCreditCardBill);
+  const updateBonusIncome      = useBuilderStore((store) => store.updateBonusIncome);
+  const updateSalaryChange     = useBuilderStore((store) => store.updateSalaryChange);
+  const updateRecurringExpense = useBuilderStore((store) => store.updateRecurringExpense);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const startMonth = useBuilderStore((s) => s.state.startMonth);
   const forecastEnd = forecastEndMonth(state.startMonth, state.totalMonths);
@@ -139,6 +157,101 @@ export default function EventsStep() {
   const [salaryMonth, setSalaryMonth]           = useState<MonthKey>(state.startMonth);
   const [salaryDescription, setSalaryDescription] = useState("");
   const [salaryIncome, setSalaryIncome]         = useState(state.monthlyIncome);
+
+  const editingOneOff    = state.oneOffExpenses.find((e) => e.id === editingId);
+  const editingCc        = state.creditCardBills.find((b) => b.id === editingId);
+  const editingRecurring = state.recurringExpenses.find((r) => r.id === editingId);
+  const editingBonus     = state.bonusIncome.find((b) => b.id === editingId);
+  const editingSalary    = state.salaryChanges.find((s) => s.id === editingId);
+
+  const oowIds = useMemo(() => new Set(findOutOfWindowItems(state).map((i) => i.id)), [state]);
+
+  function resetOneOff() {
+    if (editingOneOff) setEditingId(null);
+    setExpenseMonth(state.startMonth); setExpenseLabel(""); setExpenseAmount(0);
+  }
+  function submitOneOff() {
+    const payload = { month: expenseMonth, label: expenseLabel, amount: expenseAmount };
+    if (editingOneOff) updateOneOffExpense({ id: editingOneOff.id, ...payload });
+    else addOneOffExpense({ id: crypto.randomUUID(), ...payload });
+    resetOneOff();
+  }
+
+  function resetCc() {
+    if (editingCc) setEditingId(null);
+    setCreditCardMonth(state.startMonth); setCreditCardLabel(""); setCreditCardAmount(0);
+  }
+  function submitCc() {
+    const payload = { month: creditCardMonth, amount: creditCardAmount, label: creditCardLabel };
+    if (editingCc) updateCreditCardBill({ id: editingCc.id, ...payload });
+    else addCreditCardBill({ id: crypto.randomUUID(), ...payload });
+    resetCc();
+  }
+
+  function resetBonus() {
+    if (editingBonus) setEditingId(null);
+    setBonusMonth(state.startMonth); setBonusDescription(""); setBonusAmount(0);
+  }
+  function submitBonus() {
+    const payload = { month: bonusMonth, amount: bonusAmount, description: bonusDescription };
+    if (editingBonus) updateBonusIncome({ id: editingBonus.id, ...payload });
+    else addBonusIncome({ id: crypto.randomUUID(), ...payload });
+    resetBonus();
+  }
+
+  function resetSalary() {
+    if (editingSalary) setEditingId(null);
+    setSalaryMonth(state.startMonth); setSalaryDescription(""); setSalaryIncome(state.monthlyIncome);
+  }
+  function submitSalary() {
+    const payload = { effectiveMonth: salaryMonth, newMonthlyIncome: salaryIncome, description: salaryDescription };
+    if (editingSalary) updateSalaryChange({ id: editingSalary.id, ...payload });
+    else addSalaryChange({ id: crypto.randomUUID(), ...payload });
+    resetSalary();
+  }
+
+  function resetRecurring() {
+    if (editingRecurring) setEditingId(null);
+    setRecurringName(""); setRecurringAmount(0);
+    setRecurringStart(state.startMonth); setRecurringEnd(state.startMonth);
+    setRecurringYears(1); setRecurringFrequency("MONTHLY");
+  }
+  function submitRecurring() {
+    const resolvedEndMonth =
+      recurringFrequency === "ANNUAL" ? deriveAnnualEndMonth(recurringStart, recurringYears) : recurringEnd;
+    const payload = {
+      name: recurringName.trim(), amount: recurringAmount,
+      startMonth: recurringStart, endMonth: resolvedEndMonth, frequency: recurringFrequency,
+    };
+    if (editingRecurring) updateRecurringExpense({ id: editingRecurring.id, ...payload });
+    else addRecurringExpense({ id: crypto.randomUUID(), ...payload });
+    resetRecurring();
+  }
+
+  function startEdit(event: { id: string; type: string }) {
+    setEditingId(event.id);
+    if (event.type === "Expense") {
+      const e = state.oneOffExpenses.find((x) => x.id === event.id);
+      if (e) { setExpenseMonth(e.month); setExpenseLabel(e.label); setExpenseAmount(e.amount); }
+    } else if (event.type === "Credit Card") {
+      const b = state.creditCardBills.find((x) => x.id === event.id);
+      if (b) { setCreditCardMonth(b.month); setCreditCardLabel(b.label); setCreditCardAmount(b.amount); }
+    } else if (event.type === "Recurring") {
+      const r = state.recurringExpenses.find((x) => x.id === event.id);
+      if (r) {
+        setRecurringName(r.name); setRecurringAmount(r.amount); setRecurringStart(r.startMonth);
+        setRecurringFrequency(r.frequency ?? "MONTHLY");
+        if ((r.frequency ?? "MONTHLY") === "ANNUAL") setRecurringYears(annualYearsFromRange(r.startMonth, r.endMonth));
+        else setRecurringEnd(r.endMonth);
+      }
+    } else if (event.type === "Bonus") {
+      const b = state.bonusIncome.find((x) => x.id === event.id);
+      if (b) { setBonusMonth(b.month); setBonusDescription(b.description); setBonusAmount(b.amount); }
+    } else if (event.type === "Salary Change") {
+      const s = state.salaryChanges.find((x) => x.id === event.id);
+      if (s) { setSalaryMonth(s.effectiveMonth); setSalaryDescription(s.description); setSalaryIncome(s.newMonthlyIncome); }
+    }
+  }
 
   const timeline = useMemo(() => {
     const events = [
@@ -199,7 +312,7 @@ export default function EventsStep() {
     recurringName.trim().length > 0 &&
     recurringAmount > 0 &&
     (recurringFrequency === "ANNUAL"
-      ? recurringMaxYears >= 1 && recurringYears >= 1 && recurringYears <= recurringMaxYears
+      ? recurringYears >= 1 && recurringYears <= recurringMaxYears
       : recurringStart <= recurringEnd);
 
   return (
@@ -240,22 +353,20 @@ export default function EventsStep() {
                 prefix="₹"
                 onChange={(value) => setExpenseAmount(Number(value))}
               />
-              <Button
-                leftSection={<IconPlus size={16} />}
-                disabled={!expenseLabel.trim() || expenseAmount <= 0}
-                onClick={() => {
-                  addOneOffExpense({
-                    id: crypto.randomUUID(),
-                    month: expenseMonth,
-                    label: expenseLabel,
-                    amount: expenseAmount,
-                  });
-                  setExpenseLabel("");
-                  setExpenseAmount(0);
-                }}
-              >
-                Add Expense
-              </Button>
+              <Group gap="xs">
+                <Button
+                  leftSection={editingOneOff ? <IconPencil size={16} /> : <IconPlus size={16} />}
+                  disabled={!expenseLabel.trim() || expenseAmount <= 0}
+                  onClick={submitOneOff}
+                >
+                  {editingOneOff ? "Save Changes" : "Add Expense"}
+                </Button>
+                {editingOneOff && (
+                  <Button variant="default" leftSection={<IconX size={16} />} onClick={resetOneOff}>
+                    Cancel
+                  </Button>
+                )}
+              </Group>
             </Stack>
           </SectionCard>
         </Grid.Col>
@@ -296,7 +407,8 @@ export default function EventsStep() {
               />
               {recurringFrequency === "ANNUAL" ? (
                 <NumberInput
-                  label="Number of Years"
+                  label="How many times?"
+                  description="Charged once a year on this month's anniversary"
                   value={recurringYears}
                   min={1}
                   max={Math.max(recurringMaxYears, 1)}
@@ -311,39 +423,26 @@ export default function EventsStep() {
                   onChange={(value) => value && setRecurringEnd(value as MonthKey)}
                 />
               )}
-              {recurringFrequency === "ANNUAL" && recurringMaxYears < 1 && (
+              {recurringFrequency === "ANNUAL" && recurringYears > recurringMaxYears && (
                 <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light" p="xs">
-                  This start month leaves less than a year before the end of the forecast.
+                  That's more times than fit the forecast — the most from this month is {recurringMaxYears}.
                 </Alert>
               )}
-              {recurringFrequency === "ANNUAL" && recurringMaxYears >= 1 && recurringYears > recurringMaxYears && (
-                <Alert icon={<IconAlertCircle size={16} />} color="red" variant="light" p="xs">
-                  Number of years exceeds the forecast window. Maximum is {recurringMaxYears}.
-                </Alert>
-              )}
-              <Button
-                leftSection={<IconPlus size={16} />}
-                color="red"
-                disabled={!recurringValid}
-                onClick={() => {
-                  const resolvedEndMonth =
-                    recurringFrequency === "ANNUAL"
-                      ? deriveAnnualEndMonth(recurringStart, recurringYears)
-                      : recurringEnd;
-                  addRecurringExpense({
-                    id: crypto.randomUUID(),
-                    name: recurringName.trim(),
-                    amount: recurringAmount,
-                    startMonth: recurringStart,
-                    endMonth: resolvedEndMonth,
-                    frequency: recurringFrequency,
-                  });
-                  setRecurringName("");
-                  setRecurringAmount(0);
-                }}
-              >
-                Add Recurring Expense
-              </Button>
+              <Group gap="xs">
+                <Button
+                  leftSection={editingRecurring ? <IconPencil size={16} /> : <IconPlus size={16} />}
+                  color="red"
+                  disabled={!recurringValid}
+                  onClick={submitRecurring}
+                >
+                  {editingRecurring ? "Save Changes" : "Add Recurring Expense"}
+                </Button>
+                {editingRecurring && (
+                  <Button variant="default" leftSection={<IconX size={16} />} onClick={resetRecurring}>
+                    Cancel
+                  </Button>
+                )}
+              </Group>
             </Stack>
           </SectionCard>
         </Grid.Col>
@@ -374,22 +473,20 @@ export default function EventsStep() {
                 prefix="₹"
                 onChange={(value) => setCreditCardAmount(Number(value))}
               />
-              <Button
-                leftSection={<IconPlus size={16} />}
-                disabled={!creditCardLabel.trim() || creditCardAmount <= 0}
-                onClick={() => {
-                  addCreditCardBill({
-                    id: crypto.randomUUID(),
-                    month: creditCardMonth,
-                    amount: creditCardAmount,
-                    label: creditCardLabel,
-                  });
-                  setCreditCardLabel("");
-                  setCreditCardAmount(0);
-                }}
-              >
-                Add Bill
-              </Button>
+              <Group gap="xs">
+                <Button
+                  leftSection={editingCc ? <IconPencil size={16} /> : <IconPlus size={16} />}
+                  disabled={!creditCardLabel.trim() || creditCardAmount <= 0}
+                  onClick={submitCc}
+                >
+                  {editingCc ? "Save Changes" : "Add Bill"}
+                </Button>
+                {editingCc && (
+                  <Button variant="default" leftSection={<IconX size={16} />} onClick={resetCc}>
+                    Cancel
+                  </Button>
+                )}
+              </Group>
             </Stack>
           </SectionCard>
         </Grid.Col>
@@ -420,22 +517,20 @@ export default function EventsStep() {
                 prefix="₹"
                 onChange={(value) => setBonusAmount(Number(value))}
               />
-              <Button
-                leftSection={<IconPlus size={16} />}
-                disabled={!bonusDescription.trim() || bonusAmount <= 0}
-                onClick={() => {
-                  addBonusIncome({
-                    id: crypto.randomUUID(),
-                    month: bonusMonth,
-                    amount: bonusAmount,
-                    description: bonusDescription,
-                  });
-                  setBonusDescription("");
-                  setBonusAmount(0);
-                }}
-              >
-                Add Bonus
-              </Button>
+              <Group gap="xs">
+                <Button
+                  leftSection={editingBonus ? <IconPencil size={16} /> : <IconPlus size={16} />}
+                  disabled={!bonusDescription.trim() || bonusAmount <= 0}
+                  onClick={submitBonus}
+                >
+                  {editingBonus ? "Save Changes" : "Add Bonus"}
+                </Button>
+                {editingBonus && (
+                  <Button variant="default" leftSection={<IconX size={16} />} onClick={resetBonus}>
+                    Cancel
+                  </Button>
+                )}
+              </Group>
             </Stack>
           </SectionCard>
         </Grid.Col>
@@ -466,21 +561,20 @@ export default function EventsStep() {
                 prefix="₹"
                 onChange={(value) => setSalaryIncome(Number(value))}
               />
-              <Button
-                leftSection={<IconPlus size={16} />}
-                disabled={!salaryDescription.trim() || salaryIncome < 0}
-                onClick={() => {
-                  addSalaryChange({
-                    id: crypto.randomUUID(),
-                    effectiveMonth: salaryMonth,
-                    newMonthlyIncome: salaryIncome,
-                    description: salaryDescription,
-                  });
-                  setSalaryDescription("");
-                }}
-              >
-                Add Salary Change
-              </Button>
+              <Group gap="xs">
+                <Button
+                  leftSection={editingSalary ? <IconPencil size={16} /> : <IconPlus size={16} />}
+                  disabled={!salaryDescription.trim() || salaryIncome < 0}
+                  onClick={submitSalary}
+                >
+                  {editingSalary ? "Save Changes" : "Add Salary Change"}
+                </Button>
+                {editingSalary && (
+                  <Button variant="default" leftSection={<IconX size={16} />} onClick={resetSalary}>
+                    Cancel
+                  </Button>
+                )}
+              </Group>
             </Stack>
           </SectionCard>
         </Grid.Col>
@@ -520,9 +614,16 @@ export default function EventsStep() {
                 return (
                   <Table.Tr key={event.id}>
                     <Table.Td>
-                      <Text size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
-                        {formatMonth(event.month)}
-                      </Text>
+                      <Group gap={6} wrap="nowrap">
+                        <Text size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
+                          {formatMonth(event.month)}
+                        </Text>
+                        {oowIds.has(event.id) && (
+                          <Badge color="red" variant="light" size="sm" leftSection={<IconAlertTriangle size={11} />}>
+                            Outside
+                          </Badge>
+                        )}
+                      </Group>
                     </Table.Td>
                     <Table.Td>
                       <Badge variant="light" color={cfg.color} size="sm">
@@ -538,15 +639,25 @@ export default function EventsStep() {
                       </Text>
                     </Table.Td>
                     <Table.Td>
-                      <Button
-                        size="xs"
-                        color="red"
-                        variant="subtle"
-                        leftSection={<IconTrash size={14} />}
-                        onClick={() => removeHandlers[event.type]?.(event.id)}
-                      >
-                        Remove
-                      </Button>
+                      <Group gap={4} justify="flex-end" wrap="nowrap">
+                        <Button
+                          size="xs"
+                          variant="subtle"
+                          leftSection={<IconPencil size={14} />}
+                          onClick={() => startEdit(event)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="xs"
+                          color="red"
+                          variant="subtle"
+                          leftSection={<IconTrash size={14} />}
+                          onClick={() => removeHandlers[event.type]?.(event.id)}
+                        >
+                          Remove
+                        </Button>
+                      </Group>
                     </Table.Td>
                   </Table.Tr>
                 );

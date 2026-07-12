@@ -14,7 +14,7 @@ import {
   ThemeIcon,
 } from "@mantine/core";
 
-import { IconChartLine, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconAlertTriangle, IconChartLine, IconPencil, IconPlus, IconTrash, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
@@ -26,10 +26,13 @@ import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
 export default function InvestmentsStep() {
   const state = useBuilderStore((store) => store.state);
   const addInvestmentAccount = useBuilderStore((store) => store.addInvestmentAccount);
+  const updateInvestmentAccount = useBuilderStore((store) => store.updateInvestmentAccount);
   const removeInvestmentAccount = useBuilderStore((store) => store.removeInvestmentAccount);
 
   const forecastEnd = forecastEndMonth(state.startMonth, state.totalMonths);
+  const outOfWindow = (month: MonthKey) => month < state.startMonth || month > forecastEnd;
 
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [startMonth, setStartMonth] = useState<MonthKey>(state.startMonth);
   const [openingBalance, setOpeningBalance] = useState(0);
@@ -38,6 +41,40 @@ export default function InvestmentsStep() {
 
   const canAdd =
     name.trim().length > 0 && (openingBalance > 0 || defaultMonthlyContribution > 0);
+
+  function resetForm() {
+    setEditingId(null);
+    setName("");
+    setStartMonth(state.startMonth);
+    setOpeningBalance(0);
+    setDefaultMonthlyContribution(0);
+    setDefaultAnnualReturn(0);
+  }
+
+  function startEdit(account: (typeof state.investmentAccounts)[number]) {
+    setEditingId(account.id);
+    setName(account.name);
+    setStartMonth(account.startMonth);
+    setOpeningBalance(account.openingBalance);
+    setDefaultMonthlyContribution(account.defaultMonthlyContribution);
+    setDefaultAnnualReturn(account.defaultAnnualReturn);
+  }
+
+  function submit() {
+    const payload = {
+      name: name.trim(),
+      startMonth,
+      openingBalance,
+      defaultAnnualReturn,
+      defaultMonthlyContribution,
+    };
+    if (editingId) {
+      updateInvestmentAccount({ id: editingId, ...payload });
+    } else {
+      addInvestmentAccount(payload);
+    }
+    resetForm();
+  }
 
   return (
     <BuilderStepContainer>
@@ -57,7 +94,7 @@ export default function InvestmentsStep() {
               <IconChartLine size={16} />
             </ThemeIcon>
             <Text fw={600} size="sm">
-              Add Account
+              {editingId ? "Edit Account" : "Add Account"}
             </Text>
           </Group>
 
@@ -117,26 +154,20 @@ export default function InvestmentsStep() {
             </Grid.Col>
           </Grid>
 
-          <Button
-            leftSection={<IconPlus size={16} />}
-            disabled={!canAdd}
-            onClick={() => {
-              addInvestmentAccount({
-                name: name.trim(),
-                startMonth,
-                openingBalance,
-                defaultAnnualReturn,
-                defaultMonthlyContribution,
-              });
-              setName("");
-              setStartMonth(state.startMonth);
-              setOpeningBalance(0);
-              setDefaultMonthlyContribution(0);
-              setDefaultAnnualReturn(0);
-            }}
-          >
-            Add Account
-          </Button>
+          <Group gap="xs">
+            <Button
+              leftSection={editingId ? <IconPencil size={16} /> : <IconPlus size={16} />}
+              disabled={!canAdd}
+              onClick={submit}
+            >
+              {editingId ? "Save Changes" : "Add Account"}
+            </Button>
+            {editingId && (
+              <Button variant="default" leftSection={<IconX size={16} />} onClick={resetForm}>
+                Cancel
+              </Button>
+            )}
+          </Group>
         </Stack>
       </Card>
 
@@ -163,9 +194,21 @@ export default function InvestmentsStep() {
                 <Card key={account.id} withBorder radius="sm" p="sm" style={{ background: "var(--mantine-color-default-hover)" }}>
                   <Group justify="space-between" align="center">
                     <Stack gap={2}>
-                      <Text size="sm" fw={600}>
-                        {account.name}
-                      </Text>
+                      <Group gap="xs">
+                        <Text size="sm" fw={600}>
+                          {account.name}
+                        </Text>
+                        {outOfWindow(account.startMonth) && (
+                          <Badge
+                            color="red"
+                            variant="light"
+                            size="sm"
+                            leftSection={<IconAlertTriangle size={11} />}
+                          >
+                            Outside window
+                          </Badge>
+                        )}
+                      </Group>
                       <Text size="xs" c="dimmed">
                         Starts {formatMonth(account.startMonth)} · Opening{" "}
                         {money(account.openingBalance)} · Contribution{" "}
@@ -173,15 +216,25 @@ export default function InvestmentsStep() {
                         {account.defaultAnnualReturn}%
                       </Text>
                     </Stack>
-                    <Button
-                      size="xs"
-                      color="red"
-                      variant="subtle"
-                      leftSection={<IconTrash size={14} />}
-                      onClick={() => removeInvestmentAccount(account.id)}
-                    >
-                      Remove
-                    </Button>
+                    <Group gap={4}>
+                      <Button
+                        size="xs"
+                        variant="subtle"
+                        leftSection={<IconPencil size={14} />}
+                        onClick={() => startEdit(account)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="xs"
+                        color="red"
+                        variant="subtle"
+                        leftSection={<IconTrash size={14} />}
+                        onClick={() => removeInvestmentAccount(account.id)}
+                      >
+                        Remove
+                      </Button>
+                    </Group>
                   </Group>
                 </Card>
               ))}

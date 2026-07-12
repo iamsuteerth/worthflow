@@ -1,6 +1,27 @@
 import { describe, it, expect } from "vitest";
 import { getMaxAnnualYears, deriveAnnualEndMonth, isValidAnnualYears, isValidAnnualRange } from "@/engine/annualExpense";
+import { isRecurringExpenseActive } from "@/engine/configLookups";
+import { generateMonths } from "@/engine/dateUtils";
 import { m } from "@/engine/__tests__/factories";
+
+describe("annual recurring — real scenario (July 2026 → June 2029, 36 months)", () => {
+  it("an annual expense from August 2026 offers 3 times and charges in Aug 2026, 2027, 2028", () => {
+    const start = m("2026-07");
+    const totalMonths = 36; // July 2026 .. June 2029 inclusive
+
+    // The form's "How many times?" cap.
+    expect(getMaxAnnualYears(start, totalMonths, m("2026-08"))).toBe(3);
+
+    // 3 times → end month is the last charge.
+    const endMonth = deriveAnnualEndMonth(m("2026-08"), 3);
+    expect(endMonth).toBe("2028-08");
+
+    // The engine charges exactly Aug 2026, Aug 2027, Aug 2028.
+    const re = { id: "r", name: "Insurance", amount: 1000, startMonth: m("2026-08"), endMonth, frequency: "ANNUAL" as const };
+    const charged = generateMonths(start, totalMonths).filter((month) => isRecurringExpenseActive(re, month));
+    expect(charged).toEqual(["2026-08", "2027-08", "2028-08"]);
+  });
+});
 
 describe("getMaxAnnualYears", () => {
   it("counts the annual charges that fit from the start month to the horizon", () => {

@@ -7,6 +7,7 @@ import {
   findOutOfWindowItems,
   findOutOfWindowInConfig,
   planHasOutOfWindowItems,
+  snapStateIntoWindow,
 } from "@/engine/builderWindow";
 
 // Window: 2026-08 .. 2027-07 (12 months)
@@ -173,5 +174,58 @@ describe("findOutOfWindowInConfig / planHasOutOfWindowItems", () => {
   it("passes a clean config", () => {
     const config = baseConfig("2026-07"); // account 2026-07 now the first month
     expect(planHasOutOfWindowItems(config)).toBe(false);
+  });
+});
+
+describe("snapStateIntoWindow", () => {
+  it("clamps accounts and point events into the window, leaves FD/RD alone", () => {
+    // Window 2026-08 .. 2027-07.
+    const state: BuilderState = {
+      ...baseState(),
+      investmentAccounts: [account("before", "2026-05"), account("after", "2027-11")],
+      oneOffExpenses: [{ id: "o", month: "2026-01" as never, label: "x", amount: 1 }],
+      salaryChanges: [{ id: "s", effectiveMonth: "2028-03" as never, description: "raise", newMonthlyIncome: 1 }],
+      instruments: [
+        { type: "FD", id: "fd", name: "SBI", principal: 1000, rate: 7, startMonth: "2026-01" as never, durationMonths: 24 },
+      ],
+    };
+
+    const snapped = snapStateIntoWindow(state);
+
+    expect(snapped.investmentAccounts[0].startMonth).toBe("2026-08"); // clamped up to start
+    expect(snapped.investmentAccounts[1].startMonth).toBe("2027-07"); // clamped down to end
+    expect(snapped.oneOffExpenses[0].month).toBe("2026-08");
+    expect(snapped.salaryChanges[0].effectiveMonth).toBe("2027-07");
+    expect(snapped.instruments[0].startMonth).toBe("2026-01"); // FD untouched
+    // Everything is now inside the window.
+    expect(findOutOfWindowItems(snapped)).toEqual([]);
+  });
+
+  it("shifts a monthly recurring range into the window and clamps its end", () => {
+    const state: BuilderState = {
+      ...baseState(),
+      recurringExpenses: [
+        { id: "r", name: "Rent", amount: 1000, startMonth: "2026-06" as never, endMonth: "2027-12" as never, frequency: "MONTHLY" },
+      ],
+    };
+    const r = snapStateIntoWindow(state).recurringExpenses[0];
+    expect(r.startMonth).toBe("2026-08");
+    expect(r.endMonth).toBe("2027-07");
+    expect(findOutOfWindowItems(snapStateIntoWindow(state))).toEqual([]);
+  });
+
+  it("refits an annual recurring so the snapped range stays anniversary-aligned and in-window", () => {
+    const state: BuilderState = {
+      ...baseState(),
+      recurringExpenses: [
+        // Two intended charges starting before the window (2026-05 → 2027-05).
+        { id: "r", name: "Insurance", amount: 1000, startMonth: "2026-05" as never, endMonth: "2027-05" as never, frequency: "ANNUAL" },
+      ],
+    };
+    const r = snapStateIntoWindow(state).recurringExpenses[0];
+    expect(r.startMonth).toBe("2026-08");
+    // 12-month window only fits one annual charge, so it refits to a single charge.
+    expect(r.endMonth).toBe("2026-08");
+    expect(findOutOfWindowItems(snapStateIntoWindow(state))).toEqual([]);
   });
 });

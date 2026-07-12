@@ -15,7 +15,7 @@ import {
   ThemeIcon,
 } from "@mantine/core";
 
-import { IconBuildingBank, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { IconBuildingBank, IconPencil, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
@@ -27,9 +27,12 @@ import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
 export default function InstrumentsStep() {
   const state = useBuilderStore((store) => store.state);
   const addInstrument = useBuilderStore((store) => store.addInstrument);
+  const updateInstrument = useBuilderStore((store) => store.updateInstrument);
   const removeInstrument = useBuilderStore((store) => store.removeInstrument);
 
   const forecastEnd = forecastEndMonth(state.startMonth, state.totalMonths);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [fdName, setFdName] = useState("");
   const [fdPrincipal, setFdPrincipal] = useState(0);
@@ -45,6 +48,73 @@ export default function InstrumentsStep() {
 
   const fds = state.instruments.filter((i) => i.type === "FD");
   const rds = state.instruments.filter((i) => i.type === "RD");
+
+  const editing = state.instruments.find((i) => i.id === editingId) ?? null;
+  const editingFd = editing?.type === "FD";
+  const editingRd = editing?.type === "RD";
+
+  function resetFd() {
+    setFdName("");
+    setFdPrincipal(0);
+    setFdRate(0);
+    setFdDurationMonths(12);
+    setFdStartMonth(state.startMonth);
+    if (editingFd) setEditingId(null);
+  }
+
+  function resetRd() {
+    setRdName("");
+    setRdContribution(0);
+    setRdRate(0);
+    setRdDurationMonths(12);
+    setRdStartMonth(state.startMonth);
+    if (editingRd) setEditingId(null);
+  }
+
+  function startEdit(instrument: (typeof state.instruments)[number]) {
+    setEditingId(instrument.id);
+    if (instrument.type === "FD") {
+      setFdName(instrument.name);
+      setFdPrincipal(instrument.principal);
+      setFdRate(instrument.rate);
+      setFdDurationMonths(instrument.durationMonths);
+      setFdStartMonth(instrument.startMonth);
+    } else {
+      setRdName(instrument.name);
+      setRdContribution(instrument.monthlyContribution);
+      setRdRate(instrument.rate);
+      setRdDurationMonths(instrument.durationMonths);
+      setRdStartMonth(instrument.startMonth);
+    }
+  }
+
+  function submitFd() {
+    const fd = {
+      type: "FD" as const,
+      name: fdName,
+      principal: fdPrincipal,
+      rate: fdRate,
+      startMonth: fdStartMonth,
+      durationMonths: fdDurationMonths,
+    };
+    if (editingFd && editingId) updateInstrument({ id: editingId, ...fd });
+    else addInstrument({ id: crypto.randomUUID(), ...fd });
+    resetFd();
+  }
+
+  function submitRd() {
+    const rd = {
+      type: "RD" as const,
+      name: rdName,
+      monthlyContribution: rdContribution,
+      rate: rdRate,
+      startMonth: rdStartMonth,
+      durationMonths: rdDurationMonths,
+    };
+    if (editingRd && editingId) updateInstrument({ id: editingId, ...rd });
+    else addInstrument({ id: crypto.randomUUID(), ...rd });
+    resetRd();
+  }
 
   return (
     <BuilderStepContainer>
@@ -71,7 +141,7 @@ export default function InstrumentsStep() {
                 <IconBuildingBank size={16} />
               </ThemeIcon>
               <Text fw={600} size="sm">
-                Fixed Deposit
+                {editingFd ? "Edit Fixed Deposit" : "Fixed Deposit"}
               </Text>
             </Group>
             <Divider mb="md" />
@@ -121,27 +191,21 @@ export default function InstrumentsStep() {
                 maxMonth={forecastEnd}
                 onChange={(value) => value && setFdStartMonth(value as MonthKey)}
               />
-              <Button
-                leftSection={<IconPlus size={16} />}
-                color="cyan"
-                disabled={!fdName.trim() || fdPrincipal <= 0 || fdRate <= 0 || fdDurationMonths <= 0}
-                onClick={() => {
-                  addInstrument({
-                    id: crypto.randomUUID(),
-                    type: "FD",
-                    name: fdName,
-                    principal: fdPrincipal,
-                    rate: fdRate,
-                    startMonth: fdStartMonth,
-                    durationMonths: fdDurationMonths,
-                  });
-                  setFdName("");
-                  setFdPrincipal(0);
-                  setFdRate(0);
-                }}
-              >
-                Add FD
-              </Button>
+              <Group gap="xs">
+                <Button
+                  leftSection={editingFd ? <IconPencil size={16} /> : <IconPlus size={16} />}
+                  color="cyan"
+                  disabled={!fdName.trim() || fdPrincipal <= 0 || fdRate <= 0 || fdDurationMonths <= 0}
+                  onClick={submitFd}
+                >
+                  {editingFd ? "Save Changes" : "Add FD"}
+                </Button>
+                {editingFd && (
+                  <Button variant="default" leftSection={<IconX size={16} />} onClick={resetFd}>
+                    Cancel
+                  </Button>
+                )}
+              </Group>
             </Stack>
           </Card>
         </Grid.Col>
@@ -159,7 +223,7 @@ export default function InstrumentsStep() {
                 <IconRefresh size={16} />
               </ThemeIcon>
               <Text fw={600} size="sm">
-                Recurring Deposit
+                {editingRd ? "Edit Recurring Deposit" : "Recurring Deposit"}
               </Text>
             </Group>
             <Divider mb="md" />
@@ -209,27 +273,21 @@ export default function InstrumentsStep() {
                 maxMonth={forecastEnd}
                 onChange={(value) => value && setRdStartMonth(value as MonthKey)}
               />
-              <Button
-                leftSection={<IconPlus size={16} />}
-                color="grape"
-                disabled={!rdName.trim() || rdContribution <= 0 || rdRate <= 0 || rdDurationMonths <= 0}
-                onClick={() => {
-                  addInstrument({
-                    id: crypto.randomUUID(),
-                    type: "RD",
-                    name: rdName,
-                    monthlyContribution: rdContribution,
-                    rate: rdRate,
-                    startMonth: rdStartMonth,
-                    durationMonths: rdDurationMonths,
-                  });
-                  setRdName("");
-                  setRdContribution(0);
-                  setRdRate(0);
-                }}
-              >
-                Add RD
-              </Button>
+              <Group gap="xs">
+                <Button
+                  leftSection={editingRd ? <IconPencil size={16} /> : <IconPlus size={16} />}
+                  color="grape"
+                  disabled={!rdName.trim() || rdContribution <= 0 || rdRate <= 0 || rdDurationMonths <= 0}
+                  onClick={submitRd}
+                >
+                  {editingRd ? "Save Changes" : "Add RD"}
+                </Button>
+                {editingRd && (
+                  <Button variant="default" leftSection={<IconX size={16} />} onClick={resetRd}>
+                    Cancel
+                  </Button>
+                )}
+              </Group>
             </Stack>
           </Card>
         </Grid.Col>
@@ -303,15 +361,25 @@ export default function InstrumentsStep() {
                     <Text size="sm">{formatMonth(instrument.startMonth)}</Text>
                   </Table.Td>
                   <Table.Td>
-                    <Button
-                      size="xs"
-                      color="red"
-                      variant="subtle"
-                      leftSection={<IconTrash size={14} />}
-                      onClick={() => removeInstrument(instrument.id)}
-                    >
-                      Remove
-                    </Button>
+                    <Group gap={4} justify="flex-end" wrap="nowrap">
+                      <Button
+                        size="xs"
+                        variant="subtle"
+                        leftSection={<IconPencil size={14} />}
+                        onClick={() => startEdit(instrument)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="xs"
+                        color="red"
+                        variant="subtle"
+                        leftSection={<IconTrash size={14} />}
+                        onClick={() => removeInstrument(instrument.id)}
+                      >
+                        Remove
+                      </Button>
+                    </Group>
                   </Table.Td>
                 </Table.Tr>
               ))}
