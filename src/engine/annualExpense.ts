@@ -6,11 +6,17 @@ export function getMaxAnnualYears(forecastStartMonth: MonthKey, totalMonths: num
   const months = generateMonths(forecastStartMonth, totalMonths);
   const startIndex = getMonthIndex(startMonth, months);
   if (startIndex < 0) return 0;
-  return Math.floor((totalMonths - startIndex) / 12);
+  // An annual expense charges once per year on the start month's anniversary. It's a
+  // point event, so only the LAST charge — at index start + (years-1)*12 — must land
+  // inside the window, not a full trailing 12 months. N years fit while
+  // start + (N-1)*12 <= last index (totalMonths - 1).
+  return 1 + Math.floor((totalMonths - 1 - startIndex) / 12);
 }
 
 export function deriveAnnualEndMonth(startMonth: MonthKey, years: number): MonthKey {
-  return addMonths(startMonth, years * 12 - 1);
+  // End month = the last annual charge (its (years-1)th anniversary), not the last month
+  // of a full trailing year.
+  return addMonths(startMonth, (years - 1) * 12);
 }
 
 export function isValidAnnualYears(forecastStartMonth: MonthKey, totalMonths: number, startMonth: MonthKey, years: number): boolean {
@@ -24,8 +30,10 @@ export function isValidAnnualRange(forecastStartMonth: MonthKey, totalMonths: nu
   const endIndex = getMonthIndex(endMonth, months);
   if (startIndex < 0 || endIndex < 0) return false;
 
-  const span = endIndex - startIndex + 1;
-  if (span <= 0 || span % 12 !== 0) return false;
+  // The end month is the last annual charge, so it must fall exactly on an anniversary of
+  // the start (a whole number of years later). years = that gap / 12 + 1.
+  const gap = endIndex - startIndex;
+  if (gap < 0 || gap % 12 !== 0) return false;
 
-  return isValidAnnualYears(forecastStartMonth, totalMonths, startMonth, span / 12);
+  return isValidAnnualYears(forecastStartMonth, totalMonths, startMonth, gap / 12 + 1);
 }

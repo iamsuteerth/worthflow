@@ -412,7 +412,7 @@ When adding a recurring expense (in the Builder or the Scenario Lab), choose:
 * **Monthly** — define a Start Month and End Month; the amount is charged every month in that range.
 * **Annual** — define a Start Month and a **Number of Years**; the amount is charged once per year, on the anniversary of the start month, for that many years.
 
-The number of years you can choose is capped by how much of the forecast horizon remains from the start month. If fewer than 12 months remain, Annual isn't available for that start month and you'll see an explanatory message. Choosing more years than fit in the remaining horizon is also blocked.
+The number of years you can choose is capped by how many yearly charges fit inside the forecast: a charge lands on each anniversary of the start month, and every charge must fall within the horizon — only the charge months need to fit, not a full trailing year. So Annual is available from any start month in the window (down to a single charge in the final month), and choosing more years than fit is blocked with an explanatory message.
 
 # 9. Understanding Overrides
 
@@ -634,7 +634,7 @@ Useful for:
 
 ## Import Plan
 
-Restores a previously exported `.wfplan` file. Imported plans are validated before loading.
+Restores a previously exported `.wfplan` file. Imported plans are validated before loading. If a loaded or imported plan has any investment account or event that falls **outside its forecast window** (for example, after its start month was moved), it opens in the **Builder** with a notice so you can bring those items back into range and regenerate — rather than showing a forecast built on out-of-range data.
 
 # 13. Data & Privacy
 

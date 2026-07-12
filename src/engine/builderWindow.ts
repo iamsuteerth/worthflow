@@ -74,6 +74,8 @@ function findOutOfWindow(input: WindowInputs): OutOfWindowItem[] {
     }
   }
   for (const r of input.recurringExpenses ?? []) {
+    // Same validity rule the builder forms and plannerStore guard use — an ANNUAL range
+    // must additionally land on a whole number of years (isValidAnnualRange).
     const validRange =
       inWindow(r.startMonth, startMonth, end) &&
       inWindow(r.endMonth, startMonth, end) &&

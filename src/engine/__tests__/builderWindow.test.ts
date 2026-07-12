@@ -100,22 +100,39 @@ describe("findOutOfWindowItems", () => {
     expect(oob[0]).toMatchObject({ kind: "recurring", current: "2026-08 → 2027-12" });
   });
 
-  it("accepts a valid annual recurring range but flags an invalid one", () => {
-    const valid: BuilderState = {
-      ...baseState(),
-      recurringExpenses: [
-        { id: "ok", name: "Insurance", amount: 1000, startMonth: "2026-08" as never, endMonth: "2027-07" as never, frequency: "ANNUAL" },
-      ],
-    };
-    expect(findOutOfWindowItems(valid)).toEqual([]);
+  it("accepts an anniversary-aligned annual range and flags misaligned or out-of-window ones", () => {
+    // 24-month window: 2026-08 .. 2028-07.
+    const window24: BuilderState = { ...baseState(), totalMonths: 24 };
 
-    const bad: BuilderState = {
-      ...baseState(),
-      recurringExpenses: [
-        { id: "bad", name: "Insurance", amount: 1000, startMonth: "2026-08" as never, endMonth: "2026-11" as never, frequency: "ANNUAL" },
-      ],
-    };
-    expect(findOutOfWindowItems(bad).map((i) => i.kind)).toEqual(["recurring"]);
+    // Valid: two yearly charges, end exactly one year after start.
+    expect(
+      findOutOfWindowItems({
+        ...window24,
+        recurringExpenses: [
+          { id: "ok", name: "Insurance", amount: 1000, startMonth: "2026-08" as never, endMonth: "2027-08" as never, frequency: "ANNUAL" },
+        ],
+      })
+    ).toEqual([]);
+
+    // Invalid: both endpoints in window, but the end is not on an anniversary of the start.
+    expect(
+      findOutOfWindowItems({
+        ...window24,
+        recurringExpenses: [
+          { id: "bad1", name: "Insurance", amount: 1000, startMonth: "2026-08" as never, endMonth: "2027-01" as never, frequency: "ANNUAL" },
+        ],
+      }).map((i) => i.kind)
+    ).toEqual(["recurring"]);
+
+    // Invalid: end past the window end (2028-07).
+    expect(
+      findOutOfWindowItems({
+        ...window24,
+        recurringExpenses: [
+          { id: "bad2", name: "Insurance", amount: 1000, startMonth: "2026-08" as never, endMonth: "2028-08" as never, frequency: "ANNUAL" },
+        ],
+      }).map((i) => i.kind)
+    ).toEqual(["recurring"]);
   });
 
   it("never flags FD/RD instruments even when they start before the window", () => {

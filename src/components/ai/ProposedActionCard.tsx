@@ -65,12 +65,17 @@ export default function ProposedActionCard({ message }: Props) {
   // user hasn't dismissed it.
   const actionable = !applied && !dismissed;
 
+  // config/overrides aren't read directly here — checkFeasibility/dryRun pull the live plan
+  // via getState(). They stay in the deps as the recompute trigger, so the exhaustive-deps
+  // "unnecessary dependency" warning is expected and suppressed.
   const feasibility = useMemo(
     () => (action && actionable ? checkFeasibility(action) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [action, actionable, config, overrides],
   );
   const delta = useMemo(
     () => (action && actionable && feasibility?.feasible ? dryRun(action) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [action, actionable, feasibility, config, overrides],
   );
 
