@@ -5,6 +5,8 @@ import { simulate } from '@/engine/simulate'
 import { calculateChecksum } from '@/engine/checksum'
 import { encodeBase64 } from '@/engine/base64'
 import { importPlan } from '@/engine/importPlan'
+import { planHasOutOfWindowItems } from '@/engine/builderWindow'
+import { notifyPlanOutOfWindow } from '@/lib/cloudNotifications'
 import { usePlannerStore } from '@/store/plannerStore'
 import {
   loadManifest,
@@ -61,11 +63,14 @@ interface CloudStore {
   deleteSave: (key: string) => Promise<void>
 }
 
-async function applySaveToPlanner(key: string): Promise<void> {
+// Returns true when the loaded plan has accounts/events outside its forecast window,
+// so callers route it to the builder to fix instead of the (wrong) forecast.
+async function applySaveToPlanner(key: string): Promise<boolean> {
   const content = await downloadSave(key)
   const file = new File([content], key, { type: 'application/octet-stream' })
   const result = await importPlan(file)
   usePlannerStore.getState().loadPlan(result.baseConfig, result.overrides, result.savedScenarios, result.history)
+  return planHasOutOfWindowItems(result.baseConfig)
 }
 
 async function serializePlan(): Promise<string> {
@@ -134,8 +139,13 @@ export const useCloudStore = create<CloudStore>((set) => ({
       const latest = [...saves].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )[0]
-      await applySaveToPlanner(latest.key)
-      planner.setActiveView('forecast')
+      const outOfWindow = await applySaveToPlanner(latest.key)
+      if (outOfWindow) {
+        planner.setActiveView('builder')
+        notifyPlanOutOfWindow()
+      } else {
+        planner.setActiveView('forecast')
+      }
       return true
     } catch {
       usePlannerStore.getState().setActiveView('builder')
@@ -200,7 +210,11 @@ export const useCloudStore = create<CloudStore>((set) => ({
   },
 
   loadSave: async (key) => {
-    await applySaveToPlanner(key)
+    const outOfWindow = await applySaveToPlanner(key)
+    if (outOfWindow) {
+      usePlannerStore.getState().setActiveView('builder')
+      notifyPlanOutOfWindow()
+    }
   },
 
   downloadSave: async (key, label) => {

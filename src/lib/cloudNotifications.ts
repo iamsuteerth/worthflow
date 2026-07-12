@@ -24,3 +24,12 @@ export function notifyGeneratedNudge() {
     message: "Forecast generated. Open Profile → Save to keep it as a new cloud plan.",
   });
 }
+
+export function notifyPlanOutOfWindow() {
+  notifications.show({
+    color: "yellow",
+    title: "Plan opened in the builder",
+    message:
+      "Some accounts or events fall outside this plan's forecast window. Adjust them (or the timeline) and regenerate.",
+  });
+}

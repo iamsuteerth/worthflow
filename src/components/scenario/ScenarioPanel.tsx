@@ -25,6 +25,8 @@ import { useRef, useState } from "react";
 import { notifications } from "@mantine/notifications";
 import { exportPlan } from "@/engine/exportPlan";
 import { importPlan } from "@/engine/importPlan";
+import { planHasOutOfWindowItems } from "@/engine/builderWindow";
+import { notifyPlanOutOfWindow } from "@/lib/cloudNotifications";
 import { usePlannerStore } from "@/store/plannerStore";
 import { useUiStore } from "@/store/uiStore";
 
@@ -158,7 +160,12 @@ export default function ScenarioPanel() {
     try {
       const plan = await importPlan(file);
       loadPlan(plan.baseConfig, plan.overrides, plan.savedScenarios, plan.history);
-      notifications.show({ color: "teal", title: "Plan imported", message: "Scenario restored successfully" });
+      if (planHasOutOfWindowItems(plan.baseConfig)) {
+        usePlannerStore.getState().setActiveView("builder");
+        notifyPlanOutOfWindow();
+      } else {
+        notifications.show({ color: "teal", title: "Plan imported", message: "Scenario restored successfully" });
+      }
     } catch {
       notifications.show({ color: "red", title: "Import failed", message: "Invalid plan file" });
     }
