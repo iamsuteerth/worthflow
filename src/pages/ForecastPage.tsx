@@ -1,23 +1,12 @@
-import { useEffect } from "react";
-
 import SummaryCards from "@/components/SummaryCards";
 import NetWorthChart from "@/components/charts/NetWorthChart";
 import DashboardTabs from "@/components/dashboard/DashboardTabs";
 import ScenarioBanner from "@/components/scenario/ScenarioBanner";
-import { usePrefsStore } from "@/store/prefsStore";
-import { startForecastTour } from "@/components/onboarding/forecastTour";
 
+// The forecast tour is not started here: it would fire for existing users the moment they
+// load a saved plan. Instead it greets a brand-new user right after they generate their first
+// plan (see ReviewStep.handleGenerate), and can be replayed from the Tutorials menu.
 export default function ForecastPage() {
-  const hasSeenForecastTour = usePrefsStore((s) => s.hasSeenForecastTour);
-
-  // First visit only: run the tour once the page has painted. (Marked seen on finish/close.)
-  // Replays are triggered from the Tutorials modal in the header.
-  useEffect(() => {
-    if (hasSeenForecastTour) return;
-    const t = window.setTimeout(() => startForecastTour(), 500);
-    return () => window.clearTimeout(t);
-  }, [hasSeenForecastTour]);
-
   return (
     <>
       <SummaryCards />

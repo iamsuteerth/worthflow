@@ -39,6 +39,8 @@ import { findOutOfWindowItems, type OutOfWindowKind } from "@/engine/builderWind
 import { useBuilderStore } from "@/store/builderStore";
 import { usePlannerStore } from "@/store/plannerStore";
 import { useCloudStore, defaultPlanLabel } from "@/store/cloudStore";
+import { usePrefsStore } from "@/store/prefsStore";
+import { startForecastTour } from "@/components/onboarding/forecastTour";
 import { useDisclosure } from "@mantine/hooks";
 import {
   notifyCloudSaved,
@@ -167,6 +169,12 @@ export default function ReviewStep() {
     setActiveView("forecast");
 
     const { saves, initialLoadFailed, uploadCurrentPlan } = useCloudStore.getState();
+
+    // Greet a brand-new user the first time they generate a plan (no saves yet), once ever.
+    // Existing users load a saved plan instead of generating, so they are never interrupted.
+    if (saves.length === 0 && !usePrefsStore.getState().hasSeenForecastTour) {
+      window.setTimeout(() => startForecastTour(), 700);
+    }
 
     if (!initialLoadFailed && saves.length === 0) {
       try {
