@@ -123,7 +123,6 @@ function SectionButton({ icon: Icon, label, active, onClick }: {
 function FormBox({ children }: { children: React.ReactNode }) {
   return (
     <Box
-      data-tour="sl-form"
       style={{
         background: "var(--mantine-color-body)",
         border: "1px solid var(--mantine-color-default-border)",
@@ -212,7 +211,7 @@ export default function ScenarioPanel() {
 
       {/* ── Expenses ── */}
       {section === "expenses" && (
-        <Stack gap="md">
+        <Stack gap="md" data-tour="sl-tab">
           <Group gap={6} wrap="wrap">
             <Chip label="Expense"           active={expenseSub === "expense"}          onClick={() => setExpenseSub("expense")} />
             <Chip label="Recurring"         active={expenseSub === "recurring"}        onClick={() => setExpenseSub("recurring")} />
@@ -230,7 +229,7 @@ export default function ScenarioPanel() {
 
       {/* ── Cash Events ── */}
       {section === "cashEvents" && (
-        <Stack gap="md">
+        <Stack gap="md" data-tour="sl-tab">
           <Group gap={6} wrap="wrap">
             <Chip label="Salary change" active={cashEventsSub === "salary"}      onClick={() => setCashEventsSub("salary")} />
             <Chip label="Bonus"         active={cashEventsSub === "bonus"}       onClick={() => setCashEventsSub("bonus")} />
@@ -246,7 +245,7 @@ export default function ScenarioPanel() {
 
       {/* ── Investments ── */}
       {section === "investments" && (
-        <Stack gap="md">
+        <Stack gap="md" data-tour="sl-tab">
           <Group gap={6} wrap="wrap">
             <Chip label="New Account"     active={investmentSub === "account"}        onClick={() => setInvestmentSub("account")} />
             <Chip label="Amount Override" active={investmentSub === "amountOverride"} onClick={() => setInvestmentSub("amountOverride")} />
@@ -265,15 +264,15 @@ export default function ScenarioPanel() {
       )}
 
       {section === "fd" && (
-        <FormBox><AddFdForm /></FormBox>
+        <Box data-tour="sl-tab"><FormBox><AddFdForm /></FormBox></Box>
       )}
 
       {section === "rd" && (
-        <FormBox><AddRdForm /></FormBox>
+        <Box data-tour="sl-tab"><FormBox><AddRdForm /></FormBox></Box>
       )}
 
       {section === "events" && (
-        <Stack gap="md">
+        <Stack gap="md" data-tour="sl-tab">
           <Group justify="space-between" align="flex-start" wrap="wrap" gap="xs">
             <Text size="sm" c="dimmed" style={{ flex: 1, minWidth: 0 }}>
               All active scenario modifications. Edit or delete individual events.
@@ -340,7 +339,7 @@ export default function ScenarioPanel() {
       <SavedScenarios />
 
       <Divider />
-      <ActiveInstruments />
+      <Box data-tour="sl-active"><ActiveInstruments /></Box>
 
       <Divider />
     </Stack>

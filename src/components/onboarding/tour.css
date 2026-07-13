@@ -7,7 +7,8 @@
   border: 1px solid var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-md);
   box-shadow: var(--mantine-shadow-lg);
-  max-width: 320px;
+  /* Fit within the smallest phones (leaves a 16px gutter each side) up to a 320px cap. */
+  max-width: min(320px, calc(100vw - 32px));
 }
 
 .driver-popover.wf-tour,

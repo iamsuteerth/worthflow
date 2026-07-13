@@ -1,84 +1,155 @@
-import { driver, type DriveStep } from "driver.js";
-import "driver.js/dist/driver.css";
-import "@/components/onboarding/tour.css";
+import type { DriveStep } from "driver.js";
 
-// A walkthrough of the Scenario Lab drawer. Targets are always-present drawer elements
-// (`data-tour="sl-…"`), so the tour needs no mid-flight section switching — the caller just
-// opens the Lab on a form-bearing section first (see TutorialModal). Themed via tour.css.
+import { runTour } from "@/components/onboarding/driveTour";
+import { useUiStore } from "@/store/uiStore";
+
+type Section = "expenses" | "cashEvents" | "investments" | "fd" | "rd" | "events";
+
+// The tour walks every tab of the Scenario Lab. Each tab renders under the same
+// `data-tour="sl-tab"` anchor (only one section is mounted at a time), so the tour switches
+// the active section as it advances rather than filtering steps. Non-tab targets
+// (sl-sections, sl-saved, sl-active, sl-actions) are always present while the Lab is open.
 const STEPS: DriveStep[] = [
   {
     popover: {
-      title: "The Scenario Lab",
+      title: "Scenario Lab",
       description:
-        "Your what-if sandbox — model changes on top of your saved plan without touching it. Reset wipes them whenever you like.",
+        "Test changes on top of your saved plan. Nothing here touches the plan until you rebuild it in the Builder, and Reset clears it whenever you like.",
     },
   },
   {
     element: '[data-tour="sl-sections"]',
     popover: {
-      title: "Pick a category",
-      description:
-        "Add or tweak Expenses, Cash, Investments, FD or RD — and open Events to see and edit everything you've added.",
+      title: "Six tabs",
+      description: "Each tab groups one kind of change. Here is what every tab covers.",
     },
   },
   {
-    element: '[data-tour="sl-form"]',
+    element: '[data-tour="sl-tab"]',
     popover: {
-      title: "Changes apply instantly",
-      description:
-        "Fill a form — a salary change, a new recurring bill, an FD — and your forecast and net-worth chart update behind this panel.",
+      title: "Expenses",
+      description: "One off expenses, recurring bills, credit card payments, and a spending override for a date range.",
+    },
+  },
+  {
+    element: '[data-tour="sl-tab"]',
+    popover: {
+      title: "Cash",
+      description: "Salary changes, one off bonuses, and an opening cash adjustment.",
+    },
+  },
+  {
+    element: '[data-tour="sl-tab"]',
+    popover: {
+      title: "Investments",
+      description: "A new investment account, contribution and return overrides, and one off deposits or withdrawals.",
+    },
+  },
+  {
+    element: '[data-tour="sl-tab"]',
+    popover: {
+      title: "FD",
+      description: "A fixed deposit set by its amount, interest rate, and term.",
+    },
+  },
+  {
+    element: '[data-tour="sl-tab"]',
+    popover: {
+      title: "RD",
+      description: "A recurring deposit funded every month over a fixed term.",
+    },
+  },
+  {
+    element: '[data-tour="sl-tab"]',
+    popover: {
+      title: "Events",
+      description: "Every change you have added, grouped by type and ready to edit or remove.",
     },
   },
   {
     element: '[data-tour="sl-saved"]',
     popover: {
-      title: "Save & switch scenarios",
-      description:
-        "Save your what-ifs as a named scenario, then switch between saved scenarios to compare them side by side.",
+      title: "Saved scenarios",
+      description: "Save the current changes under a name, then switch between saved scenarios to compare them.",
+    },
+  },
+  {
+    element: '[data-tour="sl-active"]',
+    popover: {
+      title: "Active instruments",
+      description: "The fixed and recurring deposits in this scenario, with principal, interest, and maturity value.",
     },
   },
   {
     element: '[data-tour="sl-actions"]',
     popover: {
-      title: "Back up, restore or reset",
-      description:
-        "Export a full snapshot to keep or move your plan, import one to restore it, or Reset to clear every change back to your baseline.",
+      title: "Import, export, reset",
+      description: "Export a snapshot to back up or move your plan, import one to restore it, or reset to your baseline.",
     },
   },
   {
     popover: {
-      title: "That's the Lab",
-      description: "Make a scenario permanent later by rebuilding it as your base plan in the Builder.",
+      title: "Make it permanent",
+      description: "To keep a scenario for good, rebuild it as your base plan in the Builder.",
     },
   },
 ];
 
-function stepsPresentInDom(): DriveStep[] {
-  return STEPS.filter((step) => {
-    const selector = typeof step.element === "string" ? step.element : null;
-    return !selector || document.querySelector(selector) !== null;
+// The section each step needs active (null = leave the section as it is).
+const SECTION_BY_STEP: (Section | null)[] = [
+  null, // 0  intro
+  null, // 1  tabs overview
+  "expenses", // 2
+  "cashEvents", // 3
+  "investments", // 4
+  "fd", // 5
+  "rd", // 6
+  "events", // 7
+  null, // 8  saved
+  null, // 9  active instruments
+  null, // 10 import / export / reset
+  null, // 11 outro
+];
+
+// Set the section for a target step; returns true if it actually changed (so the caller waits
+// for the re-render before moving).
+function applySection(index: number): boolean {
+  const section = SECTION_BY_STEP[index];
+  if (section && useUiStore.getState().scenarioSection !== section) {
+    useUiStore.getState().setScenarioSection(section);
+    return true;
+  }
+  return false;
+}
+
+function run(): void {
+  runTour(STEPS, {
+    onNextClick: (_element, _step, { driver }) => {
+      const next = (driver.getActiveIndex() ?? 0) + 1;
+      if (applySection(next)) {
+        window.setTimeout(() => driver.moveNext(), 150);
+      } else {
+        driver.moveNext();
+      }
+    },
+    onPrevClick: (_element, _step, { driver }) => {
+      const prev = (driver.getActiveIndex() ?? 0) - 1;
+      if (applySection(prev)) {
+        window.setTimeout(() => driver.movePrevious(), 150);
+      } else {
+        driver.movePrevious();
+      }
+    },
   });
 }
 
-function run(steps: DriveStep[]): void {
-  driver({
-    showProgress: true,
-    popoverClass: "wf-tour",
-    stageRadius: 8,
-    stagePadding: 8,
-    steps,
-  }).drive();
-}
-
 export function startScenarioTour(): void {
-  const steps = stepsPresentInDom();
-  if (steps.some((s) => typeof s.element === "string")) {
-    run(steps);
+  if (document.querySelector('[data-tour="sl-sections"]')) {
+    run();
     return;
   }
   // The Lab may still be mounting (lazy chunk / open animation) — retry once shortly.
   window.setTimeout(() => {
-    const retry = stepsPresentInDom();
-    if (retry.some((s) => typeof s.element === "string")) run(retry);
+    if (document.querySelector('[data-tour="sl-sections"]')) run();
   }, 400);
 }
