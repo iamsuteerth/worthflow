@@ -1,7 +1,7 @@
 {
   "name": "worth-flow",
   "private": true,
-  "version": "3.5.3",
+  "version": "3.5.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -24,6 +24,7 @@
     "@mantine/notifications": "^9.3.1",
     "@tabler/icons-react": "^3.44.0",
     "aws-amplify": "^6.18.0",
+    "driver.js": "^1.6.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-markdown": "^10.1.0",

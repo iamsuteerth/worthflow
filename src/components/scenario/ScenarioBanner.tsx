@@ -45,7 +45,7 @@ export default function ScenarioBanner() {
   }
 
   return (
-    <Card withBorder radius="lg" p="sm" mt="md">
+    <Card data-tour="scenario" withBorder radius="lg" p="sm" mt="md">
       <Group justify="space-between" wrap="nowrap" mb={hasChanges ? "xs" : 0}>
         <UnstyledButton onClick={() => navigateToEvents()}>
           <Group gap="xs" wrap="nowrap">

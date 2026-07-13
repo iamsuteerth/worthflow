@@ -22,7 +22,7 @@ export default function SummaryCards() {
   const { summary } = result;
 
   return (
-    <Grid>
+    <Grid data-tour="summary">
       <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
         <StatCard
           title="Net Worth"

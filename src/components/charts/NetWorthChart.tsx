@@ -185,7 +185,7 @@ export default function NetWorthChart() {
   });
 
   return (
-    <Card mt="lg" radius="lg" shadow="sm" withBorder p="lg" style={{ minWidth: 0 }}>
+    <Card data-tour="networth" mt="lg" radius="lg" shadow="sm" withBorder p="lg" style={{ minWidth: 0 }}>
       <Stack gap="md" style={{ minWidth: 0 }}>
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
           <Stack gap={2}>

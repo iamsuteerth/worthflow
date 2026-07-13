@@ -1,0 +1,87 @@
+/* Theme the driver.js tour to match Mantine. All values are Mantine CSS variables, which
+   auto-adapt to the active colour scheme, so the popover is consistent in light and dark. */
+
+.driver-popover.wf-tour {
+  background-color: var(--mantine-color-body);
+  color: var(--mantine-color-text);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  box-shadow: var(--mantine-shadow-lg);
+  max-width: 320px;
+}
+
+.driver-popover.wf-tour,
+.driver-popover.wf-tour * {
+  font-family: var(--mantine-font-family);
+}
+
+.driver-popover.wf-tour .driver-popover-title {
+  color: var(--mantine-color-text);
+  font-size: var(--mantine-font-size-md);
+  font-weight: 700;
+}
+
+.driver-popover.wf-tour .driver-popover-description {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+}
+
+.driver-popover.wf-tour .driver-popover-progress-text {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+}
+
+.driver-popover.wf-tour .driver-popover-close-btn {
+  color: var(--mantine-color-dimmed);
+}
+.driver-popover.wf-tour .driver-popover-close-btn:hover,
+.driver-popover.wf-tour .driver-popover-close-btn:focus {
+  color: var(--mantine-color-text);
+}
+
+/* Footer buttons share a base; Prev is subtle/outline, Next is brand-filled. */
+.driver-popover.wf-tour .driver-popover-footer-btn {
+  border-radius: var(--mantine-radius-sm);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  padding: 4px 12px;
+  text-shadow: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.driver-popover.wf-tour .driver-popover-prev-btn {
+  background-color: transparent;
+  color: var(--mantine-color-text);
+  border: 1px solid var(--mantine-color-default-border);
+}
+.driver-popover.wf-tour .driver-popover-prev-btn:hover {
+  background-color: var(--mantine-color-default-hover);
+}
+
+.driver-popover.wf-tour .driver-popover-next-btn {
+  background-color: var(--mantine-color-brand-filled);
+  color: var(--mantine-color-white);
+  border: 1px solid var(--mantine-color-brand-filled);
+}
+.driver-popover.wf-tour .driver-popover-next-btn:hover {
+  background-color: var(--mantine-color-brand-filled-hover);
+  border-color: var(--mantine-color-brand-filled-hover);
+}
+
+.driver-popover.wf-tour .driver-popover-btn-disabled {
+  opacity: 0.5;
+}
+
+/* Arrow: recolour the one border each side exposes so it matches the popover background. */
+.driver-popover.wf-tour .driver-popover-arrow-side-left {
+  border-left-color: var(--mantine-color-body);
+}
+.driver-popover.wf-tour .driver-popover-arrow-side-right {
+  border-right-color: var(--mantine-color-body);
+}
+.driver-popover.wf-tour .driver-popover-arrow-side-top {
+  border-top-color: var(--mantine-color-body);
+}
+.driver-popover.wf-tour .driver-popover-arrow-side-bottom {
+  border-bottom-color: var(--mantine-color-body);
+}

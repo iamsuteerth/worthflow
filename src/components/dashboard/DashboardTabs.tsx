@@ -62,7 +62,7 @@ export default function DashboardTabs() {
   }, [syncOverflow]);
 
   return (
-    <Card mt="lg" radius="lg" withBorder p={0} style={{ overflow: "hidden" }}>
+    <Card data-tour="tabs" mt="lg" radius="lg" withBorder p={0} style={{ overflow: "hidden" }}>
       <Tabs
         value={dashboardTab}
         onChange={(value) =>

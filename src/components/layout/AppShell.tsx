@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { lazy, Suspense } from "react";
 
 import {
+  ActionIcon,
   AppShell,
   Avatar,
   Burger,
@@ -11,9 +12,11 @@ import {
   Stack,
   Text,
   Title,
+  Tooltip,
   UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { IconHelpCircle } from "@tabler/icons-react";
 
 import { AI_ENABLED } from "@/lib/featureFlags";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -21,6 +24,7 @@ import { usePlannerStore } from "@/store/plannerStore";
 import { useUiStore } from "@/store/uiStore";
 import { useAuthStore } from "@/store/authStore";
 import { UserProfileModal } from "@/components/profile/UserProfileModal";
+import TutorialModal from "@/components/onboarding/TutorialModal";
 import { getInitials } from "@/utils/display";
 
 import ThemeToggle from "@/components/layout/ThemeToggle";
@@ -67,6 +71,7 @@ export default function PlannerShell({ children }: Props) {
 
   const [profileOpened, { open: openProfile, close: closeProfile }] =
     useDisclosure(false);
+  const [helpOpened, { open: openHelp, close: closeHelp }] = useDisclosure(false);
 
   const initials = user ? getInitials(user.email) : "?";
 
@@ -101,6 +106,8 @@ export default function PlannerShell({ children }: Props) {
         onClose={closeProfile}
       />
 
+      <TutorialModal opened={helpOpened} onClose={closeHelp} />
+
       <AppShell
         header={{ height: 60 }}
         navbar={
@@ -122,6 +129,7 @@ export default function PlannerShell({ children }: Props) {
             <Group>
               {activeView === "forecast" && (
                 <Burger
+                  data-tour="scenario-lab"
                   opened={opened}
                   onClick={opened ? close : open}
                   size="sm"
@@ -135,6 +143,18 @@ export default function PlannerShell({ children }: Props) {
             </Group>
 
             <Group gap="xs">
+              <Tooltip label="Tutorials">
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="lg"
+                  aria-label="Tutorials"
+                  onClick={openHelp}
+                >
+                  <IconHelpCircle size={20} />
+                </ActionIcon>
+              </Tooltip>
+
               <ThemeToggle />
 
               <UnstyledButton
