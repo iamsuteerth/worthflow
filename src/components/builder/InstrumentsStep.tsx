@@ -1,28 +1,41 @@
-import type { MonthKey } from "@/types/simulation";
-
 import {
+  ActionIcon,
   Badge,
   Button,
   Card,
   Divider,
   Grid,
   Group,
-  NumberInput,
   Stack,
   Table,
   Text,
-  TextInput,
   ThemeIcon,
+  Tooltip,
 } from "@mantine/core";
 
-import { IconBuildingBank, IconPencil, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
+import { IconBuildingBank, IconPencil, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
 import { useBuilderStore } from "@/store/builderStore";
 import { forecastEndMonth } from "@/engine/dateUtils";
-import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
 import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
+import EditItemModal from "@/components/builder/EditItemModal";
+import {
+  FdFields,
+  RdFields,
+  type FdDraft,
+  type RdDraft,
+  emptyFdDraft,
+  emptyRdDraft,
+  fdDraftValid,
+  rdDraftValid,
+} from "@/components/builder/fields/InstrumentFields";
+
+type Editing =
+  | { id: string; kind: "FD"; draft: FdDraft }
+  | { id: string; kind: "RD"; draft: RdDraft }
+  | null;
 
 export default function InstrumentsStep() {
   const state = useBuilderStore((store) => store.state);
@@ -32,89 +45,44 @@ export default function InstrumentsStep() {
 
   const forecastEnd = forecastEndMonth(state.startMonth, state.totalMonths);
 
-  const [editingId, setEditingId] = useState<string | null>(null);
-
-  const [fdName, setFdName] = useState("");
-  const [fdPrincipal, setFdPrincipal] = useState(0);
-  const [fdRate, setFdRate] = useState(0);
-  const [fdDurationMonths, setFdDurationMonths] = useState(12);
-  const [fdStartMonth, setFdStartMonth] = useState<MonthKey>(state.startMonth);
-
-  const [rdName, setRdName] = useState("");
-  const [rdContribution, setRdContribution] = useState(0);
-  const [rdRate, setRdRate] = useState(0);
-  const [rdDurationMonths, setRdDurationMonths] = useState(12);
-  const [rdStartMonth, setRdStartMonth] = useState<MonthKey>(state.startMonth);
+  const [fdDraft, setFdDraft] = useState<FdDraft>(() => emptyFdDraft(state.startMonth));
+  const [rdDraft, setRdDraft] = useState<RdDraft>(() => emptyRdDraft(state.startMonth));
+  const [editing, setEditing] = useState<Editing>(null);
 
   const fds = state.instruments.filter((i) => i.type === "FD");
   const rds = state.instruments.filter((i) => i.type === "RD");
 
-  const editing = state.instruments.find((i) => i.id === editingId) ?? null;
-  const editingFd = editing?.type === "FD";
-  const editingRd = editing?.type === "RD";
-
-  function resetFd() {
-    setFdName("");
-    setFdPrincipal(0);
-    setFdRate(0);
-    setFdDurationMonths(12);
-    setFdStartMonth(state.startMonth);
-    if (editingFd) setEditingId(null);
+  function addFd() {
+    addInstrument({ id: crypto.randomUUID(), ...fdDraft });
+    setFdDraft(emptyFdDraft(state.startMonth));
   }
-
-  function resetRd() {
-    setRdName("");
-    setRdContribution(0);
-    setRdRate(0);
-    setRdDurationMonths(12);
-    setRdStartMonth(state.startMonth);
-    if (editingRd) setEditingId(null);
+  function addRd() {
+    addInstrument({ id: crypto.randomUUID(), ...rdDraft });
+    setRdDraft(emptyRdDraft(state.startMonth));
   }
 
   function startEdit(instrument: (typeof state.instruments)[number]) {
-    setEditingId(instrument.id);
     if (instrument.type === "FD") {
-      setFdName(instrument.name);
-      setFdPrincipal(instrument.principal);
-      setFdRate(instrument.rate);
-      setFdDurationMonths(instrument.durationMonths);
-      setFdStartMonth(instrument.startMonth);
+      const { id, ...draft } = instrument;
+      setEditing({ id, kind: "FD", draft });
     } else {
-      setRdName(instrument.name);
-      setRdContribution(instrument.monthlyContribution);
-      setRdRate(instrument.rate);
-      setRdDurationMonths(instrument.durationMonths);
-      setRdStartMonth(instrument.startMonth);
+      const { id, ...draft } = instrument;
+      setEditing({ id, kind: "RD", draft });
     }
   }
 
-  function submitFd() {
-    const fd = {
-      type: "FD" as const,
-      name: fdName,
-      principal: fdPrincipal,
-      rate: fdRate,
-      startMonth: fdStartMonth,
-      durationMonths: fdDurationMonths,
-    };
-    if (editingFd && editingId) updateInstrument({ id: editingId, ...fd });
-    else addInstrument({ id: crypto.randomUUID(), ...fd });
-    resetFd();
+  function saveEdit() {
+    if (!editing) return;
+    updateInstrument({ id: editing.id, ...editing.draft });
+    setEditing(null);
   }
 
-  function submitRd() {
-    const rd = {
-      type: "RD" as const,
-      name: rdName,
-      monthlyContribution: rdContribution,
-      rate: rdRate,
-      startMonth: rdStartMonth,
-      durationMonths: rdDurationMonths,
-    };
-    if (editingRd && editingId) updateInstrument({ id: editingId, ...rd });
-    else addInstrument({ id: crypto.randomUUID(), ...rd });
-    resetRd();
-  }
+  const editValid =
+    editing === null
+      ? false
+      : editing.kind === "FD"
+      ? fdDraftValid(editing.draft)
+      : rdDraftValid(editing.draft);
 
   return (
     <BuilderStepContainer>
@@ -129,165 +97,41 @@ export default function InstrumentsStep() {
 
       <Grid gap="md">
         <Grid.Col span={{ base: 12, md: 6 }}>
-          <Card
-            withBorder
-            radius="md"
-            p="lg"
-            h="100%"
-            style={{ borderLeft: "3px solid var(--mantine-color-cyan-5)" }}
-          >
+          <Card withBorder radius="md" p="lg" h="100%" style={{ borderLeft: "3px solid var(--mantine-color-cyan-5)" }}>
             <Group gap="xs" mb="md">
               <ThemeIcon variant="light" color="cyan" size="md" radius="md">
                 <IconBuildingBank size={16} />
               </ThemeIcon>
               <Text fw={600} size="sm">
-                {editingFd ? "Edit Fixed Deposit" : "Fixed Deposit"}
+                Fixed Deposit
               </Text>
             </Group>
             <Divider mb="md" />
             <Stack gap="sm">
-              <TextInput
-                label="Name"
-                placeholder="e.g. SBI FD"
-                value={fdName}
-                onChange={(e) => setFdName(e.currentTarget.value)}
-              />
-              <NumberInput
-                label="Principal"
-                value={fdPrincipal}
-                min={1}
-                thousandSeparator=","
-                prefix="₹"
-                onChange={(v) => setFdPrincipal(Number(v))}
-              />
-              <Grid gap="sm">
-                <Grid.Col span={6}>
-                  <NumberInput
-                    label="Interest Rate"
-                    value={fdRate}
-                    min={0}
-                    max={15}
-                    decimalScale={2}
-                    suffix="%"
-                    clampBehavior="strict"
-                    onChange={(v) => setFdRate(Number(v))}
-                  />
-                </Grid.Col>
-                <Grid.Col span={6}>
-                  <NumberInput
-                    label="Duration"
-                    value={fdDurationMonths}
-                    min={1}
-                    max={120}
-                    suffix=" mo"
-                    clampBehavior="strict"
-                    onChange={(v) => setFdDurationMonths(Number(v))}
-                  />
-                </Grid.Col>
-              </Grid>
-              <BuilderMonthSelect
-                label="Start Month"
-                value={fdStartMonth}
-                maxMonth={forecastEnd}
-                onChange={(value) => value && setFdStartMonth(value as MonthKey)}
-              />
-              <Group gap="xs">
-                <Button
-                  leftSection={editingFd ? <IconPencil size={16} /> : <IconPlus size={16} />}
-                  color="cyan"
-                  disabled={!fdName.trim() || fdPrincipal <= 0 || fdRate <= 0 || fdDurationMonths <= 0}
-                  onClick={submitFd}
-                >
-                  {editingFd ? "Save Changes" : "Add FD"}
-                </Button>
-                {editingFd && (
-                  <Button variant="default" leftSection={<IconX size={16} />} onClick={resetFd}>
-                    Cancel
-                  </Button>
-                )}
-              </Group>
+              <FdFields value={fdDraft} onChange={(patch) => setFdDraft((d) => ({ ...d, ...patch }))} maxMonth={forecastEnd} />
+              <Button leftSection={<IconPlus size={16} />} color="cyan" disabled={!fdDraftValid(fdDraft)} onClick={addFd}>
+                Add FD
+              </Button>
             </Stack>
           </Card>
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 6 }}>
-          <Card
-            withBorder
-            radius="md"
-            p="lg"
-            h="100%"
-            style={{ borderLeft: "3px solid var(--mantine-color-grape-5)" }}
-          >
+          <Card withBorder radius="md" p="lg" h="100%" style={{ borderLeft: "3px solid var(--mantine-color-grape-5)" }}>
             <Group gap="xs" mb="md">
               <ThemeIcon variant="light" color="grape" size="md" radius="md">
                 <IconRefresh size={16} />
               </ThemeIcon>
               <Text fw={600} size="sm">
-                {editingRd ? "Edit Recurring Deposit" : "Recurring Deposit"}
+                Recurring Deposit
               </Text>
             </Group>
             <Divider mb="md" />
             <Stack gap="sm">
-              <TextInput
-                label="Name"
-                placeholder="e.g. Post Office RD"
-                value={rdName}
-                onChange={(e) => setRdName(e.currentTarget.value)}
-              />
-              <NumberInput
-                label="Monthly Contribution"
-                value={rdContribution}
-                min={1}
-                thousandSeparator=","
-                prefix="₹"
-                onChange={(v) => setRdContribution(Number(v))}
-              />
-              <Grid gap="sm">
-                <Grid.Col span={6}>
-                  <NumberInput
-                    label="Interest Rate"
-                    value={rdRate}
-                    min={0}
-                    max={15}
-                    decimalScale={2}
-                    suffix="%"
-                    clampBehavior="strict"
-                    onChange={(v) => setRdRate(Number(v))}
-                  />
-                </Grid.Col>
-                <Grid.Col span={6}>
-                  <NumberInput
-                    label="Duration"
-                    value={rdDurationMonths}
-                    min={1}
-                    max={120}
-                    suffix=" mo"
-                    clampBehavior="strict"
-                    onChange={(v) => setRdDurationMonths(Number(v))}
-                  />
-                </Grid.Col>
-              </Grid>
-              <BuilderMonthSelect
-                label="Start Month"
-                value={rdStartMonth}
-                maxMonth={forecastEnd}
-                onChange={(value) => value && setRdStartMonth(value as MonthKey)}
-              />
-              <Group gap="xs">
-                <Button
-                  leftSection={editingRd ? <IconPencil size={16} /> : <IconPlus size={16} />}
-                  color="grape"
-                  disabled={!rdName.trim() || rdContribution <= 0 || rdRate <= 0 || rdDurationMonths <= 0}
-                  onClick={submitRd}
-                >
-                  {editingRd ? "Save Changes" : "Add RD"}
-                </Button>
-                {editingRd && (
-                  <Button variant="default" leftSection={<IconX size={16} />} onClick={resetRd}>
-                    Cancel
-                  </Button>
-                )}
-              </Group>
+              <RdFields value={rdDraft} onChange={(patch) => setRdDraft((d) => ({ ...d, ...patch }))} maxMonth={forecastEnd} />
+              <Button leftSection={<IconPlus size={16} />} color="grape" disabled={!rdDraftValid(rdDraft)} onClick={addRd}>
+                Add RD
+              </Button>
             </Stack>
           </Card>
         </Grid.Col>
@@ -331,11 +175,7 @@ export default function InstrumentsStep() {
               {state.instruments.map((instrument) => (
                 <Table.Tr key={instrument.id}>
                   <Table.Td>
-                    <Badge
-                      variant="light"
-                      color={instrument.type === "FD" ? "cyan" : "grape"}
-                      size="sm"
-                    >
+                    <Badge variant="light" color={instrument.type === "FD" ? "cyan" : "grape"} size="sm">
                       {instrument.type}
                     </Badge>
                   </Table.Td>
@@ -362,23 +202,16 @@ export default function InstrumentsStep() {
                   </Table.Td>
                   <Table.Td>
                     <Group gap={4} justify="flex-end" wrap="nowrap">
-                      <Button
-                        size="xs"
-                        variant="subtle"
-                        leftSection={<IconPencil size={14} />}
-                        onClick={() => startEdit(instrument)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        size="xs"
-                        color="red"
-                        variant="subtle"
-                        leftSection={<IconTrash size={14} />}
-                        onClick={() => removeInstrument(instrument.id)}
-                      >
-                        Remove
-                      </Button>
+                      <Tooltip label="Edit">
+                        <ActionIcon variant="subtle" aria-label="Edit" onClick={() => startEdit(instrument)}>
+                          <IconPencil size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label="Remove">
+                        <ActionIcon variant="subtle" color="red" aria-label="Remove" onClick={() => removeInstrument(instrument.id)}>
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Tooltip>
                     </Group>
                   </Table.Td>
                 </Table.Tr>
@@ -387,6 +220,29 @@ export default function InstrumentsStep() {
           </Table>
         )}
       </Card>
+
+      <EditItemModal
+        opened={editing !== null}
+        title={editing?.kind === "RD" ? "Edit Recurring Deposit" : "Edit Fixed Deposit"}
+        canSave={editValid}
+        onSave={saveEdit}
+        onClose={() => setEditing(null)}
+      >
+        {editing?.kind === "FD" && (
+          <FdFields
+            value={editing.draft}
+            onChange={(patch) => setEditing((e) => (e && e.kind === "FD" ? { ...e, draft: { ...e.draft, ...patch } } : e))}
+            maxMonth={forecastEnd}
+          />
+        )}
+        {editing?.kind === "RD" && (
+          <RdFields
+            value={editing.draft}
+            onChange={(patch) => setEditing((e) => (e && e.kind === "RD" ? { ...e, draft: { ...e.draft, ...patch } } : e))}
+            maxMonth={forecastEnd}
+          />
+        )}
+      </EditItemModal>
     </BuilderStepContainer>
   );
 }

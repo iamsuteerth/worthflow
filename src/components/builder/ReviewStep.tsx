@@ -181,7 +181,7 @@ export default function ReviewStep() {
   }
 
   return (
-    <Stack maw={800} mx="auto" mt="xl" mb="xl" gap="lg">
+    <Stack maw={1000} mx="auto" mt="xl" mb="xl" gap="lg">
       <Stack gap={4}>
         <Text fw={700} size="xl">
           Review & Generate

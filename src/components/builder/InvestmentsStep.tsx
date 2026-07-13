@@ -1,27 +1,31 @@
 import type { MonthKey } from "@/types/simulation";
 
 import {
+  ActionIcon,
   Badge,
   Button,
   Card,
   Divider,
-  Grid,
   Group,
-  NumberInput,
   Stack,
   Text,
-  TextInput,
   ThemeIcon,
+  Tooltip,
 } from "@mantine/core";
 
-import { IconAlertTriangle, IconChartLine, IconPencil, IconPlus, IconTrash, IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconChartLine, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
 import { useBuilderStore } from "@/store/builderStore";
 import { forecastEndMonth } from "@/engine/dateUtils";
-import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
 import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
+import EditItemModal from "@/components/builder/EditItemModal";
+import AccountFields, {
+  type AccountDraft,
+  accountDraftValid,
+  emptyAccountDraft,
+} from "@/components/builder/fields/AccountFields";
 
 export default function InvestmentsStep() {
   const state = useBuilderStore((store) => store.state);
@@ -32,48 +36,30 @@ export default function InvestmentsStep() {
   const forecastEnd = forecastEndMonth(state.startMonth, state.totalMonths);
   const outOfWindow = (month: MonthKey) => month < state.startMonth || month > forecastEnd;
 
+  const [addDraft, setAddDraft] = useState<AccountDraft>(() => emptyAccountDraft(state.startMonth));
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [name, setName] = useState("");
-  const [startMonth, setStartMonth] = useState<MonthKey>(state.startMonth);
-  const [openingBalance, setOpeningBalance] = useState(0);
-  const [defaultMonthlyContribution, setDefaultMonthlyContribution] = useState(0);
-  const [defaultAnnualReturn, setDefaultAnnualReturn] = useState(0);
+  const [editDraft, setEditDraft] = useState<AccountDraft>(() => emptyAccountDraft(state.startMonth));
 
-  const canAdd =
-    name.trim().length > 0 && (openingBalance > 0 || defaultMonthlyContribution > 0);
-
-  function resetForm() {
-    setEditingId(null);
-    setName("");
-    setStartMonth(state.startMonth);
-    setOpeningBalance(0);
-    setDefaultMonthlyContribution(0);
-    setDefaultAnnualReturn(0);
+  function submitAdd() {
+    addInvestmentAccount({ ...addDraft, name: addDraft.name.trim() });
+    setAddDraft(emptyAccountDraft(state.startMonth));
   }
 
   function startEdit(account: (typeof state.investmentAccounts)[number]) {
+    setEditDraft({
+      name: account.name,
+      startMonth: account.startMonth,
+      openingBalance: account.openingBalance,
+      defaultMonthlyContribution: account.defaultMonthlyContribution,
+      defaultAnnualReturn: account.defaultAnnualReturn,
+    });
     setEditingId(account.id);
-    setName(account.name);
-    setStartMonth(account.startMonth);
-    setOpeningBalance(account.openingBalance);
-    setDefaultMonthlyContribution(account.defaultMonthlyContribution);
-    setDefaultAnnualReturn(account.defaultAnnualReturn);
   }
 
-  function submit() {
-    const payload = {
-      name: name.trim(),
-      startMonth,
-      openingBalance,
-      defaultAnnualReturn,
-      defaultMonthlyContribution,
-    };
-    if (editingId) {
-      updateInvestmentAccount({ id: editingId, ...payload });
-    } else {
-      addInvestmentAccount(payload);
-    }
-    resetForm();
+  function saveEdit() {
+    if (!editingId) return;
+    updateInvestmentAccount({ id: editingId, ...editDraft, name: editDraft.name.trim() });
+    setEditingId(null);
   }
 
   return (
@@ -83,7 +69,7 @@ export default function InvestmentsStep() {
           Investment Accounts
         </Text>
         <Text size="sm" c="dimmed">
-          Every investment • Existing Portfolios, SIPs, or future lump sums are an account. 
+          Every investment • Existing Portfolios, SIPs, or future lump sums are an account.
         </Text>
       </Stack>
 
@@ -94,80 +80,22 @@ export default function InvestmentsStep() {
               <IconChartLine size={16} />
             </ThemeIcon>
             <Text fw={600} size="sm">
-              {editingId ? "Edit Account" : "Add Account"}
+              Add Account
             </Text>
           </Group>
 
           <Divider />
 
-          <Grid gap="md">
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <TextInput
-                label="Account Name"
-                placeholder="e.g. Nifty 50, Emergency Fund"
-                value={name}
-                onChange={(event) => setName(event.currentTarget.value)}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <BuilderMonthSelect
-                value={startMonth}
-                label="Start Month"
-                minMonth={state.startMonth}
-                maxMonth={forecastEnd}
-                onChange={(value) => {
-                  if (!value) return;
-                  setStartMonth(value as MonthKey);
-                }}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <NumberInput
-                label="Opening Balance"
-                value={openingBalance}
-                min={0}
-                thousandSeparator=","
-                prefix="₹"
-                onChange={(value) => setOpeningBalance(Number(value))}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <NumberInput
-                label="Default Monthly Contribution"
-                value={defaultMonthlyContribution}
-                min={0}
-                thousandSeparator=","
-                prefix="₹"
-                onChange={(value) => setDefaultMonthlyContribution(Number(value))}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6 }}>
-              <NumberInput
-                label="Default Annual Return"
-                value={defaultAnnualReturn}
-                min={-99.99}
-                max={1000}
-                decimalScale={2}
-                suffix="%"
-                onChange={(value) => setDefaultAnnualReturn(Number(value))}
-              />
-            </Grid.Col>
-          </Grid>
+          <AccountFields
+            value={addDraft}
+            onChange={(patch) => setAddDraft((d) => ({ ...d, ...patch }))}
+            minMonth={state.startMonth}
+            maxMonth={forecastEnd}
+          />
 
-          <Group gap="xs">
-            <Button
-              leftSection={editingId ? <IconPencil size={16} /> : <IconPlus size={16} />}
-              disabled={!canAdd}
-              onClick={submit}
-            >
-              {editingId ? "Save Changes" : "Add Account"}
-            </Button>
-            {editingId && (
-              <Button variant="default" leftSection={<IconX size={16} />} onClick={resetForm}>
-                Cancel
-              </Button>
-            )}
-          </Group>
+          <Button leftSection={<IconPlus size={16} />} disabled={!accountDraftValid(addDraft)} onClick={submitAdd}>
+            Add Account
+          </Button>
         </Stack>
       </Card>
 
@@ -217,23 +145,21 @@ export default function InvestmentsStep() {
                       </Text>
                     </Stack>
                     <Group gap={4}>
-                      <Button
-                        size="xs"
-                        variant="subtle"
-                        leftSection={<IconPencil size={14} />}
-                        onClick={() => startEdit(account)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        size="xs"
-                        color="red"
-                        variant="subtle"
-                        leftSection={<IconTrash size={14} />}
-                        onClick={() => removeInvestmentAccount(account.id)}
-                      >
-                        Remove
-                      </Button>
+                      <Tooltip label="Edit">
+                        <ActionIcon variant="subtle" aria-label="Edit" onClick={() => startEdit(account)}>
+                          <IconPencil size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label="Remove">
+                        <ActionIcon
+                          variant="subtle"
+                          color="red"
+                          aria-label="Remove"
+                          onClick={() => removeInvestmentAccount(account.id)}
+                        >
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Tooltip>
                     </Group>
                   </Group>
                 </Card>
@@ -255,6 +181,21 @@ export default function InvestmentsStep() {
           </Stack>
         </Card>
       )}
+
+      <EditItemModal
+        opened={editingId !== null}
+        title="Edit Account"
+        canSave={accountDraftValid(editDraft)}
+        onSave={saveEdit}
+        onClose={() => setEditingId(null)}
+      >
+        <AccountFields
+          value={editDraft}
+          onChange={(patch) => setEditDraft((d) => ({ ...d, ...patch }))}
+          minMonth={state.startMonth}
+          maxMonth={forecastEnd}
+        />
+      </EditItemModal>
     </BuilderStepContainer>
   );
 }
