@@ -17,7 +17,9 @@ A guided **Plan Builder** wizard walks you through setting up your starting poin
 5. **Instruments** — existing Fixed Deposits and Recurring Deposits
 6. **Review & Generate** — inspect a summary, export the config, and generate your forecast
 
-You can re-run the builder at any time to start a new plan from scratch.
+Every item you add can be **edited** in place (pencil icon) or removed. Accounts and events are kept inside the forecast window; if you move the timeline and something ends up outside it, Review offers a one-click **Move all into the window** fix. You can re-run the builder at any time to start a new plan from scratch.
+
+A first-time **guided tour** highlights the Forecast page after you generate your first plan, and a **Scenario Lab tour** walks through every tab of the Lab. Replay either from the **Tutorials** menu (the **?** button in the header).
 
 ### 📈 Forecast Your Finances
 

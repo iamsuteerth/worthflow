@@ -62,6 +62,10 @@ The planner works in two phases:
 
 You can switch between "Build Plan" and "Forecast" at any time using the tabs at the top of the app. Re-running the builder generates a brand-new plan. If you have active Scenario Lab changes, opening **Build Plan** asks whether to **Start from base** (the baseline only) or **Keep my edits** (fold your changes into the builder so you can turn them into a new base plan). A few things can't carry over — the builder captures your baseline only, so date-range overrides (spending, contribution, return) and investment deposits/withdrawals are left behind.
 
+## Guided Tours
+
+Two short walkthroughs highlight the main features. The **Forecast tour** runs automatically the first time you generate a plan, and the **Scenario Lab tour** steps through every tab of the Lab. You can replay either one at any time from the **Tutorials** menu, opened with the **?** button in the header next to the theme toggle.
+
 # 2. Core Concepts
 
 ## Base Plan
@@ -111,7 +115,7 @@ All charts, reports, and projections are generated within this period. Annual re
 
 # 3. The Plan Builder
 
-The Plan Builder is a six-step wizard that produces your Base Plan. Each step must be completed before moving to the next.
+The Plan Builder is a six-step wizard that produces your Base Plan. Each step must be completed before moving to the next. Anything you add (an account, an instrument, an event) can be **edited** later from its pencil icon, which opens a small form in a modal, or removed with the trash icon.
 
 ## Step 1: Forecast Timeline
 
@@ -138,19 +142,19 @@ Add any existing investment portfolios. For each account, provide:
 | Default Monthly Contribution | Regular SIP amount |
 | Default Annual Return | Expected annual growth rate (-99.99% to 1000%) |
 
-You can add multiple accounts and remove any you've added before moving on.
+You can add, edit, and remove accounts. An account whose start month falls outside the forecast window is flagged **Outside window** so you can fix it before generating.
 
 ## Step 4: Events
 
 Add any known future events that should be part of your Base Plan, across five categories:
 
 * **One-Off Expense** — month, label, amount
-* **Recurring Expense** — name, amount, and either **Monthly** (Start Month + End Month) or **Annual** (Start Month + Number of Years) frequency
+* **Recurring Expense** — name, amount, and either **Monthly** (Start Month + End Month) or **Annual** (Start Month + **How many times?**) frequency
 * **Credit Card Bill** — month, label, amount
 * **Bonus Income** — month, description, amount
 * **Salary Change** — effective month, description, new monthly income
 
-All added events appear together in a single sortable timeline table, with the option to remove any of them.
+All added events appear together in a single sortable timeline table, with the option to edit or remove any of them. An event that falls outside the forecast window is flagged **Outside**.
 
 ## Step 5: Instruments
 
@@ -159,13 +163,15 @@ Add any existing Fixed Deposits and Recurring Deposits:
 * **Fixed Deposit** — name, principal, rate (0–15%), duration (1–120 months), start month
 * **Recurring Deposit** — name, monthly contribution, rate, duration, start month
 
-You can add multiple FDs/RDs and remove any before moving on.
+You can add, edit, and remove FDs/RDs. Unlike accounts and events, an FD or RD may start before the forecast window; only the cashflow and maturity that land inside the window are counted.
 
 ## Step 6: Review & Generate
 
 Review a summary of everything you've entered — start month, duration, income, expenses, opening cash, number of investment accounts, number of events, and FD/RD counts — alongside the generated configuration (viewable as JSON, and exportable).
 
 Click **Generate Forecast** to build your plan and switch to the Forecast view.
+
+If any investment account or event falls **outside the forecast window** (for example after you change the start month or horizon on Step 1), Generate Forecast and Export are disabled and a **Move all into the window** button appears. One click pulls every stray item to the first month; you can also fix items individually with their pencil icon. FDs and RDs are exempt from this check.
 
 # 4. Managing Investment Accounts
 
