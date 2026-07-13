@@ -3,6 +3,7 @@ import { AI_ENABLED } from '@/lib/featureFlags'
 import { authService, type AuthUser } from '@/lib/auth'
 import { usePlannerStore } from '@/store/plannerStore'
 import { useCloudStore } from '@/store/cloudStore'
+import { usePrefsStore } from '@/store/prefsStore'
 
 interface AuthStore {
   user: AuthUser | null
@@ -49,6 +50,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({ user: null, authenticated: false })
     usePlannerStore.getState().resetForSignOut()
     useCloudStore.setState({ saves: [], savesError: null, initialLoadFailed: false })
+    // Clear the "seen the forecast tour" flag so the next person to sign in on this browser
+    // (a genuinely new user) is greeted, rather than inheriting the previous user's flag.
+    usePrefsStore.getState().resetForecastTour()
     if (AI_ENABLED) {
       const { useAiStore } = await import('@/store/aiStore')
       useAiStore.getState().clearForSignOut()

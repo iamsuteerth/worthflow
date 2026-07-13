@@ -1,12 +1,20 @@
+import { useEffect } from "react";
+
 import SummaryCards from "@/components/SummaryCards";
 import NetWorthChart from "@/components/charts/NetWorthChart";
 import DashboardTabs from "@/components/dashboard/DashboardTabs";
 import ScenarioBanner from "@/components/scenario/ScenarioBanner";
+import { runRequestedForecastTour } from "@/components/onboarding/forecastTour";
 
-// The forecast tour is not started here: it would fire for existing users the moment they
-// load a saved plan. Instead it greets a brand-new user right after they generate their first
-// plan (see ReviewStep.handleGenerate), and can be replayed from the Tutorials menu.
 export default function ForecastPage() {
+  // Runs the forecast tour only if one was requested when a new user generated their first
+  // plan (see ReviewStep). This fires the moment the lazy forecast page mounts, so it is
+  // robust to how long the chunk took to load. For an existing user loading a saved plan no
+  // request is pending, so nothing happens.
+  useEffect(() => {
+    runRequestedForecastTour();
+  }, []);
+
   return (
     <>
       <SummaryCards />

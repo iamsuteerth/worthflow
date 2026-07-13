@@ -144,12 +144,15 @@ function run(): void {
 }
 
 export function startScenarioTour(): void {
-  if (document.querySelector('[data-tour="sl-sections"]')) {
-    run();
-    return;
-  }
-  // The Lab may still be mounting (lazy chunk / open animation) — retry once shortly.
-  window.setTimeout(() => {
-    if (document.querySelector('[data-tour="sl-sections"]')) run();
-  }, 400);
+  // The Lab is lazy-loaded and opens with an animation, so poll until it is on screen rather
+  // than guessing a single delay. This keeps the tour reliable on slow or flaky connections.
+  let attempts = 0;
+  const tick = () => {
+    if (document.querySelector('[data-tour="sl-sections"]')) {
+      run();
+      return;
+    }
+    if (attempts++ < 30) window.setTimeout(tick, 200); // up to ~6s
+  };
+  tick();
 }

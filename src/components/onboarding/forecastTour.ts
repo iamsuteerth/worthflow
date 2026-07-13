@@ -44,12 +44,43 @@ const STEPS: DriveStep[] = [
   },
 ];
 
-export function startForecastTour(): void {
-  const steps = STEPS.filter((step) => {
+function stepsPresentInDom(): DriveStep[] {
+  return STEPS.filter((step) => {
     const selector = typeof step.element === "string" ? step.element : null;
     return !selector || document.querySelector(selector) !== null;
   });
-  if (steps.length === 0) return;
+}
 
-  runTour(steps, { onDestroyed: () => usePrefsStore.getState().markForecastTourSeen() });
+function markSeen() {
+  usePrefsStore.getState().markForecastTourSeen();
+}
+
+export function startForecastTour(): void {
+  const steps = stepsPresentInDom();
+  if (steps.some((s) => typeof s.element === "string")) {
+    runTour(steps, { onDestroyed: markSeen });
+    return;
+  }
+  // Targets not painted yet (e.g. a slow lazy chunk) — retry once shortly.
+  window.setTimeout(() => {
+    const retry = stepsPresentInDom();
+    if (retry.some((s) => typeof s.element === "string")) runTour(retry, { onDestroyed: markSeen });
+  }, 400);
+}
+
+// One-shot request, set when a brand-new user generates their first plan and consumed when the
+// (lazy-loaded) forecast page actually mounts. This makes the greeting event-driven rather than
+// timer-driven, so it opens whenever the page appears — no matter how long the chunk took to
+// load on a slow or flaky connection.
+let pending = false;
+
+export function requestForecastTour(): void {
+  pending = true;
+}
+
+export function runRequestedForecastTour(): void {
+  if (!pending) return;
+  pending = false;
+  // The page has just mounted; a short beat lets the view transition settle before the overlay.
+  window.setTimeout(() => startForecastTour(), 400);
 }
