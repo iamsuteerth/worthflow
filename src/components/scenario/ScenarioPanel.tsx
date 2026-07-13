@@ -123,6 +123,7 @@ function SectionButton({ icon: Icon, label, active, onClick }: {
 function FormBox({ children }: { children: React.ReactNode }) {
   return (
     <Box
+      data-tour="sl-form"
       style={{
         background: "var(--mantine-color-body)",
         border: "1px solid var(--mantine-color-default-border)",
@@ -194,7 +195,7 @@ export default function ScenarioPanel() {
     <Stack gap="lg">
 
       {/* ── Section switcher ── */}
-      <Box style={{
+      <Box data-tour="sl-sections" style={{
         padding: 4,
         borderRadius: "var(--mantine-radius-lg)",
         background: "var(--mantine-color-default-hover)",
@@ -323,7 +324,7 @@ export default function ScenarioPanel() {
           e.target.value = "";
         }}
       />
-      <Group grow gap={8}>
+      <Group grow gap={8} data-tour="sl-actions">
         <Button variant="default" leftSection={<IconUpload size={14} />} onClick={() => fileInputRef.current?.click()}>
           Import
         </Button>

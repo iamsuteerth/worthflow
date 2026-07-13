@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
 
-import { Badge, Button, Card, Group, Modal, Stack, Text, ThemeIcon } from "@mantine/core";
+import { Button, Card, Group, Modal, Stack, Text, ThemeIcon } from "@mantine/core";
 import { IconChartLine, IconFlask, IconPlayerPlay } from "@tabler/icons-react";
 
 import { usePlannerStore } from "@/store/plannerStore";
+import { useUiStore } from "@/store/uiStore";
 import { startForecastTour } from "@/components/onboarding/forecastTour";
+import { startScenarioTour } from "@/components/onboarding/scenarioTour";
 
 interface Props {
   opened: boolean;
@@ -48,12 +50,24 @@ function TourRow({
 
 export default function TutorialModal({ opened, onClose }: Props) {
   const setActiveView = usePlannerStore((s) => s.setActiveView);
+  const openScenarioDrawer = useUiStore((s) => s.openScenarioDrawer);
+  const setScenarioSection = useUiStore((s) => s.setScenarioSection);
 
   function replayForecast() {
     onClose();
     // Ensure the forecast page is showing (its targets must exist), then start once painted.
     setActiveView("forecast");
     window.setTimeout(() => startForecastTour(), 500);
+  }
+
+  function replayScenario() {
+    onClose();
+    // The Lab lives on the forecast view; open it on a form-bearing section so every target
+    // exists, then start once it has rendered.
+    setActiveView("forecast");
+    openScenarioDrawer();
+    setScenarioSection("expenses");
+    window.setTimeout(() => startScenarioTour(), 550);
   }
 
   return (
@@ -81,9 +95,9 @@ export default function TutorialModal({ opened, onClose }: Props) {
           title="Scenario Lab"
           description="Build what-ifs, save named scenarios and compare them against your base plan."
           action={
-            <Badge variant="light" color="gray" style={{ flexShrink: 0 }}>
-              Coming soon
-            </Badge>
+            <Button size="xs" color="violet" leftSection={<IconPlayerPlay size={14} />} onClick={replayScenario} style={{ flexShrink: 0 }}>
+              Start
+            </Button>
           }
         />
       </Stack>

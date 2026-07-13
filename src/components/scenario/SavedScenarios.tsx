@@ -126,7 +126,7 @@ export default function SavedScenarios() {
         </Stack>
       </Modal>
 
-      <Stack gap="sm">
+      <Stack gap="sm" data-tour="sl-saved">
         <Group justify="space-between">
           <Text fw={600} size="sm">Saved Scenarios</Text>
           <Button
