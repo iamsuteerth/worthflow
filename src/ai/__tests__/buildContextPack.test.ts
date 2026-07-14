@@ -64,6 +64,8 @@ describe('buildContextPack — series labels', () => {
     expect(p.series.recurring.length).toBe(p.series.months);
     expect(p.series.creditCard.length).toBe(p.series.months);
     expect(p.series.investing.length).toBe(p.series.months);
+    expect(p.series.proceeds.length).toBe(p.series.months);
+    expect(p.series.instrumentFlow.length).toBe(p.series.months);
     expect(p.series.labels[0]).toBe(p.series.startMonth);
     expect(p.series.labels[0]).toBe('2025-01');
     // ≤120 months → every month is present (no down-sampling)
@@ -115,6 +117,46 @@ describe('buildContextPack — per-month cashflow components', () => {
     // The one-off shows up as a decomposable component in its month.
     const wIdx = p.series.labels.indexOf('2026-03');
     expect(p.series.oneOff[wIdx]).toBe(300_000);
+  });
+});
+
+describe('buildContextPack — deposits, withdrawals & instruments are decomposable (Finding 2)', () => {
+  const withFlows: PlannerOverrides = {
+    runtimeEvents: [
+      { id: 'dep', type: 'INVESTMENT_DEPOSIT', accountId: 'acc-1', month: m('2025-04'), amount: 20_000 },
+      { id: 'wd', type: 'INVESTMENT_WITHDRAWAL', accountId: 'acc-1', month: m('2026-04'), amount: 15_000 },
+      { id: 'rtfd', type: 'FD', name: 'Runtime FD', principal: 80_000, rate: 7, startMonth: m('2025-08'), durationMonths: 12 },
+    ],
+  };
+
+  it('exposes signed proceeds and instrumentFlow verbatim from the engine', () => {
+    const p = buildPack(cfg, withFlows);
+    const rows = simulate(buildEffectiveConfig(cfg, withFlows), withFlows).rows;
+    for (const target of ['2025-04', '2026-04', '2025-08']) {
+      const idx = p.series.labels.indexOf(target);
+      const cf = rows.find((r) => r.month === target)!.cashflow;
+      expect(p.series.proceeds[idx]).toBe(Math.round(cf.proceeds));
+      expect(p.series.instrumentFlow[idx]).toBe(Math.round(cf.instrumentFlow));
+    }
+    // A deposit is cash OUT (negative proceeds); a withdrawal is cash IN (positive).
+    expect(p.series.proceeds[p.series.labels.indexOf('2025-04')]).toBeLessThan(0);
+    expect(p.series.proceeds[p.series.labels.indexOf('2026-04')]).toBeGreaterThan(0);
+    // Buying the FD is cash OUT (negative instrumentFlow) in its start month.
+    expect(p.series.instrumentFlow[p.series.labels.indexOf('2025-08')]).toBeLessThan(0);
+  });
+
+  it('every month reconciles: the flow columns account for the full cash movement', () => {
+    // This is the whole point of Finding 2 — before it, a deposit or FD month left an
+    // unexplained gap between the spend columns and the cash drop.
+    const p = buildPack(cfg, withFlows);
+    const s = p.series;
+    for (let i = 1; i < s.months; i++) {
+      const recon =
+        s.income[i] - s.flatExp[i] - s.oneOff[i] - s.recurring[i] -
+        s.creditCard[i] - s.investing[i] + s.proceeds[i] + s.instrumentFlow[i];
+      // Integer columns → allow a couple of rupees of rounding drift.
+      expect(Math.abs((s.cash[i] - s.cash[i - 1]) - recon)).toBeLessThanOrEqual(2);
+    }
   });
 });
 
@@ -195,8 +237,52 @@ describe('buildContextPack — aggregates (pre-computed, engine-grounded)', () =
     }
   });
 
+  it('highestOutflowMonth counts an FD purchase, not just spending (Finding 1)', () => {
+    // A one-off ₹5L FD dwarfs the 60k/mo spend and 10k/mo investing — it must be the
+    // biggest cash-OUT month even though an FD purchase is not an "expense". Before the
+    // fix this read totalOutflow (spend + investing only) and missed the FD entirely.
+    const overrides: PlannerOverrides = {
+      runtimeEvents: [
+        { id: 'bigfd', type: 'FD', name: 'Big FD', principal: 500_000, rate: 7, startMonth: m('2025-05'), durationMonths: 24 },
+      ],
+    };
+    const p = buildPack(cfg, overrides);
+    expect(p.aggregates.highestOutflowMonth.month).toBe('2025-05');
+    // 60k spend + 10k investing + 500k FD purchase = 570k out that month.
+    expect(p.aggregates.highestOutflowMonth.amount).toBe(570_000);
+    // The pure-spending peak is unaffected — the FD is not an expense.
+    expect(p.aggregates.highestExpenseMonth.amount).toBe(60_000);
+  });
+
   it('keeps the pack under the byte cap with aggregates included', () => {
     expect(serializeContextPack(buildPack(cfg)).length).toBeLessThanOrEqual(MAX_CONTEXT_PACK_BYTES);
+  });
+});
+
+describe('buildContextPack — account investedCapital is the full cost basis (Finding 3)', () => {
+  it('includes the opening balance and runtime deposits, not just monthly contributions', () => {
+    const seeded = baseConfig({
+      forecast: { startMonth: m('2025-01'), totalMonths: 12 },
+      income: { monthly: 100_000 },
+      cash: { openingBalance: 500_000 },
+      expenses: { defaultMonthly: 0, overrides: {} },
+      investments: {
+        accounts: [
+          account({ id: 'acc-1', name: 'Fund', startMonth: m('2025-01'), openingBalance: 100_000, defaultAnnualReturn: 0, defaultMonthlyContribution: 5_000 }),
+        ],
+        amountOverrides: [],
+        returnOverrides: [],
+      },
+    });
+    const overrides: PlannerOverrides = {
+      runtimeEvents: [
+        { id: 'dep', type: 'INVESTMENT_DEPOSIT', accountId: 'acc-1', month: m('2025-02'), amount: 50_000 },
+      ],
+    };
+    const p = buildPack(seeded, overrides);
+    const acc = p.accounts.find((a) => a.name === 'Fund')!;
+    // opening 100k + 12 monthly contributions × 5k (60k) + one 50k deposit = 210k.
+    expect(acc.investedCapital).toBe(210_000);
   });
 });
 

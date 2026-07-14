@@ -186,9 +186,9 @@ export default function SavedScenarios() {
                   <>
                     <Divider mb="xs" />
                     <SimpleGrid cols={3} spacing="xs">
-                      <DeltaStat label="Net Worth" value={comparison.netWorth} />
-                      <DeltaStat label="Final Cash" value={comparison.cash} />
-                      <DeltaStat label="Lowest Cash" value={comparison.lowestCash} />
+                      <DeltaStat label="Net Worth Δ" value={comparison.netWorth} />
+                      <DeltaStat label="Cash Δ" value={comparison.cash} />
+                      <DeltaStat label="Investments Δ" value={comparison.investments} />
                     </SimpleGrid>
                   </>
                 )}

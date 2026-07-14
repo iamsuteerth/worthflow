@@ -209,6 +209,21 @@ describe("simulate — summary", () => {
     expect(summary.totalIncome).toBe(300_000);
   });
 
+  it("totalExpenses is the complete spend: flat + credit-card + one-off + recurring", () => {
+    const config = makeConfig({
+      forecast: { startMonth: "2025-01", totalMonths: 3 },
+      expenses: { defaultMonthly: 10_000, overrides: {} }, // 3 × 10_000 = 30_000
+      creditCardBills: [{ id: "cc1", month: "2025-02", amount: 5_000, label: "CC" }],
+      oneOffExpenses: [{ id: "oo1", month: "2025-01", amount: 7_000, label: "Trip" }],
+      recurringExpenses: [
+        { id: "re1", name: "Gym", amount: 1_000, startMonth: "2025-01", endMonth: "2025-03", frequency: "MONTHLY" }, // 3 × 1_000 = 3_000
+      ],
+    });
+    const { summary } = simulate(config);
+    // 30_000 flat + 5_000 credit-card + 7_000 one-off + 3_000 recurring
+    expect(summary.totalExpenses).toBe(45_000);
+  });
+
   it("reports xirr as null when there are no investment cashflows", () => {
     const { summary } = simulate(makeConfig());
     expect(summary.xirr).toBeNull();

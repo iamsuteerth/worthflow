@@ -7,16 +7,16 @@ import { simulate } from "@/engine/simulate";
 export interface ScenarioDelta {
   netWorth: number;
   cash: number;
-  lowestCash: number;
+  investments: number;
 }
 
 export function compareScenario(baseConfig: PlannerConfig, overrides: PlannerOverrides): ScenarioDelta {
   const base = simulate(baseConfig);
-  const scenario = simulate(buildEffectiveConfig(baseConfig, overrides));
+  const scenario = simulate(buildEffectiveConfig(baseConfig, overrides), overrides);
 
   return {
-    netWorth:   scenario.summary.finalNetWorth  - base.summary.finalNetWorth,
-    cash:       scenario.summary.finalBalance   - base.summary.finalBalance,
-    lowestCash: scenario.summary.lowestBalance  - base.summary.lowestBalance,
+    netWorth:    scenario.summary.finalNetWorth         - base.summary.finalNetWorth,
+    cash:        scenario.summary.finalBalance          - base.summary.finalBalance,
+    investments: scenario.summary.finalInvestmentCorpus - base.summary.finalInvestmentCorpus,
   };
 }

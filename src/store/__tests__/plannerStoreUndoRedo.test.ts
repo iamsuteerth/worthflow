@@ -93,6 +93,25 @@ describe('plannerStore — scenario undo/redo', () => {
     expect(s().canRedo()).toBe(false);
   });
 
+  it('loading a saved scenario starts a fresh timeline (history reset, changes kept)', () => {
+    // Build scenario A, save it, then diverge and undo so a redo is pending.
+    s().addTransientOneOffExpense(m('2025-03'), 1_000, 'A');
+    s().saveScenario('Scenario A');
+    const scenarioAId = s().savedScenarios[0].id;
+
+    s().addTransientBonusIncome(m('2025-04'), 5_000, 'B');
+    s().undo(); // pending redo of B, and a past full of unrelated snapshots
+    expect(s().canRedo()).toBe(true);
+
+    s().loadScenario(scenarioAId);
+
+    // The scenario's changes carry over, but undo/redo can't cross into the old timeline.
+    expect(events()).toHaveLength(1);
+    expect(events()[0]).toMatchObject({ type: 'ONE_OFF_EXPENSE', amount: 1_000 });
+    expect(s().canUndo()).toBe(false);
+    expect(s().canRedo()).toBe(false);
+  });
+
   it('an AI-tagged add and its provenance tag undo together as one step', () => {
     // Simulate applyAction's two store calls: the guarded add, then the tag.
     s().addTransientFd(m('2025-02'), 50_000, 7, 12, 'FD');

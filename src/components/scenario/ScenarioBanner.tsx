@@ -35,10 +35,10 @@ export default function ScenarioBanner() {
   const removedAccountCount = deletedAccountIds.length;
   const hasChanges = events.length > 0 || newAccountCount > 0 || removedAccountCount > 0;
 
+  if (!hasChanges) return null;
+
   const canUndo = history.past.length > 0;
   const canRedo = history.future.length > 0;
-
-  if (!hasChanges && !canUndo && !canRedo) return null;
 
   const counts: Record<string, number> = {};
   for (const event of events) {
@@ -47,7 +47,7 @@ export default function ScenarioBanner() {
 
   return (
     <Card data-tour="scenario" withBorder radius="lg" p="sm" mt="md">
-      <Group justify="space-between" wrap="nowrap" mb={hasChanges ? "xs" : 0}>
+      <Group justify="space-between" wrap="nowrap" mb="xs">
         <UnstyledButton onClick={() => navigateToEvents()}>
           <Group gap="xs" wrap="nowrap">
             <IconAdjustments size={16} color="var(--mantine-primary-color-light-color)" />
@@ -88,38 +88,34 @@ export default function ScenarioBanner() {
         </Group>
       </Group>
 
-      {hasChanges && (
-        <>
-          <Divider mb="xs" />
+      <Divider mb="xs" />
 
-          <Group gap={6} style={{ flexWrap: "wrap" }}>
-            {newAccountCount > 0 && (
-              <Badge color="violet" variant="light" size="sm">
-                New account ×{newAccountCount}
+      <Group gap={6} style={{ flexWrap: "wrap" }}>
+        {newAccountCount > 0 && (
+          <Badge color="violet" variant="light" size="sm">
+            New account ×{newAccountCount}
+          </Badge>
+        )}
+        {removedAccountCount > 0 && (
+          <Badge color="red" variant="light" size="sm">
+            Removed base acc ×{removedAccountCount}
+          </Badge>
+        )}
+        {Object.entries(counts).map(([type, count]) => {
+          const { label, color } = getEventVisual(type);
+          return (
+            <UnstyledButton
+              key={type}
+              onClick={() => navigateToEvents({ types: [type as RuntimeEvent["type"]] })}
+              style={{ cursor: "pointer" }}
+            >
+              <Badge color={color} variant="light" size="sm">
+                {label} ×{count}
               </Badge>
-            )}
-            {removedAccountCount > 0 && (
-              <Badge color="red" variant="light" size="sm">
-                Removed base acc ×{removedAccountCount}
-              </Badge>
-            )}
-            {Object.entries(counts).map(([type, count]) => {
-              const { label, color } = getEventVisual(type);
-              return (
-                <UnstyledButton
-                  key={type}
-                  onClick={() => navigateToEvents({ types: [type as RuntimeEvent["type"]] })}
-                  style={{ cursor: "pointer" }}
-                >
-                  <Badge color={color} variant="light" size="sm">
-                    {label} ×{count}
-                  </Badge>
-                </UnstyledButton>
-              );
-            })}
-          </Group>
-        </>
-      )}
+            </UnstyledButton>
+          );
+        })}
+      </Group>
     </Card>
   );
 }

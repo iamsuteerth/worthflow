@@ -358,8 +358,16 @@ export function simulate(config: PlannerConfig,overrides?: PlannerOverrides): Si
     lowestBalanceMonth: lowestCashMonth,
     finalBalance: finalRow.closingBalance,
     totalIncome: rows.reduce((s, r) => s + r.cashflow.income, 0),
+    // Complete spend: flat + credit-card + one-off + recurring. Must match the
+    // aggregate `monthExpense` definition (and pair sensibly with the comprehensive
+    // totalIncome), so the AI headline never disagrees with the per-year expense totals.
     totalExpenses: rows.reduce(
-      (s, r) => s + r.cashflow.flatExpense + r.cashflow.creditCardExpense,
+      (s, r) =>
+        s +
+        r.cashflow.flatExpense +
+        r.cashflow.creditCardExpense +
+        r.cashflow.oneOffExpense +
+        r.cashflow.recurringExpense,
       0
     ),
     totalInvestments: rows.reduce((s, r) => s + r.cashflow.investmentAmount, 0),

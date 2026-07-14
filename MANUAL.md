@@ -355,7 +355,7 @@ A single, categorized list of **every active modification** in your current scen
 Whenever you have an active scenario, a banner appears above the dashboard summarizing it:
 
 * A count of total modifications — click it to jump to the **Events** section, showing everything
-* **Undo** and **Redo** buttons that step back and forth through your scenario changes one at a time. They work on *every* kind of change (events, account creation/removal, AI-applied changes), and the history travels with your plan — so undo/redo behaves identically on any device once you reload a saved plan. Starting a new change after an undo clears the redo trail, and **Reset** clears the history entirely.
+* **Undo** and **Redo** buttons that step back and forth through your scenario changes one at a time. They work on *every* kind of change (events, account creation/removal, AI-applied changes), and the history travels with your plan — so undo/redo behaves identically on any device once you reload a saved plan. Starting a new change after an undo clears the redo trail, **Reset** clears the history entirely, and loading a saved scenario starts a fresh timeline: your changes carry over, but the undo history resets so you never step back into a different scenario's edits.
 * A colored badge per event type (e.g. "Deposit ×2", "Spending Override ×1") — click a badge to jump to the Events section filtered to just that type (use **Show all** to clear the filter)
 * A green **"New account ×N"** badge if your scenario has created new investment accounts (informational only)
 * A red **"Removed base acc ×N"** badge if your scenario has deleted any of your original (base) accounts — a reversible what-if, restored by **Reset**
@@ -621,7 +621,7 @@ Your **most recent save loads automatically** and opens the Forecast. If you've 
 
 ## Save Scenario
 
-Save the current scenario configuration for later use. You can create multiple saved scenarios and switch between them instantly. (This is separate from cloud saves above: scenarios live inside a plan; cloud saves store the whole plan.)
+Save the current scenario configuration for later use. You can create multiple saved scenarios and switch between them instantly; each one shows how it moves the needle against your base plan — **Net Worth Δ**, **Cash Δ**, and **Investments Δ**. (This is separate from cloud saves above: scenarios live inside a plan; cloud saves store the whole plan.)
 
 ## Export Plan
 

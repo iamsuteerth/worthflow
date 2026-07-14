@@ -55,6 +55,7 @@ export function buildFullSeries(
       startMonth: '', months: 0, labels: [],
       cash: [], netWorth: [], investments: [], fd: [], rd: [],
       income: [], flatExp: [], oneOff: [], recurring: [], creditCard: [], investing: [],
+      proceeds: [], instrumentFlow: [],
     };
   }
 
@@ -95,6 +96,9 @@ export function buildFullSeries(
     recurring: seriesRows.map((r) => Math.round(r.cashflow.recurringExpense)),
     creditCard: seriesRows.map((r) => Math.round(r.cashflow.creditCardExpense)),
     investing: seriesRows.map((r) => Math.round(r.cashflow.investmentAmount)),
+    // Signed cash flows so a deposit/withdrawal or FD/RD month reconciles (see type doc).
+    proceeds: seriesRows.map((r) => Math.round(r.cashflow.proceeds)),
+    instrumentFlow: seriesRows.map((r) => Math.round(r.cashflow.instrumentFlow)),
   };
 }
 
@@ -110,6 +114,20 @@ export function buildFullSeries(
 // "expenses" the way a user means the word — see highestOutflowMonth).
 function monthExpense(cf: MonthlyCashflow): number {
   return cf.flatExpense + cf.creditCardExpense + cf.oneOffExpense + cf.recurringExpense;
+}
+
+// A month's TOTAL cash outflow: spending + scheduled investing (contributions +
+// funded openings) + any net runtime deposit + any net FD/RD purchase/contribution.
+// `proceeds`/`instrumentFlow` are signed (+ = cash in), so only their negative part
+// is an outflow. Unlike monthExpense this counts money moved INTO investments and
+// instruments — a big FD purchase or deposit IS a cash-out month, not an "expense".
+function monthOutflow(cf: MonthlyCashflow): number {
+  return (
+    monthExpense(cf) +
+    cf.investmentAmount +
+    Math.max(0, -cf.proceeds) +
+    Math.max(0, -cf.instrumentFlow)
+  );
 }
 
 function buildAggregates(result: SimulationResult): ContextPackAggregates {
@@ -134,7 +152,8 @@ function buildAggregates(result: SimulationResult): ContextPackAggregates {
     const exp = monthExpense(r.cashflow);
     expenseSum += exp;
     if (exp > hiExp.amount) hiExp = { month: r.month, amount: exp };
-    if (r.cashflow.totalOutflow > hiOut.amount) hiOut = { month: r.month, amount: r.cashflow.totalOutflow };
+    const outflow = monthOutflow(r.cashflow);
+    if (outflow > hiOut.amount) hiOut = { month: r.month, amount: outflow };
 
     // rows are chronological, so the last write per year is that year's December.
     const year = r.month.slice(0, 4);
@@ -298,7 +317,7 @@ export function buildContextPack(
       name: acct.name,
       currentValue: Math.round(snap?.value ?? 0),
       xirrPct: xirrToPercent(summary.accountXirr[acct.id] ?? null),
-      totalContributions: Math.round(summary.accountContributions[acct.id] ?? 0),
+      investedCapital: Math.round(summary.accountContributions[acct.id] ?? 0),
       addedInScenario: !baselineAccountIds.includes(acct.id),
     };
   });

@@ -26,12 +26,16 @@ export interface ContextPackHeadline {
  * All values are integers in INR (rounded to the nearest rupee).
  *
  * The balance columns (cash/netWorth/investments/fd/rd) are end-of-month stocks.
- * The flow columns (income/flatExp/oneOff/recurring/creditCard/investing) are that
- * month's cashflow components, so any month is decomposable: its spending is
- * flatExp + oneOff + recurring + creditCard, and its total cash out also includes
- * `investing` (contributions to investment accounts). FD/RD funding is not a
- * separate column — it shows up as growth in `fd`/`rd`. Name the driver behind a
- * flow via `planItems`.
+ * The flow columns are that month's cashflow, and EVERY month fully reconciles:
+ *   cash[i] − cash[i−1] =
+ *     income − flatExp − oneOff − recurring − creditCard − investing
+ *     + proceeds + instrumentFlow
+ * The expense and `investing` columns are positive magnitudes of cash OUT;
+ * `proceeds` and `instrumentFlow` are SIGNED (+ = cash in, − = cash out). So a
+ * month's spending is flatExp + oneOff + recurring + creditCard, its scheduled
+ * investing is `investing`, a runtime deposit/withdrawal is `proceeds`, and an
+ * FD/RD purchase, contribution or maturity is `instrumentFlow`. Name the driver
+ * behind a flow via `planItems`.
  */
 export interface ContextPackSeries {
   startMonth: string;   // "YYYY-MM" — labels[0]
@@ -47,7 +51,9 @@ export interface ContextPackSeries {
   oneOff: number[];      // one-off expenses charged that month
   recurring: number[];   // recurring-expense charges that month
   creditCard: number[];  // credit-card bills paid that month
-  investing: number[];   // contributions into investment accounts that month
+  investing: number[];   // scheduled contributions + funded openings into investment accounts that month
+  proceeds: number[];    // signed runtime deposit/withdrawal cash: + withdrawal in, − deposit out
+  instrumentFlow: number[]; // signed FD/RD cash: + maturity in, − purchase/contribution out
 }
 
 /**
@@ -74,7 +80,10 @@ export interface ContextPackAccount {
   name: string;
   currentValue: number;
   xirrPct: number | null;
-  totalContributions: number;
+  // Cost basis behind `xirrPct`: the opening balance + every monthly contribution
+  // + every runtime deposit. NOT just recurring contributions — it includes the
+  // seed lump and one-off deposits, because that is the capital the XIRR is on.
+  investedCapital: number;
   addedInScenario: boolean;
 }
 
@@ -92,14 +101,15 @@ export interface ContextPackInstrument {
  * Pre-computed answers to the aggregate questions users actually ask, so the model
  * QUOTES them rather than computing (which is where a single-shot answer would
  * hallucinate). All figures come straight from the engine rows, full-resolution
- * (NOT the down-sampled `series`). Expense = flat + credit-card + one-off +
- * recurring spending (excludes investing/FD funding, which `highestOutflowMonth`
- * captures separately). Money is integer INR.
+ * (NOT the down-sampled `series`). `highestExpenseMonth` is pure spending (flat +
+ * credit-card + one-off + recurring); `highestOutflowMonth` is total cash OUT —
+ * that spending PLUS scheduled investing, runtime deposits, and FD/RD purchases.
+ * Money is integer INR.
  */
 export interface ContextPackAggregates {
   avgMonthlyExpense: number;
   highestExpenseMonth: { month: string; amount: number };   // biggest spending month
-  highestOutflowMonth: { month: string; amount: number };   // biggest total cash outflow (incl. investing)
+  highestOutflowMonth: { month: string; amount: number };   // biggest total cash OUT: spending + investing + deposits + FD/RD purchases
   biggestCashDrops: Array<{ month: string; drop: number }>; // top month-over-month cash decreases (the "dips")
   perYear: Array<{ year: string; income: number; expenses: number; endCash: number; endNetWorth: number }>;
 }

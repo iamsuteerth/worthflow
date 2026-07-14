@@ -726,7 +726,16 @@ export const usePlannerStore = create<PlannerStore>()(
         set((s) => {
           const scenario = s.savedScenarios.find((sc) => sc.id === id);
           if (!scenario) return {};
-          return commit(s, s.baseConfig, scenario.overrides);
+          // Loading a saved scenario starts a FRESH undo/redo timeline. Folding the
+          // previous overrides into history.past would let undo cross between unrelated
+          // scenarios (and strand a redo-with-no-changes banner). The changes carry
+          // over; only the history resets.
+          const overrides = structuredClone(scenario.overrides);
+          return {
+            overrides,
+            config: buildEffectiveConfig(s.baseConfig, overrides),
+            history: emptyHistory,
+          };
         }),
 
       deleteScenario: (id) =>

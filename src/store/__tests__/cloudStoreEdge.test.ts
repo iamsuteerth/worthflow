@@ -132,6 +132,55 @@ describe('cloudStore.autoLoadLatest — bootstrap edges', () => {
   });
 });
 
+describe('cloudStore — undo/redo history survives the cloud round trip', () => {
+  it('a non-empty timeline serializes, uploads, downloads and re-imports intact (cross-device backtracking)', async () => {
+    // Two edits on "desktop", then one undo — leaving a real past AND a pending redo.
+    const planner = usePlannerStore.getState();
+    planner.addTransientOneOffExpense(m('2025-03'), 10_000, 'edit 1');
+    planner.addTransientBonusIncome(m('2025-04'), 5_000, 'edit 2');
+    usePlannerStore.getState().undo(); // backtrack the bonus -> past:1, future:1
+
+    const before = usePlannerStore.getState();
+    expect(before.history.past).toHaveLength(1);
+    expect(before.history.future).toHaveLength(1);
+    expect(before.overrides.runtimeEvents).toHaveLength(1);
+
+    // Upload through the genuine serializePlan path and capture the exact .wfplan bytes.
+    storage.loadManifestWithETag.mockResolvedValue({ entries: [], etag: 'e1' });
+    storage.saveManifest.mockResolvedValue(undefined);
+    await useCloudStore.getState().uploadCurrentPlan('Desktop Plan');
+    const uploaded = storage.uploadSave.mock.calls[0][1] as string;
+
+    // Simulate a second device: clean slate, then bootstrap from the cloud copy.
+    usePlannerStore.getState().loadPlan(
+      baseConfig({ forecast: { startMonth: m('2025-01'), totalMonths: 12 } }),
+      {},
+      [],
+    );
+    expect(usePlannerStore.getState().history.past).toHaveLength(0);
+
+    storage.loadManifest.mockResolvedValue([{ key: 'desktop.wfplan', ...META }]);
+    storage.downloadSave.mockResolvedValue(uploaded);
+    await useCloudStore.getState().autoLoadLatest();
+
+    // Both stacks came back exactly as they were on the other device.
+    const restored = usePlannerStore.getState();
+    expect(restored.overrides.runtimeEvents).toHaveLength(1);
+    expect(restored.history.past).toHaveLength(1);
+    expect(restored.history.future).toHaveLength(1);
+
+    // Redo continues the timeline (the bonus the desktop had undone comes back)...
+    restored.redo();
+    expect(usePlannerStore.getState().overrides.runtimeEvents).toHaveLength(2);
+
+    // ...and undo still backtracks all the way to the empty baseline.
+    usePlannerStore.getState().undo();
+    usePlannerStore.getState().undo();
+    expect(usePlannerStore.getState().overrides.runtimeEvents ?? []).toHaveLength(0);
+    expect(usePlannerStore.getState().canUndo()).toBe(false);
+  });
+});
+
 describe('cloudStore.loadSaves — error surface', () => {
   it('sets savesError on failure and clears the loading flag', async () => {
     storage.loadManifest.mockRejectedValue(new Error('S3 down'));
