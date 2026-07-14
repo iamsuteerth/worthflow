@@ -1,7 +1,8 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { cacheKek, loadKek, clearKek } from '@/ai/keyVault/kekCache';
+
 import { deriveKek, randomBase64 } from '@/ai/keyVault/crypto';
+import { cacheKek, loadKek, clearKek } from '@/ai/keyVault/kekCache';
 
 describe('kekCache (IndexedDB)', () => {
   beforeEach(async () => {

@@ -1,11 +1,17 @@
+import type {
+  ContextPack,
+  ContextPackSeries,
+  ContextPackAggregates,
+  ContextPackPlanItem,
+} from '@/ai/context/contextPack.types';
 import type { SimulationResult } from '@/engine/simulate';
 import type { PlannerConfig } from '@/types/config';
 import type { PlannerOverrides } from '@/types/overrides';
-import { MAX_CONTEXT_PACK_BYTES } from '@/ai/config';
-import { projectInstrument } from '@/engine/instrumentProjection';
-import { addMonths } from '@/engine/dateUtils';
 import type { MonthlyCashflow } from '@/types/simulation';
-import type { ContextPack, ContextPackSeries, ContextPackAggregates, ContextPackPlanItem } from '@/ai/context/contextPack.types';
+
+import { MAX_CONTEXT_PACK_BYTES } from '@/ai/config';
+import { addMonths } from '@/engine/dateUtils';
+import { projectInstrument } from '@/engine/instrumentProjection';
 
 // ---------------------------------------------------------------------------
 // Helpers

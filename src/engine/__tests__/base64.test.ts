@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+
 import { encodeBase64, decodeBase64 } from "@/engine/base64";
 
 describe("base64 (UTF-8 safe)", () => {

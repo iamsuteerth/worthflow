@@ -1,14 +1,15 @@
-import type { MonthKey } from "@/types/simulation";
 import type { RuntimeSpendingOverride } from "@/types/runtimeEvent";
+import type { MonthKey } from "@/types/simulation";
 
 import { Alert, Button, Grid, NumberInput, Stack, Text } from "@mantine/core";
 import { IconAlertCircle, IconAdjustments } from "@tabler/icons-react";
-import { money } from "@/format/money";
 import { useState } from "react";
+
+import MonthSelect from "@/components/common/MonthSelect";
 import { generateMonths } from "@/engine/dateUtils";
 import { formatMonth } from "@/engine/monthFormatting";
+import { money } from "@/format/money";
 import { usePlannerStore } from "@/store/plannerStore";
-import MonthSelect from "@/components/common/MonthSelect";
 
 export default function AddSpendingOverrideForm() {
   const config = usePlannerStore((s) => s.config);

@@ -1,9 +1,9 @@
-import type { AiErrorKind } from '@/ai/provider/types';
 import type { ResolvedProposedAction } from '@/ai/actions/actionSchema';
+import type { AiErrorKind } from '@/ai/provider/types';
 
 export type MessageRole = 'user' | 'assistant';
 
-// Phase 2: stored lifecycle of an AI-proposed change attached to an assistant
+// Stored lifecycle of an AI-proposed change attached to an assistant
 // message. NOTE: "applied" is NOT stored here — it's derived from the live plan
 // (see proposalState.isProposalApplied) so it can't drift from what's actually in a
 // plan across devices. Only the user's intent / last failure is persisted:
@@ -19,7 +19,7 @@ export interface Message {
   createdAt: string;
   streaming?: boolean;
   error?: { kind: AiErrorKind; message: string };
-  // Phase 2: a validated, user-confirmable change. Never auto-applied. Whether it has
+  // A validated, user-confirmable change. Never auto-applied. Whether it has
   // been applied is derived from the plan (this message's id is the proposal id).
   proposedAction?: ResolvedProposedAction;
   actionStatus?: ActionStatus;

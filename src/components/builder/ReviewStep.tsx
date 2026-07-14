@@ -13,7 +13,7 @@ import {
   Text,
   ThemeIcon,
 } from "@mantine/core";
-
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconAlertTriangle,
   IconBolt,
@@ -28,25 +28,24 @@ import {
   IconPlayerPlay,
   IconWallet,
 } from "@tabler/icons-react";
-
 import { useMemo } from "react";
-import { builderToConfig } from "@/engine/builderToConfig";
+
+import { requestForecastTour } from "@/components/onboarding/forecastTour";
 import { AdaptiveMoney } from "@/components/ui";
+import { builderToConfig } from "@/engine/builderToConfig";
+import { findOutOfWindowItems, type OutOfWindowKind } from "@/engine/builderWindow";
+import { forecastEndMonth } from "@/engine/dateUtils";
 import { exportPlan } from "@/engine/exportPlan";
 import { formatMonth } from "@/engine/monthFormatting";
-import { forecastEndMonth } from "@/engine/dateUtils";
-import { findOutOfWindowItems, type OutOfWindowKind } from "@/engine/builderWindow";
-import { useBuilderStore } from "@/store/builderStore";
-import { usePlannerStore } from "@/store/plannerStore";
-import { useCloudStore, defaultPlanLabel } from "@/store/cloudStore";
-import { usePrefsStore } from "@/store/prefsStore";
-import { requestForecastTour } from "@/components/onboarding/forecastTour";
-import { useDisclosure } from "@mantine/hooks";
 import {
   notifyCloudSaved,
   notifyCloudAutoSaveFailed,
   notifyGeneratedNudge,
 } from "@/lib/cloudNotifications";
+import { useBuilderStore } from "@/store/builderStore";
+import { useCloudStore, defaultPlanLabel } from "@/store/cloudStore";
+import { usePlannerStore } from "@/store/plannerStore";
+import { usePrefsStore } from "@/store/prefsStore";
 
 function summarizeDroppedScenarioData(
   events: RuntimeEvent[],

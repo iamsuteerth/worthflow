@@ -1,13 +1,14 @@
-import { usePlannerStore } from '@/store/plannerStore';
-import { resolveAccountName } from '@/ai/actions/validateAction';
+import type { ResolvedProposedAction } from '@/ai/actions/actionSchema';
+import type { RuntimeEvent } from '@/types/runtimeEvent';
+
 import { checkFeasibility } from '@/ai/actions/checkFeasibility';
 import { buildEditChanges } from '@/ai/actions/editMapping';
 import { proposalChangeExists } from '@/ai/actions/proposalState';
-import type { RuntimeEvent } from '@/types/runtimeEvent';
-import type { ResolvedProposedAction } from '@/ai/actions/actionSchema';
+import { resolveAccountName } from '@/ai/actions/validateAction';
+import { usePlannerStore } from '@/store/plannerStore';
 
 // ---------------------------------------------------------------------------
-// applyAction — layer 2 of the two-layer defence (PHASE2.dev.md §4).
+// applyAction — layer 2 of the two-layer defence.
 //
 // Maps a validated action onto the EXACT guarded store methods the Scenario Lab
 // uses. It is keyed by the proposing message's id (`proposalId`):

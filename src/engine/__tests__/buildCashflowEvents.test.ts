@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { buildCashflowEvents } from "@/engine/buildCashflowEvents";
+
 import { baseConfig, m } from "@/engine/__tests__/factories";
+import { buildCashflowEvents } from "@/engine/buildCashflowEvents";
 
 describe("buildCashflowEvents", () => {
   it("returns no events for an empty config", () => {

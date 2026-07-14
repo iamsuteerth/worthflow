@@ -1,10 +1,3 @@
-import type { MonthKey } from "@/types/simulation";
-import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
-import type { RecurringExpense } from "@/types/recurringExpense";
-import type { InvestmentAccount } from "@/types/investmentAccount";
-
-import { create } from "zustand";
-
 import type {
   BuilderState,
   BuilderBonusIncome,
@@ -12,6 +5,12 @@ import type {
   BuilderSalaryChange,
   BuilderCreditCardBill,
 } from "@/types/builder";
+import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
+import type { InvestmentAccount } from "@/types/investmentAccount";
+import type { RecurringExpense } from "@/types/recurringExpense";
+import type { MonthKey } from "@/types/simulation";
+
+import { create } from "zustand";
 
 import { isValidAnnualRange } from "@/engine/annualExpense";
 import { snapStateIntoWindow } from "@/engine/builderWindow";

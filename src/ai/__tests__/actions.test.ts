@@ -15,16 +15,17 @@ vi.hoisted(() => {
   }
 });
 
-import { proposedActionSchema, isUndoableAdd } from '@/ai/actions/actionSchema';
-import { validateAction, resolveAccountName } from '@/ai/actions/validateAction';
-import { checkFeasibility } from '@/ai/actions/checkFeasibility';
-import { applyAction } from '@/ai/actions/applyAction';
-import { isProposalApplied } from '@/ai/actions/proposalState';
-import { dryRun } from '@/ai/actions/dryRun';
-import { describeAction } from '@/ai/actions/describeAction';
-import { usePlannerStore } from '@/store/plannerStore';
-import { baseConfig, account, m } from '@/engine/__tests__/factories';
 import type { ResolvedProposedAction } from '@/ai/actions/actionSchema';
+
+import { proposedActionSchema, isUndoableAdd } from '@/ai/actions/actionSchema';
+import { applyAction } from '@/ai/actions/applyAction';
+import { checkFeasibility } from '@/ai/actions/checkFeasibility';
+import { describeAction } from '@/ai/actions/describeAction';
+import { dryRun } from '@/ai/actions/dryRun';
+import { isProposalApplied } from '@/ai/actions/proposalState';
+import { validateAction, resolveAccountName } from '@/ai/actions/validateAction';
+import { baseConfig, account, m } from '@/engine/__tests__/factories';
+import { usePlannerStore } from '@/store/plannerStore';
 
 // A plan with cash, an income surplus, and one investment account.
 function setupPlan() {

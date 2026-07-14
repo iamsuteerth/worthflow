@@ -1,9 +1,10 @@
 import { ScrollArea, Stack, Table, Text } from "@mantine/core";
-import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
-import { formatMonth } from "@/engine/monthFormatting";
+
 import { sumEvents } from "@/components/tables/tableUtils";
-import { moneyParens } from "@/format/money";
 import { EmptyState, RecordCard, Money } from "@/components/ui";
+import { formatMonth } from "@/engine/monthFormatting";
+import { moneyParens } from "@/format/money";
+import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 function cashflowColumns(row: ReturnType<typeof useFilteredSimulation>["rows"][number]) {

@@ -1,8 +1,14 @@
-import { randomBase64, deriveKek, aesGcmEncrypt, aesGcmDecrypt } from '@/ai/keyVault/crypto';
-import { cacheKek, loadKek, clearKek } from '@/ai/keyVault/kekCache';
-import { AI_KDF_ITERATIONS } from '@/ai/config';
-import { AiError } from '@/ai/provider/types';
 import type { KeyBlob } from '@/ai/cloud/aiCloud';
+
+import { AI_KDF_ITERATIONS } from '@/ai/config';
+import {
+  randomBase64,
+  deriveKek,
+  aesGcmEncrypt,
+  aesGcmDecrypt,
+} from '@/ai/keyVault/crypto';
+import { cacheKek, loadKek, clearKek } from '@/ai/keyVault/kekCache';
+import { AiError } from '@/ai/provider/types';
 
 export type KeyStatus = 'absent' | 'locked' | 'ready' | 'validating' | 'invalid';
 

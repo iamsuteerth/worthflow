@@ -1,11 +1,12 @@
 import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
 
 import { describe, it, expect } from "vitest";
-import { addMonths, getMonthIndex, generateMonths } from "@/engine/dateUtils";
+
+import { m } from "@/engine/__tests__/factories";
 import { calculateXirr } from "@/engine/calculateXirr";
+import { addMonths, getMonthIndex, generateMonths } from "@/engine/dateUtils";
 import { isFdActive, createHistoricalFdPosition, getElapsedMonths } from "@/engine/fd";
 import { createHistoricalRdPosition } from "@/engine/rd";
-import { m } from "@/engine/__tests__/factories";
 
 describe("addMonths — boundary behaviour", () => {
   it("returns the same month for an offset of 0", () => {

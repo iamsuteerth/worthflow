@@ -1,14 +1,22 @@
 import type { FinancialEvent } from "@/types/events";
 
-import { Card, Stack, Text, Group, Divider, Box } from "@mantine/core";
-import { IconChartAreaLine } from "@tabler/icons-react";
-import { useElementSize } from "@mantine/hooks";
-import MonthRangeFilter from "@/components/common/MonthRangeFilter";
 import { AreaChart } from "@mantine/charts";
-import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
+import {
+  Card,
+  Stack,
+  Text,
+  Group,
+  Divider,
+  Box,
+} from "@mantine/core";
+import { useElementSize } from "@mantine/hooks";
+import { IconChartAreaLine } from "@tabler/icons-react";
+
+import MonthRangeFilter from "@/components/common/MonthRangeFilter";
+import { EmptyState } from "@/components/ui";
 import { formatMonth } from "@/engine/monthFormatting";
 import { moneyCompact, moneySigned } from "@/format/money";
-import { EmptyState } from "@/components/ui";
+import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
 import { SEMANTIC, deltaColor } from "@/theme/semantic";
 
 type EventSummary = {

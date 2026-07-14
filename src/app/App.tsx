@@ -1,15 +1,14 @@
-import { useEffect, useState, lazy, Suspense } from "react";
 import { Alert, Button, Group, SegmentedControl, Stack } from "@mantine/core";
 import { IconChartLine, IconCloudOff, IconSettings } from "@tabler/icons-react";
+import { useEffect, useState, lazy, Suspense } from "react";
 
-import PlannerShell from "@/components/layout/AppShell";
 import LoginPage from "@/components/auth/LoginPage";
+import PlannerShell from "@/components/layout/AppShell";
 import { AppLoadingSkeleton, PageContentSkeleton } from "@/components/layout/SkeletonLoaders";
-
 import { AI_ENABLED } from "@/lib/featureFlags";
-import { usePlannerStore, type AppView } from "@/store/plannerStore";
 import { useAuthStore } from "@/store/authStore";
 import { useCloudStore } from "@/store/cloudStore";
+import { usePlannerStore, type AppView } from "@/store/plannerStore";
 
 let aiStoreImport: Promise<{ useAiStore: { getState: () => { initAi: () => Promise<void> } } }> | null = null;
 if (AI_ENABLED) {

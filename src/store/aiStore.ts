@@ -1,16 +1,46 @@
-import type { AiErrorKind } from '@/ai/provider/types';
-import type { KeyStatus } from '@/ai/keyVault/keyVault';
-import type { KeyBlob, EncryptedEnvelope } from '@/ai/cloud/aiCloud';
 import type { Conversation, Message } from '@/ai/chat/conversation.types';
+import type { KeyBlob, EncryptedEnvelope } from '@/ai/cloud/aiCloud';
+import type { KeyStatus } from '@/ai/keyVault/keyVault';
+import type { AiErrorKind, ProviderId } from '@/ai/provider/types';
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import { getProvider } from '@/ai/provider/index';
-import { AiError, isAbortError } from '@/ai/provider/types';
-import type { ProviderId } from '@/ai/provider/types';
-import { getDefaultModelId, DEFAULT_PROVIDER, PROVIDER_LABELS } from '@/ai/provider/modelCatalog';
-
+import { applyAction } from '@/ai/actions/applyAction';
+import { affordabilityWarning } from '@/ai/actions/checkFeasibility';
+import { describeAction } from '@/ai/actions/describeAction';
+import { validateAction } from '@/ai/actions/validateAction';
+import {
+  notifyAiCloudSyncFailed,
+  notifyAiKeyRemoved,
+  notifyAiKeySetup,
+  notifyAiPassphraseChanged,
+  notifyIndexedDbUnavailable,
+  notifyAiChatCompacted,
+  notifyAiActionApplied,
+} from '@/ai/aiNotifications';
+import { compactConversation, buildHistoryForRequest, pruneHistoryTokens } from '@/ai/chat/compaction';
+import { emptyConversation } from '@/ai/chat/conversation.types';
+import {
+  encryptConversation,
+  decryptConversation,
+  scheduleConversationWrite,
+  flushConversationWrite,
+  cancelConversationWrite,
+} from '@/ai/chat/conversationSync';
+import { shouldCompact, MAX_HISTORY_TOKENS } from '@/ai/chat/tokenBudget';
+import {
+  getKeyBlob,
+  putKeyBlob,
+  deleteKeyBlob,
+  getConversation,
+  putConversation,
+  deleteConversation,
+} from '@/ai/cloud/aiCloud';
+import { SYSTEM_PROMPT, ACTION_CONTRACT } from '@/ai/config';
+import { getContextBlock, clearContextCache } from '@/ai/context/contextCache';
+import { aesGcmEncrypt } from '@/ai/keyVault/crypto';
+import { cacheKek, clearKek } from '@/ai/keyVault/kekCache';
 import {
   resolveKeyStatus,
   unlockWithPassphrase,
@@ -22,47 +52,10 @@ import {
   getSessionKek,
   activateKek,
 } from '@/ai/keyVault/keyVault';
-
-import {
-  getKeyBlob,
-  putKeyBlob,
-  deleteKeyBlob,
-  getConversation,
-  putConversation,
-  deleteConversation,
-} from '@/ai/cloud/aiCloud';
-
-import { emptyConversation } from '@/ai/chat/conversation.types';
-import { shouldCompact, MAX_HISTORY_TOKENS } from '@/ai/chat/tokenBudget';
-import { compactConversation, buildHistoryForRequest, pruneHistoryTokens } from '@/ai/chat/compaction';
-import {
-  encryptConversation,
-  decryptConversation,
-  scheduleConversationWrite,
-  flushConversationWrite,
-  cancelConversationWrite,
-} from '@/ai/chat/conversationSync';
-import { getContextBlock, clearContextCache } from '@/ai/context/contextCache';
-import { SYSTEM_PROMPT, ACTION_CONTRACT } from '@/ai/config';
-
-import { validateAction } from '@/ai/actions/validateAction';
-import { applyAction } from '@/ai/actions/applyAction';
-import { affordabilityWarning } from '@/ai/actions/checkFeasibility';
-import { describeAction } from '@/ai/actions/describeAction';
-
-import {
-  notifyAiCloudSyncFailed,
-  notifyAiKeyRemoved,
-  notifyAiKeySetup,
-  notifyAiPassphraseChanged,
-  notifyIndexedDbUnavailable,
-  notifyAiChatCompacted,
-  notifyAiActionApplied,
-} from '@/ai/aiNotifications';
-
+import { getProvider } from '@/ai/provider/index';
+import { getDefaultModelId, DEFAULT_PROVIDER, PROVIDER_LABELS } from '@/ai/provider/modelCatalog';
+import { AiError, isAbortError } from '@/ai/provider/types';
 import { usePlannerStore } from '@/store/plannerStore';
-import { aesGcmEncrypt } from '@/ai/keyVault/crypto';
-import { cacheKek, clearKek } from '@/ai/keyVault/kekCache';
 
 export { mergeConversations } from '@/ai/chat/conversationSync';
 

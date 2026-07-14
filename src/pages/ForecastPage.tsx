@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 
-import SummaryCards from "@/components/SummaryCards";
 import NetWorthChart from "@/components/charts/NetWorthChart";
 import DashboardTabs from "@/components/dashboard/DashboardTabs";
-import ScenarioBanner from "@/components/scenario/ScenarioBanner";
 import { runRequestedForecastTour } from "@/components/onboarding/forecastTour";
+import ScenarioBanner from "@/components/scenario/ScenarioBanner";
+import SummaryCards from "@/components/SummaryCards";
 
 export default function ForecastPage() {
   // Runs the forecast tour only if one was requested when a new user generated their first

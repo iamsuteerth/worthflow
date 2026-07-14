@@ -1,10 +1,11 @@
 import type { RuntimeEvent } from "@/types/runtimeEvent";
 
 import { describe, it, expect } from "vitest";
-import { importPlan } from "@/engine/importPlan";
-import { calculateChecksum } from "@/engine/checksum";
-import { encodeBase64 } from "@/engine/base64";
+
 import { m } from "@/engine/__tests__/factories";
+import { encodeBase64 } from "@/engine/base64";
+import { calculateChecksum } from "@/engine/checksum";
+import { importPlan } from "@/engine/importPlan";
 
 const validPlan = {
   baseConfig: {

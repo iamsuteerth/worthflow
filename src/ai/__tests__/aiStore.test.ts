@@ -65,10 +65,11 @@ vi.mock('@/ai/aiNotifications', () => ({
   notifyAiActionApplied: () => {},
 }));
 
+import type { Conversation } from '@/ai/chat/conversation.types';
+
+import { baseConfig, m } from '@/engine/__tests__/factories';
 import { useAiStore, aiPersistPartialize, mergeConversations } from '@/store/aiStore';
 import { usePlannerStore } from '@/store/plannerStore';
-import { baseConfig, m } from '@/engine/__tests__/factories';
-import type { Conversation } from '@/ai/chat/conversation.types';
 
 const planCfg = baseConfig({
   forecast: { startMonth: m('2025-01'), totalMonths: 12 },
@@ -178,7 +179,7 @@ describe('aiStore — lifecycle', () => {
   });
 });
 
-describe('aiStore — assisted actions (Phase 2)', () => {
+describe('aiStore — assisted actions', () => {
   it('proposes a pending action without mutating the plan', async () => {
     await useAiStore.getState().setupKey('AIzaTESTKEY', 'passphrase1');
     await useAiStore.getState().proposeAction('add a big expense');

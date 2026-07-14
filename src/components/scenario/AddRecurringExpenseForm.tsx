@@ -3,12 +3,13 @@ import type { MonthKey } from "@/types/simulation";
 import { Alert, Button, Grid, NumberInput, SegmentedControl, Stack, Text, TextInput } from "@mantine/core";
 import { IconAlertCircle, IconRepeat } from "@tabler/icons-react";
 import { useState } from "react";
+
+import MonthSelect from "@/components/common/MonthSelect";
+import { getMaxAnnualYears, deriveAnnualEndMonth } from "@/engine/annualExpense";
 import { generateMonths } from "@/engine/dateUtils";
 import { formatMonth } from "@/engine/monthFormatting";
-import { getMaxAnnualYears, deriveAnnualEndMonth } from "@/engine/annualExpense";
-import { usePlannerStore } from "@/store/plannerStore";
-import MonthSelect from "@/components/common/MonthSelect";
 import { money } from "@/format/money";
+import { usePlannerStore } from "@/store/plannerStore";
 
 export default function AddRecurringExpenseForm() {
   const config = usePlannerStore((state) => state.config);

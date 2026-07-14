@@ -1,11 +1,12 @@
 import type { MonthKey } from "@/types/simulation";
 
-import { useState } from "react";
 import { Group, Select } from "@mantine/core";
-import { useFilterStore } from "@/store/filterStore";
-import { useSimulation } from "@/hooks/useSimulation";
-import { addMonths } from "@/engine/dateUtils";
+import { useState } from "react";
+
 import MonthSelect from "@/components/common/MonthSelect";
+import { addMonths } from "@/engine/dateUtils";
+import { useSimulation } from "@/hooks/useSimulation";
+import { useFilterStore } from "@/store/filterStore";
 
 const PRESETS = [
   { value: "6m", label: "6 Months", months: 6 },

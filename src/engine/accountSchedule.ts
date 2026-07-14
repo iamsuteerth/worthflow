@@ -1,8 +1,8 @@
 import type { PlannerConfig } from "@/types/config";
 import type { MonthKey } from "@/types/simulation";
 
-import { generateMonths } from "@/engine/dateUtils";
 import { getAccountContribution, getAccountReturn } from "@/engine/accountSimulation";
+import { generateMonths } from "@/engine/dateUtils";
 
 export type RangeSource = "DEFAULT" | "OVERRIDE";
 

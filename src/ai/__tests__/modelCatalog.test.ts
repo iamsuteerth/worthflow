@@ -1,4 +1,7 @@
+import type { ProviderId } from '@/ai/provider/types';
+
 import { describe, it, expect } from 'vitest';
+
 import {
   MODEL_CATALOG,
   PROVIDER_LABELS,
@@ -9,7 +12,6 @@ import {
   getModelSelectData,
   isValidModel,
 } from '@/ai/provider/modelCatalog';
-import type { ProviderId } from '@/ai/provider/types';
 
 // The BYOK providers offered (mock is never in the picker).
 const OFFERED: ProviderId[] = ['gemini'];

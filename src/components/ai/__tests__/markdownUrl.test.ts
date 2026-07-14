@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { safeUrl } from '@/components/ai/markdownUrl';
 
 describe('safeUrl — AI markdown link sanitiser', () => {

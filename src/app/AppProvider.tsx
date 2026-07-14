@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+
 import type { ColorScheme } from "@/app/theme-context";
 
 import { MantineProvider } from "@mantine/core";

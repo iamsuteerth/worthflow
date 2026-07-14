@@ -1,6 +1,5 @@
 import type { Message } from '@/ai/chat/conversation.types';
 
-import { useMemo } from 'react';
 import { Alert, Badge, Button, Group, Paper, Stack, Text } from '@mantine/core';
 import {
   IconAlertTriangle,
@@ -9,13 +8,15 @@ import {
   IconWand,
   IconX,
 } from '@tabler/icons-react';
-import { useAiStore } from '@/store/aiStore';
-import { usePlannerStore } from '@/store/plannerStore';
-import { dryRun } from '@/ai/actions/dryRun';
+import { useMemo } from 'react';
+
 import { checkFeasibility } from '@/ai/actions/checkFeasibility';
 import { describeAction } from '@/ai/actions/describeAction';
+import { dryRun } from '@/ai/actions/dryRun';
 import { isProposalApplied } from '@/ai/actions/proposalState';
 import { Money } from '@/components/ui';
+import { useAiStore } from '@/store/aiStore';
+import { usePlannerStore } from '@/store/plannerStore';
 
 interface Props {
   message: Message;

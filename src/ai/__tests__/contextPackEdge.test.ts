@@ -1,10 +1,12 @@
-import { describe, it, expect } from 'vitest';
-import { simulate } from '@/engine/simulate';
-import { buildContextPack, serializeContextPack, hasActiveScenario } from '@/ai/context/buildContextPack';
-import { MAX_CONTEXT_PACK_BYTES } from '@/ai/config';
-import { baseConfig, account, m } from '@/engine/__tests__/factories';
-import type { PlannerOverrides } from '@/types/overrides';
 import type { Instrument } from '@/types/instrument';
+import type { PlannerOverrides } from '@/types/overrides';
+
+import { describe, it, expect } from 'vitest';
+
+import { MAX_CONTEXT_PACK_BYTES } from '@/ai/config';
+import { buildContextPack, serializeContextPack, hasActiveScenario } from '@/ai/context/buildContextPack';
+import { baseConfig, account, m } from '@/engine/__tests__/factories';
+import { simulate } from '@/engine/simulate';
 
 describe('buildContextPack — scenarioChanges numbering', () => {
   it('stays 1-based and index-aligned with runtimeEvents order across mixed kinds', () => {

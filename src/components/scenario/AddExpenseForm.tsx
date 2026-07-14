@@ -3,9 +3,10 @@ import type { MonthKey } from "@/types/simulation";
 import { Button, NumberInput, Stack, TextInput } from "@mantine/core";
 import { IconBolt } from "@tabler/icons-react";
 import { useState } from "react";
-import { usePlannerStore } from "@/store/plannerStore";
+
 import MonthSelect from "@/components/common/MonthSelect";
 import { forecastEndMonth } from "@/engine/dateUtils";
+import { usePlannerStore } from "@/store/plannerStore";
 
 export default function AddExpenseForm() {
   const addExpense = usePlannerStore((state) => state.addTransientOneOffExpense);

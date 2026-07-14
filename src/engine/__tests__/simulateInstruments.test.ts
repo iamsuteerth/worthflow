@@ -1,8 +1,9 @@
 import type { PlannerOverrides } from "@/types/overrides";
 
 import { describe, it, expect } from "vitest";
-import { simulate } from "@/engine/simulate";
+
 import { baseConfig, account, m, rdBankMaturity } from "@/engine/__tests__/factories";
+import { simulate } from "@/engine/simulate";
 
 const rdAges = (c: number, rate: number, ages: number[]) =>
   ages.reduce((sum, age) => sum + c * Math.pow(1 + rate / 400, age / 3), 0);

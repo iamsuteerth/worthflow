@@ -1,17 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import { Card, Tabs } from "@mantine/core";
-
-import ForecastTable from "@/components/tables/ForecastTable";
-import CashflowTable from "@/components/tables/CashflowTable";
-import EventTimeline from "@/components/timeline/EventTimeline";
-import NetWorthTable from "@/components/tables/NetworthTable";
-import InstrumentsTable from "@/components/tables/InstrumentsTable";
-import OneOffExpensesTable from "@/components/tables/OneOffExpenses";
-import InvestmentTimeline from "@/components/timeline/InvestmentTimeline";
-import InvestmentAccountsTable from "@/components/tables/InvestmentAccountsTable";
-import { useUiStore, type DashboardTabValue } from "@/store/uiStore";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import classes from "@/components/dashboard/DashboardTabs.module.css";
+import CashflowTable from "@/components/tables/CashflowTable";
+import ForecastTable from "@/components/tables/ForecastTable";
+import InstrumentsTable from "@/components/tables/InstrumentsTable";
+import InvestmentAccountsTable from "@/components/tables/InvestmentAccountsTable";
+import NetWorthTable from "@/components/tables/NetworthTable";
+import OneOffExpensesTable from "@/components/tables/OneOffExpenses";
+import EventTimeline from "@/components/timeline/EventTimeline";
+import InvestmentTimeline from "@/components/timeline/InvestmentTimeline";
+import { useUiStore, type DashboardTabValue } from "@/store/uiStore";
 
 const TABS: { value: DashboardTabValue; label: string }[] = [
   { value: "forecast", label: "Forecast" },

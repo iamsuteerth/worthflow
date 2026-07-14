@@ -1,15 +1,15 @@
-import type { MonthKey } from "@/types/simulation";
 import type { BuilderState } from "@/types/builder";
 import type { PlannerConfig } from "@/types/config";
 import type { InvestmentAccount } from "@/types/investmentAccount";
 import type { RecurringExpense } from "@/types/recurringExpense";
+import type { MonthKey } from "@/types/simulation";
 
-import { forecastEndMonth } from "@/engine/dateUtils";
 import { isValidAnnualRange, getMaxAnnualYears, deriveAnnualEndMonth } from "@/engine/annualExpense";
+import { forecastEndMonth } from "@/engine/dateUtils";
 
 // Investment accounts and dated events must sit inside the forecast window. FD/RD
 // instruments are deliberately exempt — they may start before the window and only their
-// in-window cashflow/maturity matters (see IMPLEMENTATION.dev.md §3). This module is the
+// in-window cashflow/maturity matters. This module is the
 // single source of truth for "what is out of window", mirroring the scenario-lab rule in
 // plannerStore.isRuntimeEventStructurallyValid but for the *base* builder entities.
 export type OutOfWindowKind =
@@ -126,7 +126,7 @@ export function planHasOutOfWindowItems(config: PlannerConfig): boolean {
 }
 
 // ── Snapping (the "Move into window" quick-fix) ────────────────────────────────
-// Pure — returns corrected copies, never mutates. The decision (IMPLEMENTATION.dev.md §2):
+// Pure — returns corrected copies, never mutates. The decision:
 // point events clamp into [start, end]; recurring ranges shift start in and clamp or refit end.
 
 function clampMonth(month: MonthKey, start: MonthKey, end: MonthKey): MonthKey {

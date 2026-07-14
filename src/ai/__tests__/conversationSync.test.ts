@@ -27,6 +27,9 @@ vi.mock('@/ai/cloud/aiCloud', () => ({
 
 vi.mock('@/ai/aiNotifications', () => ({ notifyAiCloudSyncFailed: () => {} }));
 
+import type { Conversation, Message } from '@/ai/chat/conversation.types';
+import type { KeyBlob } from '@/ai/cloud/aiCloud';
+
 import {
   mergeConversations,
   encryptConversation,
@@ -39,8 +42,6 @@ import {
   type SyncHost,
 } from '@/ai/chat/conversationSync';
 import { encryptNewKey, activateKek, clearSessionKek } from '@/ai/keyVault/keyVault';
-import type { Conversation, Message } from '@/ai/chat/conversation.types';
-import type { KeyBlob } from '@/ai/cloud/aiCloud';
 
 function msg(id: string, createdAt: string, text = id): Message {
   return { id, role: 'user', text, createdAt };

@@ -1,3 +1,5 @@
+import type { RuntimeEvent } from "@/types/runtimeEvent";
+
 import {
   Box,
   Button,
@@ -9,6 +11,7 @@ import {
   Text,
   UnstyledButton,
 } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import {
   IconBuildingBank,
   IconCoins,
@@ -22,33 +25,30 @@ import {
 } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 
-import { notifications } from "@mantine/notifications";
+import ActiveInstruments from "@/components/scenario/ActiveInstruments";
+import AddAmountOverrideForm from "@/components/scenario/AddAmountOverrideForm";
+import AddBonusForm from "@/components/scenario/AddBonusForm";
+import AddCreditCardExpenseForm from "@/components/scenario/AddCreditCardExpenseForm";
+import AddExpenseForm from "@/components/scenario/AddExpenseForm";
+import AddFdForm from "@/components/scenario/AddFdForm";
+import AddInvestmentAccountForm from "@/components/scenario/AddInvestmentAccountForm";
+import AddInvestmentDepositForm from "@/components/scenario/AddInvestmentDepositForm";
+import AddInvestmentReturnOverrideForm from "@/components/scenario/AddInvestmentReturnOverrideForm";
+import AddInvestmentWithdrawalForm from "@/components/scenario/AddInvestmentWithdrawalForm";
+import AddOpeningCashOverrideForm from "@/components/scenario/AddOpeningCashOverrideForm";
+import AddRdForm from "@/components/scenario/AddRdForm";
+import AddRecurringExpenseForm from "@/components/scenario/AddRecurringExpenseForm";
+import AddSalaryChangeForm from "@/components/scenario/AddSalaryChangeForm";
+import AddSpendingOverrideForm from "@/components/scenario/AddSpendingOverrideForm";
+import InvestmentEventGroups from "@/components/scenario/InvestmentEventGroups";
+import RuntimeEventList from "@/components/scenario/RuntimeEventList";
+import SavedScenarios from "@/components/scenario/SavedScenarios";
+import { planHasOutOfWindowItems } from "@/engine/builderWindow";
 import { exportPlan } from "@/engine/exportPlan";
 import { importPlan } from "@/engine/importPlan";
-import { planHasOutOfWindowItems } from "@/engine/builderWindow";
 import { notifyPlanOutOfWindow } from "@/lib/cloudNotifications";
 import { usePlannerStore } from "@/store/plannerStore";
 import { useUiStore } from "@/store/uiStore";
-
-import ActiveInstruments             from "@/components/scenario/ActiveInstruments";
-import AddBonusForm                  from "@/components/scenario/AddBonusForm";
-import AddCreditCardExpenseForm      from "@/components/scenario/AddCreditCardExpenseForm";
-import AddExpenseForm                from "@/components/scenario/AddExpenseForm";
-import AddFdForm                     from "@/components/scenario/AddFdForm";
-import AddAmountOverrideForm         from "@/components/scenario/AddAmountOverrideForm";
-import AddInvestmentAccountForm      from "@/components/scenario/AddInvestmentAccountForm";
-import AddInvestmentDepositForm      from "@/components/scenario/AddInvestmentDepositForm";
-import AddInvestmentReturnOverrideForm from "@/components/scenario/AddInvestmentReturnOverrideForm";
-import AddInvestmentWithdrawalForm   from "@/components/scenario/AddInvestmentWithdrawalForm";
-import AddOpeningCashOverrideForm    from "@/components/scenario/AddOpeningCashOverrideForm";
-import AddRdForm                     from "@/components/scenario/AddRdForm";
-import AddRecurringExpenseForm       from "@/components/scenario/AddRecurringExpenseForm";
-import AddSalaryChangeForm           from "@/components/scenario/AddSalaryChangeForm";
-import AddSpendingOverrideForm       from "@/components/scenario/AddSpendingOverrideForm";
-import RuntimeEventList              from "@/components/scenario/RuntimeEventList";
-import InvestmentEventGroups         from "@/components/scenario/InvestmentEventGroups";
-import SavedScenarios                from "@/components/scenario/SavedScenarios";
-import type { RuntimeEvent } from "@/types/runtimeEvent";
 
 type ExpenseSub    = "expense" | "recurring" | "card" | "spendingOverride";
 type CashEventsSub = "salary" | "bonus" | "openingCash";

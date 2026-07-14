@@ -10,13 +10,14 @@ import {
   Title,
 } from "@mantine/core";
 
-import { useMemo } from "react";
 import { IconBuildingBank, IconPigMoney } from "@tabler/icons-react";
+import { useMemo } from "react";
+
+import { AdaptiveMoney } from "@/components/ui";
 import { addMonths } from "@/engine/dateUtils";
+import { projectInstrument } from "@/engine/instrumentProjection";
 import { formatMonth } from "@/engine/monthFormatting";
 import { usePlannerStore } from "@/store/plannerStore";
-import { AdaptiveMoney } from "@/components/ui";
-import { projectInstrument } from "@/engine/instrumentProjection";
 
 export default function ActiveInstruments() {
   const config = usePlannerStore((state) => state.config);

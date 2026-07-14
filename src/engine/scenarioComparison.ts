@@ -1,8 +1,8 @@
 import type { PlannerConfig } from "@/types/config";
 import type { PlannerOverrides } from "@/types/overrides";
 
-import { simulate } from "@/engine/simulate";
 import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
+import { simulate } from "@/engine/simulate";
 
 export interface ScenarioDelta {
   netWorth: number;

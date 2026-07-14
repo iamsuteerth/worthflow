@@ -1,5 +1,7 @@
-import { GoogleGenAI } from '@google/genai';
 import type { Content } from '@google/genai';
+
+import { GoogleGenAI } from '@google/genai';
+
 import { AI_MODEL_ID } from '@/ai/config';
 import {
   AiError,

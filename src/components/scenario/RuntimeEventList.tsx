@@ -1,6 +1,6 @@
+import type { InvestmentAccount } from "@/types/investmentAccount";
 import type { RuntimeEvent } from "@/types/runtimeEvent";
 import type { MonthKey } from "@/types/simulation";
-import type { InvestmentAccount } from "@/types/investmentAccount";
 
 import {
   ActionIcon,
@@ -17,14 +17,15 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
-import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
-import { simulate } from "@/engine/simulate";
+
+import MonthSelect from "@/components/common/MonthSelect";
 import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 import { forecastEndMonth } from "@/engine/dateUtils";
-import { getEventVisual } from "@/theme/eventVisuals";
 import { formatMonth } from "@/engine/monthFormatting";
+import { simulate } from "@/engine/simulate";
 import { money } from "@/format/money";
-import MonthSelect from "@/components/common/MonthSelect";
+import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
+import { getEventVisual } from "@/theme/eventVisuals";
 
 // The event's own identity (user label / name / account), shown as the card title.
 function eventName(event: RuntimeEvent, accounts: InvestmentAccount[]): string {

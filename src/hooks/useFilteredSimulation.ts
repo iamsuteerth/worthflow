@@ -1,6 +1,7 @@
 import type { SimulationResult } from "@/engine/simulate";
 
 import { useMemo } from "react";
+
 import { useSimulation } from "@/hooks/useSimulation";
 import { useFilterStore } from "@/store/filterStore";
 

@@ -1,13 +1,13 @@
 import type { SaveFileMeta } from '@/lib/storage'
 
 import { create } from 'zustand'
-import { simulate } from '@/engine/simulate'
-import { calculateChecksum } from '@/engine/checksum'
+
 import { encodeBase64 } from '@/engine/base64'
-import { importPlan } from '@/engine/importPlan'
 import { planHasOutOfWindowItems } from '@/engine/builderWindow'
+import { calculateChecksum } from '@/engine/checksum'
+import { importPlan } from '@/engine/importPlan'
+import { simulate } from '@/engine/simulate'
 import { notifyPlanOutOfWindow } from '@/lib/cloudNotifications'
-import { usePlannerStore } from '@/store/plannerStore'
 import {
   loadManifest,
   loadManifestWithETag,
@@ -17,6 +17,7 @@ import {
   deleteSave as storageDeleteSave,
   generateSaveKey
 } from '@/lib/storage'
+import { usePlannerStore } from '@/store/plannerStore'
 
 export type { SaveFileMeta }
 

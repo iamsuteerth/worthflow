@@ -1,6 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { estimateTokens, estimateMessagesTokens, shouldCompact } from '@/ai/chat/tokenBudget';
 import type { Message } from '@/ai/chat/conversation.types';
+
+import { describe, it, expect } from 'vitest';
+
+import { estimateTokens, estimateMessagesTokens, shouldCompact } from '@/ai/chat/tokenBudget';
 
 const msg = (text: string): Message => ({ id: 'x', role: 'user', text, createdAt: 't' });
 

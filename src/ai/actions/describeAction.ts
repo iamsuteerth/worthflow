@@ -1,11 +1,12 @@
-import { money } from '@/format/money';
-import { formatMonth } from '@/engine/monthFormatting';
-import { usePlannerStore } from '@/store/plannerStore';
-import { buildEditChanges } from '@/ai/actions/editMapping';
-import type { RuntimeEvent } from '@/types/runtimeEvent';
-import type { InvestmentAccount } from '@/types/investmentAccount';
-import type { MonthKey } from '@/types/simulation';
 import type { ResolvedProposedAction } from '@/ai/actions/actionSchema';
+import type { InvestmentAccount } from '@/types/investmentAccount';
+import type { RuntimeEvent } from '@/types/runtimeEvent';
+import type { MonthKey } from '@/types/simulation';
+
+import { buildEditChanges } from '@/ai/actions/editMapping';
+import { formatMonth } from '@/engine/monthFormatting';
+import { money } from '@/format/money';
+import { usePlannerStore } from '@/store/plannerStore';
 
 // Compact plain-language description of an existing runtime event (for edit/delete
 // previews). Mirrors the Scenario Lab's event list wording.

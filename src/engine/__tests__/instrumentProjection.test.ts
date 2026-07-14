@@ -1,9 +1,10 @@
 import type { FinancialEvent } from "@/types/events";
 
 import { describe, it, expect } from "vitest";
+
+import { baseConfig, m, rdBankMaturity } from "@/engine/__tests__/factories";
 import { fdMaturityValue, rdMaturityValue, projectInstrument } from "@/engine/instrumentProjection";
 import { simulate } from "@/engine/simulate";
-import { baseConfig, m, rdBankMaturity } from "@/engine/__tests__/factories";
 
 function eventAmount(rows: { events: FinancialEvent[] }[], type: string): number {
   for (const row of rows) {

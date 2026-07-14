@@ -1,9 +1,9 @@
 import type { Conversation } from '@/ai/chat/conversation.types';
 import type { KeyBlob, EncryptedEnvelope } from '@/ai/cloud/aiCloud';
 
+import { notifyAiCloudSyncFailed } from '@/ai/aiNotifications';
 import { getConversation, putConversation } from '@/ai/cloud/aiCloud';
 import { encryptWithSessionKek, decryptWithSessionKek } from '@/ai/keyVault/keyVault';
-import { notifyAiCloudSyncFailed } from '@/ai/aiNotifications';
 
 // ---------------------------------------------------------------------------
 // conversationSync — encrypted, debounced, conflict-merging persistence of the

@@ -1,11 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import {
-  compactConversation,
-  buildHistoryForRequest,
-  pruneHistoryTokens,
-} from '@/ai/chat/compaction';
 import type { Conversation, Message } from '@/ai/chat/conversation.types';
 import type { AIProvider } from '@/ai/provider/types';
+
+import { describe, it, expect } from 'vitest';
+
+import { compactConversation, buildHistoryForRequest, pruneHistoryTokens } from '@/ai/chat/compaction';
 
 const summarizer: AIProvider = {
   id: 'mock',

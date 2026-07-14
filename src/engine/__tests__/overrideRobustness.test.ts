@@ -2,9 +2,10 @@ import type { PlannerConfig } from "@/types/config";
 import type { PlannerOverrides } from "@/types/overrides";
 
 import { describe, it, expect } from "vitest";
-import { simulate } from "@/engine/simulate";
-import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
+
 import { baseConfig, account, m } from "./factories";
+import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
+import { simulate } from "@/engine/simulate";
 
 const run = (cfg: PlannerConfig, ov: PlannerOverrides = {}) =>
   simulate(buildEffectiveConfig(cfg, ov), ov);

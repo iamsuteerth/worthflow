@@ -6,10 +6,10 @@ import {
   Timeline,
 } from "@mantine/core";
 
-import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
-import { formatMonthGrouped } from "@/engine/monthFormatting";
-import { getEventVisual } from "@/theme/eventVisuals";
 import { EmptyState, AdaptiveMoney } from "@/components/ui";
+import { formatMonthGrouped } from "@/engine/monthFormatting";
+import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
+import { getEventVisual } from "@/theme/eventVisuals";
 
 const INVESTMENT_TYPES = new Set([
   "ACCOUNT_CREATED",

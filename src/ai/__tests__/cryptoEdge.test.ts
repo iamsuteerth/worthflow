@@ -1,5 +1,14 @@
+import type { KeyBlob } from '@/ai/cloud/aiCloud';
+
 import { describe, it, expect, beforeEach } from 'vitest';
-import { deriveKek, aesGcmEncrypt, aesGcmDecrypt, randomBase64, randomBytes } from '@/ai/keyVault/crypto';
+
+import {
+  deriveKek,
+  aesGcmEncrypt,
+  aesGcmDecrypt,
+  randomBase64,
+  randomBytes,
+} from '@/ai/keyVault/crypto';
 import {
   encryptNewKey,
   unlockWithPassphrase,
@@ -8,7 +17,6 @@ import {
   encryptWithSessionKek,
   decryptWithSessionKek,
 } from '@/ai/keyVault/keyVault';
-import type { KeyBlob } from '@/ai/cloud/aiCloud';
 
 const full = (b: Omit<KeyBlob, 'providerId' | 'modelId' | 'createdAt' | 'updatedAt'>): KeyBlob => ({
   ...b,

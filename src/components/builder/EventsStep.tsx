@@ -14,7 +14,6 @@ import {
   ThemeIcon,
   Tooltip,
 } from "@mantine/core";
-
 import {
   IconAlertTriangle,
   IconBolt,
@@ -26,13 +25,8 @@ import {
   IconTrash,
   IconTrendingUp,
 } from "@tabler/icons-react";
-
 import { useMemo, useState } from "react";
-import { formatMonth } from "@/engine/monthFormatting";
-import { money } from "@/format/money";
-import { findOutOfWindowItems } from "@/engine/builderWindow";
-import { forecastEndMonth } from "@/engine/dateUtils";
-import { useBuilderStore } from "@/store/builderStore";
+
 import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
 import EditItemModal from "@/components/builder/EditItemModal";
 import {
@@ -46,6 +40,11 @@ import {
   type MonthTextAmountDraft,
   type RecurringDraft,
 } from "@/components/builder/fields/EventFields";
+import { findOutOfWindowItems } from "@/engine/builderWindow";
+import { forecastEndMonth } from "@/engine/dateUtils";
+import { formatMonth } from "@/engine/monthFormatting";
+import { money } from "@/format/money";
+import { useBuilderStore } from "@/store/builderStore";
 
 const TYPE_CONFIG: Record<string, { color: string; accentColor: string; icon: React.ReactNode }> = {
   Expense: { color: "red", accentColor: "var(--mantine-color-red-5)", icon: <IconBolt size={16} /> },

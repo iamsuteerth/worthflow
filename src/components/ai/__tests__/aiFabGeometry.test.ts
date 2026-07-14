@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { computePanelGeometry } from '@/components/ai/aiFabGeometry';
 
 const TOP_GAP = 16;

@@ -1,15 +1,16 @@
-import { usePlannerStore } from '@/store/plannerStore';
-import { buildEffectiveConfig } from '@/engine/buildEffectiveConfig';
-import { simulate } from '@/engine/simulate';
-import { resolveAccountName } from '@/ai/actions/validateAction';
-import { buildEditChanges } from '@/ai/actions/editMapping';
-import type { RuntimeEvent } from '@/types/runtimeEvent';
+import type { ResolvedProposedAction } from '@/ai/actions/actionSchema';
 import type { PlannerConfig } from '@/types/config';
 import type { PlannerOverrides } from '@/types/overrides';
-import type { ResolvedProposedAction } from '@/ai/actions/actionSchema';
+import type { RuntimeEvent } from '@/types/runtimeEvent';
+
+import { buildEditChanges } from '@/ai/actions/editMapping';
+import { resolveAccountName } from '@/ai/actions/validateAction';
+import { buildEffectiveConfig } from '@/engine/buildEffectiveConfig';
+import { simulate } from '@/engine/simulate';
+import { usePlannerStore } from '@/store/plannerStore';
 
 // ---------------------------------------------------------------------------
-// dryRun — the trust-builder preview (PHASE2.dev.md §6).
+// dryRun — the trust-builder preview.
 //
 // Runs simulate() on a CLONE of (base plan + the proposed action) and reports a
 // headline delta. Purely informational; it NEVER mutates the live store. Unlike

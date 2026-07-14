@@ -2,10 +2,11 @@ import type { BuilderState } from "@/types/builder";
 import type { PlannerOverrides } from "@/types/overrides";
 
 import { describe, it, expect } from "vitest";
+
+import { baseConfig, account, m } from "@/engine/__tests__/factories";
+import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 import { builderToConfig } from "@/engine/builderToConfig";
 import { configToBuilder } from "@/engine/configToBuilder";
-import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
-import { baseConfig, account, m } from "@/engine/__tests__/factories";
 
 const baseState: BuilderState = {
   startMonth: m("2025-01"),

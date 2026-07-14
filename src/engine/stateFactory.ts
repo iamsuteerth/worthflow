@@ -1,6 +1,6 @@
 import type { PlannerConfig } from "@/types/config";
-import type { SimulationState } from "@/types/simulationState";
 import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
+import type { SimulationState } from "@/types/simulationState";
 
 import { addMonths } from "@/engine/dateUtils";
 import { createHistoricalFdPosition } from "@/engine/fd";

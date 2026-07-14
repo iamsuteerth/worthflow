@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import { ActionIcon, Group, Textarea, Tooltip } from '@mantine/core';
 import { IconSend, IconPlayerStopFilled, IconWand } from '@tabler/icons-react';
+import { useState } from 'react';
+
 import { looksLikeActionRequest } from '@/ai/actions/intentRouting';
 
 interface Props {

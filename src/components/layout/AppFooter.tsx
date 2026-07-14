@@ -1,4 +1,9 @@
-import { Anchor, Box, Group, Text } from "@mantine/core";
+import {
+  Anchor,
+  Box,
+  Group,
+  Text,
+} from "@mantine/core";
 import { IconBrandGithub, IconBrandLinkedin, IconHeartFilled } from "@tabler/icons-react";
 
 interface AppFooterProps {

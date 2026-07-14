@@ -1,5 +1,6 @@
-import { money as _money } from "@/format/money";
 import type { FinancialEvent } from "@/types/events";
+
+import { money as _money } from "@/format/money";
 
 export function money(value: number): string {
   return _money(value);

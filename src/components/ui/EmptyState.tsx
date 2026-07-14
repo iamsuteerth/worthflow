@@ -1,7 +1,12 @@
-import type { ReactNode } from "react";
 import type { PaperProps } from "@mantine/core";
+import type { ReactNode } from "react";
 
-import { Paper, Stack, Text, ThemeIcon } from "@mantine/core";
+import {
+  Paper,
+  Stack,
+  Text,
+  ThemeIcon,
+} from "@mantine/core";
 
 interface EmptyStateProps extends Omit<PaperProps, "children"> {
   title: string;

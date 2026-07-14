@@ -1,12 +1,20 @@
 import type { ReactNode } from "react";
 
-import { Button, Card, Group, Modal, Stack, Text, ThemeIcon } from "@mantine/core";
+import {
+  Button,
+  Card,
+  Group,
+  Modal,
+  Stack,
+  Text,
+  ThemeIcon,
+} from "@mantine/core";
 import { IconChartLine, IconFlask, IconPlayerPlay } from "@tabler/icons-react";
 
-import { usePlannerStore } from "@/store/plannerStore";
-import { useUiStore } from "@/store/uiStore";
 import { startForecastTour } from "@/components/onboarding/forecastTour";
 import { startScenarioTour } from "@/components/onboarding/scenarioTour";
+import { usePlannerStore } from "@/store/plannerStore";
+import { useUiStore } from "@/store/uiStore";
 
 interface Props {
   opened: boolean;

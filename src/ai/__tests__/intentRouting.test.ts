@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { looksLikeActionRequest } from '@/ai/actions/intentRouting';
 
 describe('looksLikeActionRequest — Send-button intent routing', () => {

@@ -1,6 +1,5 @@
 import type { MonthKey } from "@/types/simulation";
 
-import { Fragment, useEffect, useState } from "react";
 import {
   ActionIcon,
   Badge,
@@ -15,15 +14,17 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconChevronRight, IconEdit, IconTrash } from "@tabler/icons-react";
+import { Fragment, useEffect, useState } from "react";
+
+import { EditEventModal } from "@/components/scenario/RuntimeEventList";
+import { money } from "@/components/tables/tableUtils";
+import { EmptyState } from "@/components/ui";
+import { buildAccountSchedule, type ScheduleRange } from "@/engine/accountSchedule";
+import { generateMonths, getMonthIndex } from "@/engine/dateUtils";
+import { formatMonth } from "@/engine/monthFormatting";
 import { useSimulation } from "@/hooks/useSimulation";
 import { usePlannerStore } from "@/store/plannerStore";
 import { useUiStore } from "@/store/uiStore";
-import { formatMonth } from "@/engine/monthFormatting";
-import { generateMonths, getMonthIndex } from "@/engine/dateUtils";
-import { buildAccountSchedule, type ScheduleRange } from "@/engine/accountSchedule";
-import { money } from "@/components/tables/tableUtils";
-import { EmptyState } from "@/components/ui";
-import { EditEventModal } from "@/components/scenario/RuntimeEventList";
 
 function rangeLabel(range: ScheduleRange, kind: "contribution" | "return"): string {
   if (range.source === "DEFAULT") {

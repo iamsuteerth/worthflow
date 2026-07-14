@@ -1,8 +1,9 @@
 import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
 
 import { describe, it, expect } from "vitest";
-import { createInitialState } from "@/engine/stateFactory";
+
 import { baseConfig, account, m } from "@/engine/__tests__/factories";
+import { createInitialState } from "@/engine/stateFactory";
 
 describe("createInitialState", () => {
   it("seeds cash from the opening balance and zeroes account balances", () => {

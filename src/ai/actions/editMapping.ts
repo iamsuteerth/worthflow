@@ -1,5 +1,5 @@
-import type { RuntimeEvent } from '@/types/runtimeEvent';
 import type { ResolvedProposedAction } from '@/ai/actions/actionSchema';
+import type { RuntimeEvent } from '@/types/runtimeEvent';
 
 type EditAction = Extract<ResolvedProposedAction, { kind: 'EDIT_SCENARIO_EVENT' }>;
 

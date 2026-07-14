@@ -1,7 +1,7 @@
 import type { PlannerConfig } from "@/types/config";
 import type { AccountSnapshot } from "@/types/investmentAccount";
-import type { MonthKey } from "@/types/simulation";
 import type { RuntimeInvestmentDeposit, RuntimeInvestmentWithdrawal } from "@/types/runtimeEvent";
+import type { MonthKey } from "@/types/simulation";
 
 export function getAccountReturn(config: PlannerConfig, accountId: string, month: MonthKey): number {
   const account = config.investments.accounts.find((a) => a.id === accountId);

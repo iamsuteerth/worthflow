@@ -15,8 +15,8 @@ vi.hoisted(() => {
   }
 });
 
-import { usePlannerStore } from '@/store/plannerStore';
 import { baseConfig, account, m } from '@/engine/__tests__/factories';
+import { usePlannerStore } from '@/store/plannerStore';
 
 function loadBaseline() {
   const cfg = baseConfig({

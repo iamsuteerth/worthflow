@@ -1,5 +1,5 @@
-import type { MonthKey } from "@/types/simulation";
 import type { EventCategory } from "@/engine/eventCategories";
+import type { MonthKey } from "@/types/simulation";
 
 import { create } from "zustand";
 

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { compareScenario } from "@/engine/scenarioComparison";
+
 import { baseConfig, m } from "./factories";
+import { compareScenario } from "@/engine/scenarioComparison";
 
 describe("compareScenario", () => {
   it("reports zero deltas when there are no overrides", () => {

@@ -1,17 +1,8 @@
+import type { SalaryChange, BonusIncome } from "@/types/incomeEvents";
 import type { Instrument } from "@/types/instrument";
-import type { MonthKey } from "@/types/simulation";
+import type { InvestmentAccount, AccountAmountOverride, AccountReturnOverride } from "@/types/investmentAccount";
 import type { RecurringExpense } from "@/types/recurringExpense";
-
-import type {
-  SalaryChange,
-  BonusIncome,
-} from "@/types/incomeEvents";
-
-import type {
-  InvestmentAccount,
-  AccountAmountOverride,
-  AccountReturnOverride,
-} from "@/types/investmentAccount";
+import type { MonthKey } from "@/types/simulation";
 
 export interface ForecastConfig {
   startMonth: MonthKey;

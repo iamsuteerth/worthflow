@@ -1,4 +1,9 @@
+import type { KeyBlob } from '@/ai/cloud/aiCloud';
+
 import { describe, it, expect, beforeEach } from 'vitest';
+
+import { AI_KDF_ITERATIONS } from '@/ai/config';
+import { deriveKek, aesGcmEncrypt, randomBase64 } from '@/ai/keyVault/crypto';
 import {
   encryptNewKey,
   revealKey,
@@ -11,9 +16,6 @@ import {
   decryptWithSessionKek,
   resolveKeyStatus,
 } from '@/ai/keyVault/keyVault';
-import { deriveKek, aesGcmEncrypt, randomBase64 } from '@/ai/keyVault/crypto';
-import { AI_KDF_ITERATIONS } from '@/ai/config';
-import type { KeyBlob } from '@/ai/cloud/aiCloud';
 
 type PartialBlob = Awaited<ReturnType<typeof encryptNewKey>>['blob'];
 const full = (b: PartialBlob): KeyBlob => ({

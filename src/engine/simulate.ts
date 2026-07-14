@@ -1,6 +1,5 @@
 
 import type { AssetSnapshot } from "@/types/assets";
-import type { MonthlyCashflow, SimulationRow, SimulationSummary, MonthKey } from "@/types/simulation";
 import type { PlannerConfig } from "@/types/config";
 import type { PlannerOverrides } from "@/types/overrides";
 import type {
@@ -10,7 +9,16 @@ import type {
   RuntimeAccountReturnOverride,
   RuntimeSpendingOverride,
 } from "@/types/runtimeEvent";
+import type {
+  MonthlyCashflow,
+  SimulationRow,
+  SimulationSummary,
+  MonthKey,
+} from "@/types/simulation";
 
+import { getAccountContribution, processAccountMonth } from "@/engine/accountSimulation";
+import { buildCashflowEvents } from "@/engine/buildCashflowEvents";
+import { calculateXirr } from "@/engine/calculateXirr";
 import {
   getMonthlyExpense,
   getCreditCardExpense,
@@ -19,14 +27,9 @@ import {
   getMonthlyIncome,
   getBonusIncome,
 } from "@/engine/configLookups";
-
-import { createInitialState } from "@/engine/stateFactory";
-import { processInstrumentLifecycle } from "@/engine/instrumentLifecycle";
-import { buildCashflowEvents } from "@/engine/buildCashflowEvents";
-import { getAccountContribution, processAccountMonth } from "@/engine/accountSimulation";
-
-import { calculateXirr } from "@/engine/calculateXirr";
 import { generateMonths } from "@/engine/dateUtils";
+import { processInstrumentLifecycle } from "@/engine/instrumentLifecycle";
+import { createInitialState } from "@/engine/stateFactory";
 
 export interface SimulationResult {
   rows: SimulationRow[];

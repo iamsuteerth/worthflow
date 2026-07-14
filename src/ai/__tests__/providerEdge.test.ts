@@ -1,9 +1,11 @@
+import type { Message } from '@/ai/chat/conversation.types';
+
 import { describe, it, expect } from 'vitest';
-import { translateError, buildContents } from '@/ai/provider/geminiProvider';
-import { isAbortError } from '@/ai/provider/types';
+
 import { estimateTokens, shouldCompact } from '@/ai/chat/tokenBudget';
 import { MAX_CONVERSATION_TOKENS } from '@/ai/config';
-import type { Message } from '@/ai/chat/conversation.types';
+import { translateError, buildContents } from '@/ai/provider/geminiProvider';
+import { isAbortError } from '@/ai/provider/types';
 
 describe('translateError — message-only classification', () => {
   it("maps Safari's 'Load failed' and case variants to NETWORK", () => {

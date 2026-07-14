@@ -15,9 +15,10 @@ vi.hoisted(() => {
   }
 });
 
-import { usePlannerStore } from '@/store/plannerStore';
-import { baseConfig, account, m } from '@/engine/__tests__/factories';
 import type { RuntimeEvent } from '@/types/runtimeEvent';
+
+import { baseConfig, account, m } from '@/engine/__tests__/factories';
+import { usePlannerStore } from '@/store/plannerStore';
 
 function setPlan(over = {}) {
   const cfg = baseConfig({

@@ -1,5 +1,5 @@
-import type { PlannerConfig } from "@/types/config";
 import type { BuilderState } from "@/types/builder";
+import type { PlannerConfig } from "@/types/config";
 
 export function builderToConfig(state: BuilderState): PlannerConfig {
   return {

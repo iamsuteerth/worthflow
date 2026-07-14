@@ -1,8 +1,16 @@
-import { useState } from 'react';
-import { Alert, Button, Group, PasswordInput, Stack, Text } from '@mantine/core';
+import {
+  Alert,
+  Button,
+  Group,
+  PasswordInput,
+  Stack,
+  Text,
+} from '@mantine/core';
 import { IconLockOpen } from '@tabler/icons-react';
-import { useAiStore } from '@/store/aiStore';
+import { useState } from 'react';
+
 import { AiError } from '@/ai/provider/types';
+import { useAiStore } from '@/store/aiStore';
 
 interface Props {
   onForgotPassphrase: () => void;

@@ -32,7 +32,7 @@ Formatting:
 - Reply in GitHub-flavoured Markdown. Use **bold** for key figures, bullet or numbered lists for multiple points, and a Markdown table when comparing several months or instruments.
 - Be concise and friendly: answer the question directly, then stop. Don't pad or repeat the question back.`;
 
-// Phase 2 action contract. APPENDED to SYSTEM_PROMPT (never forks it) only on
+// Action contract. APPENDED to SYSTEM_PROMPT (never forks it) only on
 // the explicit "Suggest a change" path, where the provider runs in JSON mode.
 // The model emits ONE ProposedAction object; the app validates it with Zod and
 // the user must explicitly Apply it — the AI never changes the plan itself.

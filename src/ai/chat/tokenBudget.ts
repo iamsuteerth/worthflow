@@ -1,6 +1,8 @@
-import { MAX_CONVERSATION_TOKENS, MAX_HISTORY_TOKENS } from '@/ai/config';
-export { MAX_HISTORY_TOKENS };
 import type { Message } from '@/ai/chat/conversation.types';
+
+import { MAX_CONVERSATION_TOKENS, MAX_HISTORY_TOKENS } from '@/ai/config';
+
+export { MAX_HISTORY_TOKENS };
 
 /** Cheap heuristic: 1 token ≈ 4 characters. */
 export function estimateTokens(text: string): number {

@@ -1,8 +1,9 @@
 /* eslint-disable react-refresh/only-export-components -- colocated draft types + validation with these small field-groups */
-import type { MonthKey } from "@/types/simulation";
 import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
+import type { MonthKey } from "@/types/simulation";
 
 import { Grid, NumberInput, Stack, TextInput } from "@mantine/core";
+
 import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
 
 // FD/RD inputs + constraints, shared by the inline Add cards and the Edit modal. FD and RD

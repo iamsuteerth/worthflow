@@ -2,6 +2,7 @@ import type { MonthKey } from "@/types/simulation";
 
 import { Select } from "@mantine/core";
 import { useMemo } from "react";
+
 import { formatMonth } from "@/engine/monthFormatting";
 
 interface Props {

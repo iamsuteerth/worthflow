@@ -16,9 +16,10 @@ import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconDeviceFloppy, IconFolderOpen, IconTrash } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
+
 import { compareScenario } from "@/engine/scenarioComparison";
-import { usePlannerStore } from "@/store/plannerStore";
 import { moneySigned } from "@/format/money";
+import { usePlannerStore } from "@/store/plannerStore";
 
 function DeltaStat({ label, value }: { label: string; value: number }) {
   const color = value > 0 ? "teal" : value < 0 ? "red" : "dimmed";

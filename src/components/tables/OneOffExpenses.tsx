@@ -1,9 +1,10 @@
 import { ScrollArea, Stack, Table, Text } from "@mantine/core";
-import { usePlannerStore } from "@/store/plannerStore";
-import { formatMonth } from "@/engine/monthFormatting";
-import { EmptyState, RecordCard, Money } from "@/components/ui";
+
 import { money } from "@/components/tables/tableUtils";
+import { EmptyState, RecordCard, Money } from "@/components/ui";
+import { formatMonth } from "@/engine/monthFormatting";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { usePlannerStore } from "@/store/plannerStore";
 
 export default function OneOffExpensesTable() {
   const config = usePlannerStore((state) => state.config);

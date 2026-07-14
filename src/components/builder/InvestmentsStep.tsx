@@ -15,10 +15,7 @@ import {
 
 import { IconAlertTriangle, IconChartLine, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
-import { formatMonth } from "@/engine/monthFormatting";
-import { money } from "@/format/money";
-import { useBuilderStore } from "@/store/builderStore";
-import { forecastEndMonth } from "@/engine/dateUtils";
+
 import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
 import EditItemModal from "@/components/builder/EditItemModal";
 import AccountFields, {
@@ -26,6 +23,10 @@ import AccountFields, {
   accountDraftValid,
   emptyAccountDraft,
 } from "@/components/builder/fields/AccountFields";
+import { forecastEndMonth } from "@/engine/dateUtils";
+import { formatMonth } from "@/engine/monthFormatting";
+import { money } from "@/format/money";
+import { useBuilderStore } from "@/store/builderStore";
 
 export default function InvestmentsStep() {
   const state = useBuilderStore((store) => store.state);

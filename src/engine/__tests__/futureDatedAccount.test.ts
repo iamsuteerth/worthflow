@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { simulate } from "@/engine/simulate";
+
 import { baseConfig, account, m } from "@/engine/__tests__/factories";
+import { simulate } from "@/engine/simulate";
 
 function withAccount(startMonth: string, openingBalance: number, openingCash: number) {
   return baseConfig({

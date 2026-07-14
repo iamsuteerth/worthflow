@@ -27,9 +27,9 @@ const storage = vi.hoisted(() => ({
 }));
 vi.mock('@/lib/storage', () => storage);
 
+import { baseConfig, m } from '@/engine/__tests__/factories';
 import { useCloudStore } from '@/store/cloudStore';
 import { usePlannerStore } from '@/store/plannerStore';
-import { baseConfig, m } from '@/engine/__tests__/factories';
 
 function preconditionFailed(): Error {
   const e = new Error('precondition failed') as Error & { name: string };

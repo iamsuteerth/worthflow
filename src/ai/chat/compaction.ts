@@ -1,7 +1,8 @@
-import { KEEP_TAIL_MESSAGES, SUMMARY_SYSTEM_PROMPT } from '@/ai/config';
-import { estimateTokens } from '@/ai/chat/tokenBudget';
 import type { Conversation } from '@/ai/chat/conversation.types';
 import type { AIProvider } from '@/ai/provider/types';
+
+import { estimateTokens } from '@/ai/chat/tokenBudget';
+import { KEEP_TAIL_MESSAGES, SUMMARY_SYSTEM_PROMPT } from '@/ai/config';
 
 /**
  * Compacts the conversation: summarizes the older turns that fall outside

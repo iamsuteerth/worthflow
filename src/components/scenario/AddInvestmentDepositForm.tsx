@@ -2,12 +2,13 @@ import type { MonthKey } from "@/types/simulation";
 
 import { Button, NumberInput, Select, Stack, Text } from "@mantine/core";
 import { IconArrowDown } from "@tabler/icons-react";
-import { money } from "@/format/money";
 import { useState } from "react";
-import { formatMonth } from "@/engine/monthFormatting";
-import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
+
 import MonthSelect from "@/components/common/MonthSelect";
 import { forecastEndMonth } from "@/engine/dateUtils";
+import { formatMonth } from "@/engine/monthFormatting";
+import { money } from "@/format/money";
+import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
 
 export default function AddInvestmentDepositForm() {
   const addDeposit = usePlannerStore((s) => s.addTransientInvestmentDeposit);

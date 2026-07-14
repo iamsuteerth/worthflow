@@ -1,5 +1,5 @@
-import type { PlannerOverrides } from '@/types/overrides';
 import type { ResolvedProposedAction } from '@/ai/actions/actionSchema';
+import type { PlannerOverrides } from '@/types/overrides';
 
 // ---------------------------------------------------------------------------
 // Derived "applied" state for an AI proposal.

@@ -1,13 +1,14 @@
 import { Badge, ScrollArea, Stack, Table, Text } from "@mantine/core";
 import { useMemo } from "react";
-import { usePlannerStore } from "@/store/plannerStore";
-import { useFilterStore } from "@/store/filterStore";
-import { addMonths } from "@/engine/dateUtils";
-import { formatMonth } from "@/engine/monthFormatting";
-import { EmptyState, RecordCard, Money } from "@/components/ui";
+
 import { money } from "@/components/tables/tableUtils";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { EmptyState, RecordCard, Money } from "@/components/ui";
+import { addMonths } from "@/engine/dateUtils";
 import { projectInstrument } from "@/engine/instrumentProjection";
+import { formatMonth } from "@/engine/monthFormatting";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { useFilterStore } from "@/store/filterStore";
+import { usePlannerStore } from "@/store/plannerStore";
 
 export default function InstrumentsTable() {
   const config = usePlannerStore((state) => state.config);

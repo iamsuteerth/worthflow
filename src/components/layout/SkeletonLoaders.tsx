@@ -1,4 +1,10 @@
-import { AppShell, Group, SimpleGrid, Skeleton, Stack } from "@mantine/core";
+import {
+  AppShell,
+  Group,
+  SimpleGrid,
+  Skeleton,
+  Stack,
+} from "@mantine/core";
 
 export function AppLoadingSkeleton() {
   return (

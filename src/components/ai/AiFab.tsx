@@ -1,14 +1,15 @@
-import { useState, useContext, useEffect } from 'react';
 import { Paper, Transition } from '@mantine/core';
 import { IconSparkles, IconX } from '@tabler/icons-react';
-import { useAuthStore } from '@/store/authStore';
+import { useState, useContext, useEffect } from 'react';
+
+import { ThemeContext } from '@/app/theme-context';
+import { computePanelGeometry, FAB_SIZE, FAB_INSET } from '@/components/ai/aiFabGeometry';
+import ChatPanel from '@/components/ai/ChatPanel';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { useAiStore } from '@/store/aiStore';
+import { useAuthStore } from '@/store/authStore';
 import { usePlannerStore } from '@/store/plannerStore';
 import { useUiStore } from '@/store/uiStore';
-import { ThemeContext } from '@/app/theme-context';
-import { useIsMobile } from '@/hooks/useIsMobile';
-import ChatPanel from '@/components/ai/ChatPanel';
-import { computePanelGeometry, FAB_SIZE, FAB_INSET } from '@/components/ai/aiFabGeometry';
 
 const IO_THRESHOLDS = Array.from({ length: 11 }, (_, i) => i / 10);
 

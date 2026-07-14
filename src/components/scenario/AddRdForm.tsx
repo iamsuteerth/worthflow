@@ -3,13 +3,14 @@ import type { MonthKey } from "@/types/simulation";
 import { Button, Grid, NumberInput, Stack, Text, TextInput } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import { useState } from "react";
-import { addMonths, forecastEndMonth } from "@/engine/dateUtils";
-import { formatMonth } from "@/engine/monthFormatting";
-import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
+
 import MonthSelect from "@/components/common/MonthSelect";
 import InstrumentPreview from "@/components/scenario/InstrumentPreview";
+import { addMonths, forecastEndMonth } from "@/engine/dateUtils";
 import { rdMaturityValue } from "@/engine/instrumentProjection";
+import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
+import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
 
 export default function AddRdForm() {
   const addRd = usePlannerStore((state) => state.addTransientRd);

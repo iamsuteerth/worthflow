@@ -4,8 +4,9 @@ import type { SavedScenario } from "@/types/scenario";
 import type { MonthKey } from "@/types/simulation";
 
 import { z } from "zod";
-import { calculateChecksum } from "@/engine/checksum";
+
 import { decodeBase64 } from "@/engine/base64";
+import { calculateChecksum } from "@/engine/checksum";
 
 const MonthKeySchema = z.custom<MonthKey>(
   (value) =>

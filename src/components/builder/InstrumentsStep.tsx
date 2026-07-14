@@ -15,10 +15,7 @@ import {
 
 import { IconBuildingBank, IconPencil, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
-import { formatMonth } from "@/engine/monthFormatting";
-import { money } from "@/format/money";
-import { useBuilderStore } from "@/store/builderStore";
-import { forecastEndMonth } from "@/engine/dateUtils";
+
 import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
 import EditItemModal from "@/components/builder/EditItemModal";
 import {
@@ -31,6 +28,10 @@ import {
   fdDraftValid,
   rdDraftValid,
 } from "@/components/builder/fields/InstrumentFields";
+import { forecastEndMonth } from "@/engine/dateUtils";
+import { formatMonth } from "@/engine/monthFormatting";
+import { money } from "@/format/money";
+import { useBuilderStore } from "@/store/builderStore";
 
 type Editing =
   | { id: string; kind: "FD"; draft: FdDraft }

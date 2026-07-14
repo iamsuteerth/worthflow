@@ -1,8 +1,9 @@
 import type { PlannerOverrides } from "@/types/overrides";
 
 import { describe, it, expect } from "vitest";
-import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
+
 import { baseConfig, account, m } from "@/engine/__tests__/factories";
+import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
 
 describe("buildEffectiveConfig — scalar overrides", () => {
   it("returns an unchanged clone when overrides are empty", () => {

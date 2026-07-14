@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import type { ReactNode } from 'react';
+
 import {
   Alert,
   Button,
@@ -16,10 +16,12 @@ import {
   Select,
 } from '@mantine/core';
 import { IconAlertTriangle, IconCheck, IconKey, IconShieldCheck, IconTrash } from '@tabler/icons-react';
-import { useAiStore } from '@/store/aiStore';
-import { AiError } from '@/ai/provider/types';
+import { useState } from 'react';
+
 import { AI_PASSPHRASE_MIN } from '@/ai/config';
 import { getModelSelectData, getDefaultModelId } from '@/ai/provider/modelCatalog';
+import { AiError } from '@/ai/provider/types';
+import { useAiStore } from '@/store/aiStore';
 
 // Gemini setup copy: how to get a key, and how to harden it. The key vault is
 // provider-agnostic; only this copy and the endpoint differ.

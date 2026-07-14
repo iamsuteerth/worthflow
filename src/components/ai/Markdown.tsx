@@ -1,9 +1,10 @@
 import type { Components } from 'react-markdown';
 
-import { memo } from 'react';
 import { Anchor, Table, Text } from '@mantine/core';
+import { memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+
 import { safeUrl } from '@/components/ai/markdownUrl';
 
 const components: Components = {

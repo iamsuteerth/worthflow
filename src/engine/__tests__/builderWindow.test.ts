@@ -1,7 +1,7 @@
-import { describe, it, expect } from "vitest";
-
 import type { BuilderState } from "@/types/builder";
 import type { PlannerConfig } from "@/types/config";
+
+import { describe, it, expect } from "vitest";
 
 import {
   findOutOfWindowItems,

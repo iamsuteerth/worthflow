@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+
 import { calculateXirr } from "@/engine/calculateXirr";
 
 describe("calculateXirr", () => {

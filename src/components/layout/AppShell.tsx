@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
 
-import { lazy, Suspense } from "react";
-
 import {
   ActionIcon,
   AppShell,
@@ -17,19 +15,19 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconHelpCircle } from "@tabler/icons-react";
+import { lazy, Suspense } from "react";
 
-import { AI_ENABLED } from "@/lib/featureFlags";
-import { useIsMobile } from "@/hooks/useIsMobile";
-import { usePlannerStore } from "@/store/plannerStore";
-import { useUiStore } from "@/store/uiStore";
-import { useAuthStore } from "@/store/authStore";
-import { UserProfileModal } from "@/components/profile/UserProfileModal";
-import TutorialModal from "@/components/onboarding/TutorialModal";
-import { getInitials } from "@/utils/display";
-
-import ThemeToggle from "@/components/layout/ThemeToggle";
 import AppFooter from "@/components/layout/AppFooter";
 import { ScenarioPanelSkeleton } from "@/components/layout/SkeletonLoaders";
+import ThemeToggle from "@/components/layout/ThemeToggle";
+import TutorialModal from "@/components/onboarding/TutorialModal";
+import { UserProfileModal } from "@/components/profile/UserProfileModal";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { AI_ENABLED } from "@/lib/featureFlags";
+import { useAuthStore } from "@/store/authStore";
+import { usePlannerStore } from "@/store/plannerStore";
+import { useUiStore } from "@/store/uiStore";
+import { getInitials } from "@/utils/display";
 
 const AiFab = AI_ENABLED
   ? lazy(() => import("@/components/ai/AiFab"))

@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+
 import { generateMonths, addMonths, forecastEndMonth } from "@/engine/dateUtils";
 
 describe("generateMonths", () => {

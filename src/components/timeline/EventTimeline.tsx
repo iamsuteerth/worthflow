@@ -7,12 +7,12 @@ import {
   Timeline,
 } from "@mantine/core";
 
-import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
-import { formatMonth, formatMonthGrouped } from "@/engine/monthFormatting";
-import { useFilterStore } from "@/store/filterStore";
-import { EVENT_CATEGORY_LIST, getEventCategory } from "@/engine/eventCategories";
-import { getEventVisual } from "@/theme/eventVisuals";
 import { EmptyState, AdaptiveMoney } from "@/components/ui";
+import { EVENT_CATEGORY_LIST, getEventCategory } from "@/engine/eventCategories";
+import { formatMonth, formatMonthGrouped } from "@/engine/monthFormatting";
+import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
+import { useFilterStore } from "@/store/filterStore";
+import { getEventVisual } from "@/theme/eventVisuals";
 
 const EXCLUDED_TYPES = new Set([
   "ACCOUNT_CREATED",

@@ -1,4 +1,5 @@
 import { notifications } from "@mantine/notifications";
+
 import { SAVE_LIMIT } from "@/store/cloudStore";
 
 const usage = (used: number) => `${used} of ${SAVE_LIMIT} cloud slots used.`;

@@ -25,11 +25,11 @@ const storage = vi.hoisted(() => ({
 }));
 vi.mock('@/lib/storage', () => storage);
 
-import { useCloudStore } from '@/store/cloudStore';
-import { usePlannerStore } from '@/store/plannerStore';
+import { baseConfig, m } from '@/engine/__tests__/factories';
 import { encodeBase64 } from '@/engine/base64';
 import { calculateChecksum } from '@/engine/checksum';
-import { baseConfig, m } from '@/engine/__tests__/factories';
+import { useCloudStore } from '@/store/cloudStore';
+import { usePlannerStore } from '@/store/plannerStore';
 
 const META = { label: 'x', networth: 0, timeframeMonths: 12, createdAt: '2026-01-01T00:00:00.000Z' };
 

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { isValidEmail, isValidPassword } from '@/lib/validation';
 import { getInitials, formatDate, formatDateShort } from '@/utils/display';
 

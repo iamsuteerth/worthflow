@@ -1,6 +1,7 @@
+import type { AIProvider, ProviderId } from '@/ai/provider/types';
+
 import geminiProvider from '@/ai/provider/geminiProvider';
 import mockProvider from '@/ai/provider/mockProvider';
-import type { AIProvider, ProviderId } from '@/ai/provider/types';
 
 // When the app is built/run in mock mode, every provider request is served by the
 // deterministic mock — regardless of what the stored keyblob says — so `dev:mock`

@@ -1,15 +1,16 @@
 import type { MonthKey } from "@/types/simulation";
 
 import { Button, Grid, NumberInput, Stack, Text, TextInput } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
+import { IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
+
+import MonthSelect from "@/components/common/MonthSelect";
+import { forecastEndMonth } from "@/engine/dateUtils";
+import { formatMonth } from "@/engine/monthFormatting";
+import { money } from "@/format/money";
 import { getAvailableCash, usePlannerStore } from "@/store/plannerStore";
 import { useUiStore } from "@/store/uiStore";
-import { money } from "@/format/money";
-import { formatMonth } from "@/engine/monthFormatting";
-import { forecastEndMonth } from "@/engine/dateUtils";
-import MonthSelect from "@/components/common/MonthSelect";
 
 const labelStyle = {
   label: {

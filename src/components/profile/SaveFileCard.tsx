@@ -1,5 +1,14 @@
-import { ActionIcon, Button, Card, Group, Skeleton, Stack, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Card,
+  Group,
+  Skeleton,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { IconDownload, IconTrash } from "@tabler/icons-react";
+
 import { Money } from "@/components/ui";
 import { formatDateShort } from "@/utils/display";
 

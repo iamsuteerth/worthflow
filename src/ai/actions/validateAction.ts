@@ -1,13 +1,11 @@
-import { generateMonths } from '@/engine/dateUtils';
-import { isValidAnnualRange } from '@/engine/annualExpense';
 import type { MonthKey } from '@/types/simulation';
-import {
-  proposedActionSchema,
-  type ResolvedProposedAction,
-} from '@/ai/actions/actionSchema';
+
+import { proposedActionSchema, type ResolvedProposedAction } from '@/ai/actions/actionSchema';
+import { isValidAnnualRange } from '@/engine/annualExpense';
+import { generateMonths } from '@/engine/dateUtils';
 
 // ---------------------------------------------------------------------------
-// validateAction — layer 1 of the two-layer defence (PHASE2.dev.md §4).
+// validateAction — layer 1 of the two-layer defence.
 //
 // Takes untrusted JSON from the model + the live forecast context, and either
 // returns a well-formed, in-window, ref-resolved action or a single

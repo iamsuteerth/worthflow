@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
+
+import { proposedActionSchema } from '@/ai/actions/actionSchema';
 import { translateError, buildContents } from '@/ai/provider/geminiProvider';
 import mockProvider from '@/ai/provider/mockProvider';
-import { proposedActionSchema } from '@/ai/actions/actionSchema';
 
 describe('translateError — classification', () => {
   it('maps auth failures to INVALID_KEY', () => {
@@ -139,7 +140,7 @@ describe('mockProvider', () => {
   });
 });
 
-describe('mockProvider.proposeAction (Phase 2)', () => {
+describe('mockProvider.proposeAction', () => {
   it('returns a schema-valid canned action inside the context window', async () => {
     const result = await mockProvider.proposeAction(
       {

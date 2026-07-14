@@ -3,8 +3,9 @@ import type { MonthKey } from "@/types/simulation";
 
 import { Alert, NumberInput, SegmentedControl, Stack, TextInput } from "@mantine/core";
 import { IconAlertCircle } from "@tabler/icons-react";
-import { getMaxAnnualYears, deriveAnnualEndMonth } from "@/engine/annualExpense";
+
 import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
+import { getMaxAnnualYears, deriveAnnualEndMonth } from "@/engine/annualExpense";
 
 // ── Month + text + amount (one-off expense, credit-card bill, bonus, salary change) ──
 // These four events all reduce to a single dated month, a text label and an amount; only the

@@ -1,8 +1,9 @@
 /* eslint-disable react-refresh/only-export-components -- colocated draft type + validation with this small field-group */
-import type { MonthKey } from "@/types/simulation";
 import type { InvestmentAccount } from "@/types/investmentAccount";
+import type { MonthKey } from "@/types/simulation";
 
 import { Grid, NumberInput, TextInput } from "@mantine/core";
+
 import BuilderMonthSelect from "@/components/builder/BuilderMonthSelect";
 
 // One source of truth for the investment-account inputs + their constraints, shared by the

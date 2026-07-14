@@ -1,5 +1,5 @@
-import type { PlannerConfig } from "@/types/config";
 import type { BuilderState } from "@/types/builder";
+import type { PlannerConfig } from "@/types/config";
 
 // Inverse of builderToConfig: rebuilds the wizard draft from a generated/loaded
 // baseConfig. Override-layer data (expenses.overrides, investments.*Overrides,

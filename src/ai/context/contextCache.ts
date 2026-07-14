@@ -1,8 +1,8 @@
 import type { PlannerConfig } from '@/types/config';
 import type { PlannerOverrides } from '@/types/overrides';
 
-import { simulate } from '@/engine/simulate';
 import { buildContextPack, serializeContextPack, hasActiveScenario } from '@/ai/context/buildContextPack';
+import { simulate } from '@/engine/simulate';
 
 // Building the pack re-runs simulate() and serialises the result. plannerStore
 // replaces `config`/`overrides` with new object references on every plan change,

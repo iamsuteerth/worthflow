@@ -1,12 +1,9 @@
 import { Card, Grid, Group, NumberInput, Stack, Text, ThemeIcon } from "@mantine/core";
-import {
-  IconBolt,
-  IconCash,
-  IconWallet,
-} from "@tabler/icons-react";
-import { useBuilderStore } from "@/store/builderStore";
+import { IconBolt, IconCash, IconWallet } from "@tabler/icons-react";
+
 import BuilderStepContainer from "@/components/builder/BuilderStepContainer";
 import { moneySigned } from "@/format/money";
+import { useBuilderStore } from "@/store/builderStore";
 
 function FieldCard({
   icon,

@@ -3,8 +3,8 @@ import type { Instrument, FixedDeposit } from "@/types/instrument";
 import type { MonthKey } from "@/types/simulation";
 
 import { addMonths } from "@/engine/dateUtils";
-import { calculateRdValue } from "@/engine/rdMath";
 import { createFdPosition, updateFdPosition } from "@/engine/fd";
+import { calculateRdValue } from "@/engine/rdMath";
 
 export interface InstrumentProjection {
   principal: number;

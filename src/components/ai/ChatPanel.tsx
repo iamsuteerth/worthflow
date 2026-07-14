@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-
 import {
   ActionIcon,
   Alert,
@@ -12,9 +10,7 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
-
 import { useDisclosure } from '@mantine/hooks';
-
 import {
   IconDotsVertical,
   IconRefresh,
@@ -24,14 +20,15 @@ import {
   IconTrash,
   IconX,
 } from '@tabler/icons-react';
+import { useEffect, useState } from 'react';
 
+import { getModelEntry, PROVIDER_LABELS } from '@/ai/provider/modelCatalog';
+import KeySettings from '@/components/ai/KeySettings';
+import MessageComposer from '@/components/ai/MessageComposer';
+import MessageList from '@/components/ai/MessageList';
+import UnlockPrompt from '@/components/ai/UnlockPrompt';
 import { useAiStore } from '@/store/aiStore';
 import { useUiStore } from '@/store/uiStore';
-import { getModelEntry, PROVIDER_LABELS } from '@/ai/provider/modelCatalog';
-import MessageList from '@/components/ai/MessageList';
-import MessageComposer from '@/components/ai/MessageComposer';
-import UnlockPrompt from '@/components/ai/UnlockPrompt';
-import KeySettings from '@/components/ai/KeySettings';
 
 export default function ChatPanel() {
   const keyStatus = useAiStore((s) => s.keyStatus);

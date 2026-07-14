@@ -1,4 +1,5 @@
 import { Badge, ThemeIcon } from "@mantine/core";
+
 import { getEventVisual } from "@/theme/eventVisuals";
 
 interface EventBadgeProps {

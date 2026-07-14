@@ -1,8 +1,14 @@
 import type { ReactNode } from "react";
 
-import { Component } from "react";
-import { Button, Center, Stack, Text, Title } from "@mantine/core";
+import {
+  Button,
+  Center,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { IconAlertCircle } from "@tabler/icons-react";
+import { Component } from "react";
 
 interface Props {
   children: ReactNode;

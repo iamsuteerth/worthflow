@@ -1,6 +1,7 @@
+import type { MonthKey } from "@/types/simulation";
+
 import { beforeEach, describe, it, expect } from "vitest";
 
-import type { MonthKey } from "@/types/simulation";
 import { useBuilderStore } from "@/store/builderStore";
 
 const m = (s: string) => s as MonthKey;

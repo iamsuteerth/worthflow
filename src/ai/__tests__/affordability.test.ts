@@ -16,8 +16,8 @@ vi.hoisted(() => {
 });
 
 import { affordabilityWarning } from '@/ai/actions/checkFeasibility';
-import { usePlannerStore } from '@/store/plannerStore';
 import { baseConfig, account, m } from '@/engine/__tests__/factories';
+import { usePlannerStore } from '@/store/plannerStore';
 
 beforeEach(() => {
   const cfg = baseConfig({

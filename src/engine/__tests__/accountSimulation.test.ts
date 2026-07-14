@@ -1,8 +1,9 @@
 import type { RuntimeInvestmentDeposit, RuntimeInvestmentWithdrawal } from "@/types/runtimeEvent";
 
 import { describe, it, expect } from "vitest";
+
+import { baseConfig, account, m } from "@/engine/__tests__/factories";
 import { getAccountReturn, getAccountContribution, processAccountMonth } from "@/engine/accountSimulation";
-import { baseConfig, account, m } from  "@/engine/__tests__/factories";
 
 const MONTHLY_FACTOR = (annual: number) => Math.pow(1 + annual / 100, 1 / 12);
 

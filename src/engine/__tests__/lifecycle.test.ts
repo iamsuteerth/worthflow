@@ -1,11 +1,12 @@
 import type { FixedDeposit, RecurringDeposit } from "@/types/instrument";
 
 import { describe, it, expect } from "vitest";
-import { createInitialState } from "@/engine/stateFactory";
-import { processFdLifecycle } from "@/engine/fdLifecycle";
-import { processRdLifecycle } from "@/engine/rdLifecycle";
-import { processInstrumentLifecycle } from "@/engine/instrumentLifecycle";
+
 import { baseConfig, m, rdBankMaturity } from "@/engine/__tests__/factories";
+import { processFdLifecycle } from "@/engine/fdLifecycle";
+import { processInstrumentLifecycle } from "@/engine/instrumentLifecycle";
+import { processRdLifecycle } from "@/engine/rdLifecycle";
+import { createInitialState } from "@/engine/stateFactory";
 
 const fd = (over: Partial<FixedDeposit> = {}): FixedDeposit => ({
   id: "fd1", type: "FD", name: "FD A", principal: 100_000, rate: 12, startMonth: m("2025-01"), durationMonths: 12, ...over,

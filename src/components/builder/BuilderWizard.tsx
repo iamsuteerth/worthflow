@@ -8,13 +8,14 @@ import {
 } from "@mantine/core";
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
 import { useState } from "react";
-import { useBuilderStore } from "@/store/builderStore";
+
 import BaselineStep from "@/components/builder/BaselineStep";
 import EventsStep from "@/components/builder/EventsStep";
 import ForecastStep from "@/components/builder/ForecastStep";
 import InstrumentsStep from "@/components/builder/InstrumentsStep";
 import InvestmentsStep from "@/components/builder/InvestmentsStep";
 import ReviewStep from "@/components/builder/ReviewStep";
+import { useBuilderStore } from "@/store/builderStore";
 
 const STEPS = [
   { label: "Forecast", description: "Timeline" },

@@ -1,11 +1,11 @@
 import { Badge, Group, ScrollArea, Stack, Table, Text } from "@mantine/core";
 import { IconTableOff } from "@tabler/icons-react";
-import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
+
+import { EmptyState, RecordCard, Money } from "@/components/ui";
 import { formatMonth } from "@/engine/monthFormatting";
-import { EmptyState, RecordCard } from "@/components/ui";
-import { Money } from "@/components/ui";
-import { useIsMobile } from "@/hooks/useIsMobile";
 import { moneyParens } from "@/format/money";
+import { useFilteredSimulation } from "@/hooks/useFilteredSimulation";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { SEMANTIC } from "@/theme/semantic";
 
 export default function ForecastTable() {

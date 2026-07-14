@@ -1,6 +1,12 @@
-import { useLayoutEffect, useRef, useState } from "react";
 import { Tooltip } from "@mantine/core";
-import { money, moneyCompact, moneyParens, moneyCompactParens } from "@/format/money";
+import { useLayoutEffect, useRef, useState } from "react";
+
+import {
+  money,
+  moneyCompact,
+  moneyParens,
+  moneyCompactParens,
+} from "@/format/money";
 
 interface AdaptiveMoneyProps {
   value: number;

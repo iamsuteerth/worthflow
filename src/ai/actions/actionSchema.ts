@@ -1,11 +1,11 @@
-import { z } from 'zod';
 import type { MonthKey } from '@/types/simulation';
+
+import { z } from 'zod';
 
 // ---------------------------------------------------------------------------
 // ProposedAction — the closed, Zod-validated discriminated union the AI may
 // propose. It maps 1:1 onto existing guarded `plannerStore.addTransient*`
-// methods (see AI_PLAN.dev.md §5.1 / PHASE2.dev.md §2). The AI cannot express
-// anything the Scenario Lab UI couldn't already do.
+// methods. The AI cannot express anything the Scenario Lab UI couldn't already do.
 //
 // This is the SCHEMA layer (layer 1 of two). It validates SHAPE only: kinds,
 // field presence/types, enums, positivity, and the same numeric bounds the

@@ -1,8 +1,9 @@
 import { create } from 'zustand'
-import { AI_ENABLED } from '@/lib/featureFlags'
+
 import { authService, type AuthUser } from '@/lib/auth'
-import { usePlannerStore } from '@/store/plannerStore'
+import { AI_ENABLED } from '@/lib/featureFlags'
 import { useCloudStore } from '@/store/cloudStore'
+import { usePlannerStore } from '@/store/plannerStore'
 import { usePrefsStore } from '@/store/prefsStore'
 
 interface AuthStore {

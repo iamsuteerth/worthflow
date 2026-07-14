@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
+
+import { m } from "@/engine/__tests__/factories";
 import { getMaxAnnualYears, deriveAnnualEndMonth, isValidAnnualYears, isValidAnnualRange } from "@/engine/annualExpense";
 import { isRecurringExpenseActive } from "@/engine/configLookups";
 import { generateMonths } from "@/engine/dateUtils";
-import { m } from "@/engine/__tests__/factories";
 
 describe("annual recurring — real scenario (July 2026 → June 2029, 36 months)", () => {
   it("an annual expense from August 2026 offers 3 times and charges in Aug 2026, 2027, 2028", () => {

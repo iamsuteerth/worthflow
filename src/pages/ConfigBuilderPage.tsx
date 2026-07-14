@@ -1,12 +1,13 @@
 import type { PlannerOverrides } from "@/types/overrides";
 
-import { useEffect, useState } from "react";
 import { Button, List, Modal, Stack, Text } from "@mantine/core";
+import { useEffect, useState } from "react";
+
 import BuilderWizard from "@/components/builder/BuilderWizard";
-import { usePlannerStore } from "@/store/plannerStore";
-import { useBuilderStore } from "@/store/builderStore";
-import { configToBuilder } from "@/engine/configToBuilder";
 import { buildEffectiveConfig } from "@/engine/buildEffectiveConfig";
+import { configToBuilder } from "@/engine/configToBuilder";
+import { useBuilderStore } from "@/store/builderStore";
+import { usePlannerStore } from "@/store/plannerStore";
 
 // Any active Scenario Lab change (override-layer or scalar) means the builder could
 // either start fresh from the baseline or fold these edits in.

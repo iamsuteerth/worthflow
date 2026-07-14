@@ -79,13 +79,14 @@ vi.mock('@/ai/aiNotifications', () => ({
   notifyAiActionApplied: () => {},
 }));
 
+import type { Conversation } from '@/ai/chat/conversation.types';
+
+import { encryptConversation } from '@/ai/chat/conversationSync';
+import { clearKek } from '@/ai/keyVault/kekCache';
+import { clearSessionKek } from '@/ai/keyVault/keyVault';
+import { baseConfig, m } from '@/engine/__tests__/factories';
 import { useAiStore } from '@/store/aiStore';
 import { usePlannerStore } from '@/store/plannerStore';
-import { encryptConversation } from '@/ai/chat/conversationSync';
-import { clearSessionKek } from '@/ai/keyVault/keyVault';
-import { clearKek } from '@/ai/keyVault/kekCache';
-import { baseConfig, m } from '@/engine/__tests__/factories';
-import type { Conversation } from '@/ai/chat/conversation.types';
 
 const planCfg = baseConfig({
   forecast: { startMonth: m('2025-01'), totalMonths: 12 },

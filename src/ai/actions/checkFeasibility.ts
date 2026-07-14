@@ -1,14 +1,4 @@
-import {
-  usePlannerStore,
-  getAvailableCash,
-  getAccountValueAtMonth,
-} from '@/store/plannerStore';
-import { buildEffectiveConfig } from '@/engine/buildEffectiveConfig';
-import { generateMonths } from '@/engine/dateUtils';
-import { money } from '@/format/money';
-import { formatMonth } from '@/engine/monthFormatting';
-import { resolveAccountName } from '@/ai/actions/validateAction';
-import { buildEditChanges } from '@/ai/actions/editMapping';
+import type { ResolvedProposedAction } from '@/ai/actions/actionSchema';
 import type {
   RuntimeEvent,
   RuntimeSpendingOverride,
@@ -16,7 +6,14 @@ import type {
   RuntimeAccountReturnOverride,
 } from '@/types/runtimeEvent';
 import type { MonthKey } from '@/types/simulation';
-import type { ResolvedProposedAction } from '@/ai/actions/actionSchema';
+
+import { buildEditChanges } from '@/ai/actions/editMapping';
+import { resolveAccountName } from '@/ai/actions/validateAction';
+import { buildEffectiveConfig } from '@/engine/buildEffectiveConfig';
+import { generateMonths } from '@/engine/dateUtils';
+import { formatMonth } from '@/engine/monthFormatting';
+import { money } from '@/format/money';
+import { usePlannerStore, getAvailableCash, getAccountValueAtMonth } from '@/store/plannerStore';
 
 // ---------------------------------------------------------------------------
 // Decides, against the LIVE plan, whether an applied action would actually take

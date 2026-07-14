@@ -19,11 +19,12 @@ import {
 import { notifications } from "@mantine/notifications";
 import { IconKey, IconLock, IconMailCheck, IconUserPlus } from "@tabler/icons-react";
 import { useState } from "react";
-import { useAuthStore } from "@/store/authStore";
-import { authService } from "@/lib/auth";
-import ThemeToggle from "@/components/layout/ThemeToggle";
+
 import AppFooter from "@/components/layout/AppFooter";
+import ThemeToggle from "@/components/layout/ThemeToggle";
+import { authService } from "@/lib/auth";
 import { isValidEmail, isValidPassword, PASSWORD_HINT } from "@/lib/validation";
+import { useAuthStore } from "@/store/authStore";
 
 type AuthView = "signIn" | "signUp" | "confirmSignUp" | "forgotPassword" | "resetPassword";
 

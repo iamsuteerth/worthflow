@@ -8,10 +8,10 @@ import {
   IconWallet,
 } from "@tabler/icons-react";
 
-import { useSimulation } from "@/hooks/useSimulation";
+import { AdaptiveMoney, StatCard } from "@/components/ui";
 import { formatMonth } from "@/engine/monthFormatting";
 import { money } from "@/format/money";
-import { AdaptiveMoney, StatCard } from "@/components/ui";
+import { useSimulation } from "@/hooks/useSimulation";
 
 export default function SummaryCards() {
   const result = useSimulation();
