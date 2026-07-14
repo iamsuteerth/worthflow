@@ -685,9 +685,13 @@ Every figure the assistant quotes comes directly from Worth Flow's simulation en
 Good starting questions:
 
 * "When does my cash reach its lowest point, and why?"
+* "What's my heaviest month, and what's driving it?"
+* "Break down my expenses for September 2028."
 * "Which account contributes most to my net worth by the end of the forecast?"
 * "What would happen if I reduced expenses by ₹10,000/month from next year?"
 * "Summarise my FD maturities for the next two years."
+
+The assistant sees your forecast month by month, including each month's spending split into baseline, one-off, recurring and credit-card amounts and the money you put into investments, along with the names of the expenses and income behind them. That lets it not just tell you which month is heaviest but name what makes it heavy.
 
 ## Suggesting changes to your plan
 

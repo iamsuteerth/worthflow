@@ -5,7 +5,7 @@ import { MAX_CONTEXT_PACK_BYTES } from '@/ai/config';
 import { projectInstrument } from '@/engine/instrumentProjection';
 import { addMonths } from '@/engine/dateUtils';
 import type { MonthlyCashflow } from '@/types/simulation';
-import type { ContextPack, ContextPackSeries, ContextPackAggregates } from '@/ai/context/contextPack.types';
+import type { ContextPack, ContextPackSeries, ContextPackAggregates, ContextPackPlanItem } from '@/ai/context/contextPack.types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -45,7 +45,11 @@ export function buildFullSeries(
   }
 
   if (rows.length === 0) {
-    return { startMonth: '', months: 0, labels: [], cash: [], netWorth: [], investments: [], fd: [], rd: [] };
+    return {
+      startMonth: '', months: 0, labels: [],
+      cash: [], netWorth: [], investments: [], fd: [], rd: [],
+      income: [], flatExp: [], oneOff: [], recurring: [], creditCard: [], investing: [],
+    };
   }
 
   let seriesRows = rows;
@@ -78,6 +82,13 @@ export function buildFullSeries(
     investments: seriesRows.map((r) => Math.round(r.assets.investmentCorpus)),
     fd: seriesRows.map((r) => Math.round(r.assets.fdValue)),
     rd: seriesRows.map((r) => Math.round(r.assets.rdValue)),
+    // Per-month cashflow components, so any month is decomposable (see the type doc).
+    income: seriesRows.map((r) => Math.round(r.cashflow.income)),
+    flatExp: seriesRows.map((r) => Math.round(r.cashflow.flatExpense)),
+    oneOff: seriesRows.map((r) => Math.round(r.cashflow.oneOffExpense)),
+    recurring: seriesRows.map((r) => Math.round(r.cashflow.recurringExpense)),
+    creditCard: seriesRows.map((r) => Math.round(r.cashflow.creditCardExpense)),
+    investing: seriesRows.map((r) => Math.round(r.cashflow.investmentAmount)),
   };
 }
 
@@ -206,6 +217,47 @@ function buildScenarioChanges(
 }
 
 // ---------------------------------------------------------------------------
+// Plan items — the named expense/income drivers behind the numbers. Read from the
+// EFFECTIVE config, so base-plan and active-scenario line items are both included
+// (buildEffectiveConfig merges scenario runtime events into these same arrays).
+// This is what lets the model say WHICH item drives a month, not just the figure.
+// ---------------------------------------------------------------------------
+
+function buildPlanItems(config: PlannerConfig): ContextPackPlanItem[] {
+  const items: ContextPackPlanItem[] = [];
+
+  for (const e of config.oneOffExpenses) {
+    items.push({ kind: 'oneOff', name: e.label, amount: Math.round(e.amount), month: e.month });
+  }
+  for (const b of config.creditCardBills) {
+    items.push({ kind: 'card', name: b.label, amount: Math.round(b.amount), month: b.month });
+  }
+  for (const r of config.recurringExpenses) {
+    items.push({
+      kind: 'recurring',
+      name: r.name,
+      amount: Math.round(r.amount),
+      from: r.startMonth,
+      to: r.endMonth,
+      freq: r.frequency,
+    });
+  }
+  for (const b of config.bonusIncome) {
+    items.push({ kind: 'bonus', name: b.description, amount: Math.round(b.amount), month: b.month });
+  }
+  for (const s of config.salaryChanges) {
+    items.push({
+      kind: 'salary',
+      name: s.description,
+      amount: Math.round(s.newMonthlyIncome),
+      month: s.effectiveMonth,
+    });
+  }
+
+  return items;
+}
+
+// ---------------------------------------------------------------------------
 // Main export
 // ---------------------------------------------------------------------------
 
@@ -283,6 +335,7 @@ export function buildContextPack(
     series: buildFullSeries(result, focusWindow?.from, focusWindow?.to),
     accounts,
     instruments,
+    planItems: buildPlanItems(config),
     scenarioChanges: buildScenarioChanges(config, overrides),
     // Base-vs-scenario effect, grounded in a real base-plan simulation. Only when a
     // scenario is active AND the caller supplied the base run (see aiStore).
@@ -300,11 +353,15 @@ export function buildContextPack(
     focusWindow,
   };
 
-  // Size guard: if the pack exceeds the byte cap, drop instruments (series is never dropped —
-  // the model needs it to answer month-specific questions correctly).
-  const json = JSON.stringify(pack);
-  if (json.length > MAX_CONTEXT_PACK_BYTES) {
-    return { ...pack, instruments: [] };
+  // Size guard: if the pack exceeds the byte cap, shed the least essential blocks first —
+  // instruments, then the plan-item catalog. The series is never dropped, because the model
+  // needs it to answer month-specific questions correctly.
+  if (JSON.stringify(pack).length > MAX_CONTEXT_PACK_BYTES) {
+    const trimmed: ContextPack = { ...pack, instruments: [] };
+    if (JSON.stringify(trimmed).length > MAX_CONTEXT_PACK_BYTES) {
+      trimmed.planItems = [];
+    }
+    return trimmed;
   }
 
   return pack;

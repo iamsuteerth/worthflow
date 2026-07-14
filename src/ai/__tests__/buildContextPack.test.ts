@@ -55,6 +55,13 @@ describe('buildContextPack — series labels', () => {
     expect(p.series.investments.length).toBe(p.series.months);
     expect(p.series.fd.length).toBe(p.series.months);
     expect(p.series.rd.length).toBe(p.series.months);
+    // Per-month cashflow-component columns are equally parallel.
+    expect(p.series.income.length).toBe(p.series.months);
+    expect(p.series.flatExp.length).toBe(p.series.months);
+    expect(p.series.oneOff.length).toBe(p.series.months);
+    expect(p.series.recurring.length).toBe(p.series.months);
+    expect(p.series.creditCard.length).toBe(p.series.months);
+    expect(p.series.investing.length).toBe(p.series.months);
     expect(p.series.labels[0]).toBe(p.series.startMonth);
     expect(p.series.labels[0]).toBe('2025-01');
     // ≤120 months → every month is present (no down-sampling)
@@ -79,6 +86,68 @@ describe('buildContextPack — series labels', () => {
     const last = p.series.months - 1;
     expect(p.headline.finalNetWorth).toBe(p.series.netWorth[last]);
     expect(p.headline.finalInvestmentCorpus).toBe(p.series.investments[last]);
+  });
+});
+
+describe('buildContextPack — per-month cashflow components', () => {
+  it('reads each component verbatim from the engine cashflow at the same index', () => {
+    // 300k one-off in 2026-03 on top of the 60k baseline spend.
+    const overrides: PlannerOverrides = {
+      runtimeEvents: [
+        { id: 'oneoff', type: 'ONE_OFF_EXPENSE', month: m('2026-03'), amount: 300_000, label: 'Wedding' },
+      ],
+    };
+    const p = buildPack(cfg, overrides);
+    const rows = simulate(buildEffectiveConfig(cfg, overrides), overrides).rows;
+    for (const target of ['2025-09', '2026-03', '2028-06']) {
+      const idx = p.series.labels.indexOf(target);
+      expect(idx).toBeGreaterThan(-1);
+      const cf = rows.find((r) => r.month === target)!.cashflow;
+      expect(p.series.income[idx]).toBe(Math.round(cf.income));
+      expect(p.series.flatExp[idx]).toBe(Math.round(cf.flatExpense));
+      expect(p.series.oneOff[idx]).toBe(Math.round(cf.oneOffExpense));
+      expect(p.series.recurring[idx]).toBe(Math.round(cf.recurringExpense));
+      expect(p.series.creditCard[idx]).toBe(Math.round(cf.creditCardExpense));
+      expect(p.series.investing[idx]).toBe(Math.round(cf.investmentAmount));
+    }
+    // The one-off shows up as a decomposable component in its month.
+    const wIdx = p.series.labels.indexOf('2026-03');
+    expect(p.series.oneOff[wIdx]).toBe(300_000);
+  });
+});
+
+describe('buildContextPack — planItems catalog (named drivers)', () => {
+  it('names a BASE-plan one-off expense that the pack never surfaced before', () => {
+    const withBaseOneOff = baseConfig({
+      forecast: { startMonth: m('2025-01'), totalMonths: 60 },
+      income: { monthly: 100_000 },
+      cash: { openingBalance: 500_000 },
+      expenses: { defaultMonthly: 60_000, overrides: {} },
+      oneOffExpenses: [{ id: 'o1', month: m('2027-09'), label: 'Car down payment', amount: 250_000 }],
+    });
+    const p = buildPack(withBaseOneOff);
+    const item = p.planItems.find((i) => i.name === 'Car down payment');
+    expect(item).toBeDefined();
+    expect(item!.kind).toBe('oneOff');
+    expect(item!.month).toBe('2027-09');
+    expect(item!.amount).toBe(250_000);
+    // The name is in the serialized block the model actually receives.
+    expect(serializeContextPack(p)).toContain('Car down payment');
+  });
+
+  it('includes active-scenario line items alongside base ones (from the effective config)', () => {
+    const overrides: PlannerOverrides = {
+      runtimeEvents: [
+        { id: 'rec', type: 'RECURRING_EXPENSE', name: 'Gym', amount: 2_000, startMonth: m('2025-03'), endMonth: m('2026-02'), frequency: 'MONTHLY' },
+      ],
+    };
+    const p = buildPack(cfg, overrides);
+    const gym = p.planItems.find((i) => i.name === 'Gym');
+    expect(gym).toBeDefined();
+    expect(gym!.kind).toBe('recurring');
+    expect(gym!.from).toBe('2025-03');
+    expect(gym!.to).toBe('2026-02');
+    expect(gym!.freq).toBe('MONTHLY');
   });
 });
 

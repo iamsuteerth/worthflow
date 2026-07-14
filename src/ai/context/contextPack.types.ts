@@ -24,6 +24,14 @@ export interface ContextPackHeadline {
  * include only the first 36 months plus each year-end, so positions are NOT a
  * linear function of the calendar month.
  * All values are integers in INR (rounded to the nearest rupee).
+ *
+ * The balance columns (cash/netWorth/investments/fd/rd) are end-of-month stocks.
+ * The flow columns (income/flatExp/oneOff/recurring/creditCard/investing) are that
+ * month's cashflow components, so any month is decomposable: its spending is
+ * flatExp + oneOff + recurring + creditCard, and its total cash out also includes
+ * `investing` (contributions to investment accounts). FD/RD funding is not a
+ * separate column — it shows up as growth in `fd`/`rd`. Name the driver behind a
+ * flow via `planItems`.
  */
 export interface ContextPackSeries {
   startMonth: string;   // "YYYY-MM" — labels[0]
@@ -34,6 +42,32 @@ export interface ContextPackSeries {
   investments: number[]; // investment corpus (all accounts combined)
   fd: number[];          // FD book value
   rd: number[];          // RD book value
+  income: number[];      // that month's income
+  flatExp: number[];     // baseline (default) monthly spend
+  oneOff: number[];      // one-off expenses charged that month
+  recurring: number[];   // recurring-expense charges that month
+  creditCard: number[];  // credit-card bills paid that month
+  investing: number[];   // contributions into investment accounts that month
+}
+
+/**
+ * A named driver behind the numbers — the plan's expense/income line items, base
+ * plan and active scenario alike (they are merged into the effective config before
+ * the pack is built). Lets the model attribute a month's spending to a NAME
+ * ("September is high because of the 'Car down payment' one-off") instead of only
+ * quoting a component figure. Point events (`oneOff`, `card`, `bonus`, `salary`)
+ * carry `month`; a `recurring` item carries `from`/`to`/`freq`. Money is integer INR.
+ * This is for naming/attribution; `scenarioChanges` remains the numbered, editable
+ * list of what the active scenario changed.
+ */
+export interface ContextPackPlanItem {
+  kind: 'oneOff' | 'card' | 'recurring' | 'bonus' | 'salary';
+  name: string;
+  amount: number;
+  month?: string;                    // point events + salary effective month
+  from?: string;                     // recurring start
+  to?: string;                       // recurring end
+  freq?: 'MONTHLY' | 'ANNUAL';       // recurring frequency
 }
 
 export interface ContextPackAccount {
@@ -96,6 +130,7 @@ export interface ContextPack {
   series: ContextPackSeries;
   accounts: ContextPackAccount[];
   instruments: ContextPackInstrument[];
+  planItems: ContextPackPlanItem[];
   scenarioChanges: string[];
   scenarioEffect?: ContextPackScenarioEffect;
   focusWindow?: { from: string; to: string };
