@@ -82,8 +82,8 @@ export default function InstrumentsStep() {
     editing === null
       ? false
       : editing.kind === "FD"
-      ? fdDraftValid(editing.draft)
-      : rdDraftValid(editing.draft);
+        ? fdDraftValid(editing.draft)
+        : rdDraftValid(editing.draft);
 
   return (
     <BuilderStepContainer>
@@ -160,65 +160,67 @@ export default function InstrumentsStep() {
             No instruments added yet.
           </Text>
         ) : (
-          <Table striped highlightOnHover withColumnBorders={false}>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Type</Table.Th>
-                <Table.Th>Name</Table.Th>
-                <Table.Th style={{ textAlign: "right" }}>Amount</Table.Th>
-                <Table.Th style={{ textAlign: "right" }}>Rate</Table.Th>
-                <Table.Th style={{ textAlign: "right" }}>Duration</Table.Th>
-                <Table.Th>Start</Table.Th>
-                <Table.Th />
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {state.instruments.map((instrument) => (
-                <Table.Tr key={instrument.id}>
-                  <Table.Td>
-                    <Badge variant="light" color={instrument.type === "FD" ? "cyan" : "grape"} size="sm">
-                      {instrument.type}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm" fw={500}>{instrument.name}</Text>
-                  </Table.Td>
-                  <Table.Td style={{ textAlign: "right" }}>
-                    <Text size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
-                      {instrument.type === "FD"
-                        ? money(instrument.principal)
-                        : `${money(instrument.monthlyContribution)}/mo`}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td style={{ textAlign: "right" }}>
-                    <Text size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
-                      {instrument.rate}%
-                    </Text>
-                  </Table.Td>
-                  <Table.Td style={{ textAlign: "right" }}>
-                    <Text size="sm">{instrument.durationMonths} mo</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm">{formatMonth(instrument.startMonth)}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap={4} justify="flex-end" wrap="nowrap">
-                      <Tooltip label="Edit">
-                        <ActionIcon variant="subtle" aria-label="Edit" onClick={() => startEdit(instrument)}>
-                          <IconPencil size={16} />
-                        </ActionIcon>
-                      </Tooltip>
-                      <Tooltip label="Remove">
-                        <ActionIcon variant="subtle" color="red" aria-label="Remove" onClick={() => removeInstrument(instrument.id)}>
-                          <IconTrash size={16} />
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
-                  </Table.Td>
+          <Table.ScrollContainer minWidth={640}>
+            <Table striped highlightOnHover withColumnBorders={false}>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Type</Table.Th>
+                  <Table.Th>Name</Table.Th>
+                  <Table.Th style={{ textAlign: "right" }}>Amount</Table.Th>
+                  <Table.Th style={{ textAlign: "right" }}>Rate</Table.Th>
+                  <Table.Th style={{ textAlign: "right" }}>Duration</Table.Th>
+                  <Table.Th>Start</Table.Th>
+                  <Table.Th />
                 </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+              </Table.Thead>
+              <Table.Tbody>
+                {state.instruments.map((instrument) => (
+                  <Table.Tr key={instrument.id}>
+                    <Table.Td>
+                      <Badge variant="light" color={instrument.type === "FD" ? "cyan" : "grape"} size="sm">
+                        {instrument.type}
+                      </Badge>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm" fw={500}>{instrument.name}</Text>
+                    </Table.Td>
+                    <Table.Td style={{ textAlign: "right" }}>
+                      <Text size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
+                        {instrument.type === "FD"
+                          ? money(instrument.principal)
+                          : `${money(instrument.monthlyContribution)}/mo`}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td style={{ textAlign: "right" }}>
+                      <Text size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
+                        {instrument.rate}%
+                      </Text>
+                    </Table.Td>
+                    <Table.Td style={{ textAlign: "right" }}>
+                      <Text size="sm">{instrument.durationMonths} mo</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm">{formatMonth(instrument.startMonth)}</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap={4} justify="flex-end" wrap="nowrap">
+                        <Tooltip label="Edit">
+                          <ActionIcon variant="subtle" aria-label="Edit" onClick={() => startEdit(instrument)}>
+                            <IconPencil size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label="Remove">
+                          <ActionIcon variant="subtle" color="red" aria-label="Remove" onClick={() => removeInstrument(instrument.id)}>
+                            <IconTrash size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
         )}
       </Card>
 

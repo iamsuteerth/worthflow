@@ -277,8 +277,8 @@ export default function EventsStep() {
     editing === null
       ? false
       : editing.kind === "recurring"
-      ? recurringDraftValid(editing.draft, startMonth, state.totalMonths)
-      : monthTextAmountValid(editing.draft, MTA_CONFIG[editing.kind].allowZeroAmount);
+        ? recurringDraftValid(editing.draft, startMonth, state.totalMonths)
+        : monthTextAmountValid(editing.draft, MTA_CONFIG[editing.kind].allowZeroAmount);
 
   return (
     <BuilderStepContainer>
@@ -341,65 +341,67 @@ export default function EventsStep() {
             No events added yet.
           </Text>
         ) : (
-          <Table striped highlightOnHover withColumnBorders={false}>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Month</Table.Th>
-                <Table.Th>Type</Table.Th>
-                <Table.Th>Description</Table.Th>
-                <Table.Th style={{ textAlign: "right" }}>Value</Table.Th>
-                <Table.Th />
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {timeline.map((event) => {
-                const cfg = TYPE_CONFIG[event.type] ?? TYPE_CONFIG["Expense"];
-                return (
-                  <Table.Tr key={event.id}>
-                    <Table.Td>
-                      <Group gap={6} wrap="nowrap">
-                        <Text size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
-                          {formatMonth(event.month)}
+          <Table.ScrollContainer minWidth={600}>
+            <Table striped highlightOnHover withColumnBorders={false}>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Month</Table.Th>
+                  <Table.Th>Type</Table.Th>
+                  <Table.Th>Description</Table.Th>
+                  <Table.Th style={{ textAlign: "right" }}>Value</Table.Th>
+                  <Table.Th />
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {timeline.map((event) => {
+                  const cfg = TYPE_CONFIG[event.type] ?? TYPE_CONFIG["Expense"];
+                  return (
+                    <Table.Tr key={event.id}>
+                      <Table.Td>
+                        <Group gap={6} wrap="nowrap">
+                          <Text size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
+                            {formatMonth(event.month)}
+                          </Text>
+                          {oowIds.has(event.id) && (
+                            <Badge color="red" variant="light" size="sm" leftSection={<IconAlertTriangle size={11} />}>
+                              Outside
+                            </Badge>
+                          )}
+                        </Group>
+                      </Table.Td>
+                      <Table.Td>
+                        <Badge variant="light" color={cfg.color} size="sm">
+                          {event.type}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm">{event.description}</Text>
+                      </Table.Td>
+                      <Table.Td style={{ textAlign: "right" }}>
+                        <Text size="sm" fw={600} style={{ fontVariantNumeric: "tabular-nums" }}>
+                          {event.value}
                         </Text>
-                        {oowIds.has(event.id) && (
-                          <Badge color="red" variant="light" size="sm" leftSection={<IconAlertTriangle size={11} />}>
-                            Outside
-                          </Badge>
-                        )}
-                      </Group>
-                    </Table.Td>
-                    <Table.Td>
-                      <Badge variant="light" color={cfg.color} size="sm">
-                        {event.type}
-                      </Badge>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm">{event.description}</Text>
-                    </Table.Td>
-                    <Table.Td style={{ textAlign: "right" }}>
-                      <Text size="sm" fw={600} style={{ fontVariantNumeric: "tabular-nums" }}>
-                        {event.value}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap={4} justify="flex-end" wrap="nowrap">
-                        <Tooltip label="Edit">
-                          <ActionIcon variant="subtle" aria-label="Edit" onClick={() => startEdit(event)}>
-                            <IconPencil size={16} />
-                          </ActionIcon>
-                        </Tooltip>
-                        <Tooltip label="Remove">
-                          <ActionIcon variant="subtle" color="red" aria-label="Remove" onClick={() => removeHandlers[event.type]?.(event.id)}>
-                            <IconTrash size={16} />
-                          </ActionIcon>
-                        </Tooltip>
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                );
-              })}
-            </Table.Tbody>
-          </Table>
+                      </Table.Td>
+                      <Table.Td>
+                        <Group gap={4} justify="flex-end" wrap="nowrap">
+                          <Tooltip label="Edit">
+                            <ActionIcon variant="subtle" aria-label="Edit" onClick={() => startEdit(event)}>
+                              <IconPencil size={16} />
+                            </ActionIcon>
+                          </Tooltip>
+                          <Tooltip label="Remove">
+                            <ActionIcon variant="subtle" color="red" aria-label="Remove" onClick={() => removeHandlers[event.type]?.(event.id)}>
+                              <IconTrash size={16} />
+                            </ActionIcon>
+                          </Tooltip>
+                        </Group>
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                })}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
         )}
       </Card>
 
